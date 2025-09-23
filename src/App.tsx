@@ -12,6 +12,15 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import Properties from "./pages/Properties";
+import PropertyDetails from "./pages/PropertyDetails";
+import AddProperty from "./pages/AddProperty";
+import Wishlist from "./pages/Wishlist";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
+import TenantDashboard from "./pages/TenantDashboard";
+import SellerDashboard from "./pages/SellerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +40,15 @@ const App = () => (
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
+                    <Route path="/properties" element={<Properties />} />
+                    <Route path="/property/:id" element={<PropertyDetails />} />
+                    <Route path="/add-property" element={<AddProperty />} />
+                    <Route path="/wishlist" element={<Wishlist />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/orders" element={<Orders />} />
+                    <Route path="/tenant-dashboard" element={<TenantDashboard />} />
+                    <Route path="/seller-dashboard" element={<SellerDashboard />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
