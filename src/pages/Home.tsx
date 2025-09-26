@@ -46,12 +46,12 @@ const Home = () => {
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
               Find Your Dream
               <span className="block bg-gradient-to-r from-luxury to-accent bg-clip-text text-transparent">
-                Property Today
+                Your Destiny
               </span>
             </h1>
             <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-              Discover the perfect home, apartment, or investment property with our comprehensive 
-              real estate platform. Buy, sell, or rent with confidence.
+              Welcome to Destiny - where dreams become reality. Discover perfect properties, create custom homes, 
+              and build your future with our comprehensive real estate and construction platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button size="lg" className="bg-luxury hover:bg-luxury/90 text-luxury-foreground">
@@ -145,7 +145,7 @@ const Home = () => {
               Ready to Find Your Perfect Property?
             </h2>
             <p className="text-xl mb-8 text-primary-foreground/90">
-              Join thousands of satisfied customers who found their dream homes with EstateHub.
+              Join thousands of satisfied customers who found their dream homes and built their perfect properties with Destiny.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {!user ? (

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertyProvider } from "@/contexts/PropertyContext";
+import { ConstructionProvider } from "@/contexts/ConstructionContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import Navbar from "@/components/Navbar";
@@ -21,6 +22,10 @@ import Orders from "./pages/Orders";
 import TenantDashboard from "./pages/TenantDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ContractorDashboard from "./pages/ContractorDashboard";
+import WorkerDashboard from "./pages/WorkerDashboard";
+import DesignerDashboard from "./pages/DesignerDashboard";
+import Construction from "./pages/Construction";
 
 const queryClient = new QueryClient();
 
@@ -28,8 +33,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <PropertyProvider>
-        <WishlistProvider>
-          <OrderProvider>
+        <ConstructionProvider>
+          <WishlistProvider>
+            <OrderProvider>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -49,14 +55,19 @@ const App = () => (
                     <Route path="/tenant-dashboard" element={<TenantDashboard />} />
                     <Route path="/seller-dashboard" element={<SellerDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
+                    <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+                    <Route path="/designer-dashboard" element={<DesignerDashboard />} />
+                    <Route path="/construction" element={<Construction />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
               </BrowserRouter>
             </TooltipProvider>
-          </OrderProvider>
-        </WishlistProvider>
+            </OrderProvider>
+          </WishlistProvider>
+        </ConstructionProvider>
       </PropertyProvider>
     </AuthProvider>
   </QueryClientProvider>

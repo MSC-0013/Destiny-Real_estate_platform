@@ -29,6 +29,12 @@ const Navbar = () => {
         return '/seller-dashboard';
       case 'tenant':
         return '/tenant-dashboard';
+      case 'contractor':
+        return '/contractor-dashboard';
+      case 'worker':
+        return '/worker-dashboard';
+      case 'designer':
+        return '/designer-dashboard';
       default:
         return '/';
     }
@@ -41,12 +47,12 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-luxury" />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-luxury bg-clip-text text-transparent">
-              EstateHub
+              Destiny
             </span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            <Link to="/properties" className="text-sm font-medium text-foreground/80 hover:text-foreground">
               Properties
             </Link>
             <Link to="/properties?category=rent" className="text-sm font-medium text-foreground/80 hover:text-foreground">
@@ -54,6 +60,9 @@ const Navbar = () => {
             </Link>
             <Link to="/properties?category=sale" className="text-sm font-medium text-foreground/80 hover:text-foreground">
               Buy
+            </Link>
+            <Link to="/construction" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+              Construction
             </Link>
           </div>
         </div>
