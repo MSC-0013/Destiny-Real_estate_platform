@@ -185,7 +185,7 @@ const DesignerDashboard = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Budget</p>
-                            <p className="font-medium">${project.estimatedCost.toLocaleString()}</p>
+                            <p className="font-medium">₹{project.estimatedCost.toLocaleString()}</p>
                           </div>
                         </div>
 

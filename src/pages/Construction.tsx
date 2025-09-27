@@ -67,7 +67,7 @@ const Construction = () => {
     { icon: Building, label: 'Total Projects', value: projects.length.toString(), color: 'text-blue-600' },
     { icon: TrendingUp, label: 'In Progress', value: projects.filter(p => p.status === 'in-progress').length.toString(), color: 'text-green-600' },
     { icon: Hammer, label: 'Completed', value: projects.filter(p => p.status === 'completed').length.toString(), color: 'text-emerald-600' },
-    { icon: DollarSign, label: 'Total Value', value: `$${(projects.reduce((sum, p) => sum + p.estimatedCost, 0) / 1000000).toFixed(1)}M`, color: 'text-luxury' },
+    { icon: DollarSign, label: 'Total Value', value: `₹${(projects.reduce((sum, p) => sum + p.estimatedCost, 0) / 10000000).toFixed(1)}Cr`, color: 'text-luxury' },
   ];
 
   return (
@@ -212,7 +212,7 @@ const Construction = () => {
 
                     <div className="flex items-center text-sm text-muted-foreground">
                       <DollarSign className="mr-2 h-4 w-4" />
-                      ${project.estimatedCost.toLocaleString()}
+                      ₹{project.estimatedCost.toLocaleString()}
                     </div>
 
                     {project.startDate && (

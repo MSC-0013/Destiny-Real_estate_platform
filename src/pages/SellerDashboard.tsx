@@ -146,7 +146,7 @@ const SellerDashboard = () => {
                       <p className="text-sm text-muted-foreground">{property.location}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${property.price.toLocaleString()}</p>
+                      <p className="font-semibold">₹{property.price.toLocaleString()}</p>
                       <p className="text-sm text-muted-foreground">
                         {property.available ? 'Available' : 'Sold'}
                       </p>

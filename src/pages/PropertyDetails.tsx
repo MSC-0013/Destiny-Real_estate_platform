@@ -1,13 +1,16 @@
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useProperty } from '@/contexts/PropertyContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MapPin, Home, Bath, Square, Calendar } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Heart, MapPin, Home, Bath, Square, Calendar, IndianRupee, ShoppingCart, Key } from 'lucide-react';
 
 const PropertyDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { getProperty } = useProperty();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
@@ -96,8 +99,9 @@ const PropertyDetails = () => {
               {property.available && <Badge className="bg-green-500">Available</Badge>}
             </div>
             
-            <div className="text-3xl font-bold text-primary">
-              ${property.price.toLocaleString()}
+            <div className="text-3xl font-bold text-primary flex items-center gap-1">
+              <IndianRupee className="w-8 h-8" />
+              {property.price.toLocaleString()}
               {property.category === 'rent' && <span className="text-lg text-muted-foreground">/month</span>}
             </div>
             
@@ -142,10 +146,72 @@ const PropertyDetails = () => {
               <p className="text-muted-foreground">{property.sellerPhone}</p>
             </div>
             
-            <div className="flex gap-4">
-              <Button className="flex-1">Contact Seller</Button>
-              <Button variant="outline" className="flex-1">Schedule Visit</Button>
-            </div>
+            {/* Purchase/Rent Actions */}
+            {property.available && user ? (
+              <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg mb-4">
+                    {property.category === 'sale' ? 'Purchase This Property' : 'Rent This Property'}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button 
+                      size="lg" 
+                      className="flex items-center gap-2 h-12"
+                      onClick={() => navigate(`/contract/${id}/${property.category === 'sale' ? 'buy' : 'rent'}`)}
+                    >
+                      {property.category === 'sale' ? (
+                        <>
+                          <ShoppingCart className="w-5 h-5" />
+                          Buy Now
+                        </>
+                      ) : (
+                        <>
+                          <Key className="w-5 h-5" />
+                          Rent Now
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="flex items-center gap-2 h-12"
+                      onClick={() => {
+                        // Contact seller functionality
+                        window.open(`tel:${property.sellerPhone}`, '_self');
+                      }}
+                    >
+                      <MapPin className="w-5 h-5" />
+                      Contact Seller
+                    </Button>
+                  </div>
+                  
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Secure transaction • Digital contract • Instant processing
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : !property.available ? (
+              <Card className="border-red-200 bg-red-50/50">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-semibold text-red-800 mb-2">
+                    {property.category === 'sale' ? 'Property Sold' : 'Property Rented'}
+                  </h3>
+                  <p className="text-red-600">
+                    This property is no longer available.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center">
+                <Button onClick={() => navigate('/login')} size="lg">
+                  Login to {property.category === 'sale' ? 'Purchase' : 'Rent'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

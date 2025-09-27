@@ -33,9 +33,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, className }) => {
 
   const formatPrice = (price: number, category: string) => {
     if (category === 'rent') {
-      return `$${price.toLocaleString()}/month`;
+      return `₹${price.toLocaleString()}/month`;
     }
-    return `$${price.toLocaleString()}`;
+    return `₹${price.toLocaleString()}`;
   };
 
   return (
