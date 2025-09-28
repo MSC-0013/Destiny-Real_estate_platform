@@ -37,7 +37,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!hasSearched) {
-      setSearchResults(properties.filter(p => p.featured).slice(0, 6));
+      setSearchResults(properties.filter(p => p.featured && p.available).slice(0, 6));
     }
   }, [properties, hasSearched]);
 
@@ -84,7 +84,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -94,29 +94,29 @@ const Home = () => {
         
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-green-500/10 rounded-full blur-xl animate-pulse delay-2000" />
+          <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 md:w-40 md:h-40 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 right-1/3 w-16 h-16 md:w-24 md:h-24 bg-green-500/10 rounded-full blur-xl animate-pulse delay-2000" />
         </div>
         
-        <div className="relative z-10 text-center text-white px-4 max-w-6xl mx-auto">
+        <div className="relative z-10 text-center text-white px-4 py-8 max-w-6xl mx-auto">
           <div className="mb-6">
-            <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 mb-4 px-6 py-2 text-lg">
+            <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 mb-4 px-4 py-2 md:px-6 md:py-2 text-sm md:text-lg">
               <Sparkles className="mr-2 h-4 w-4" />
               Welcome to Destiny
             </Badge>
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-8 leading-tight">
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-pulse">
               Destiny
             </span>
-            <span className="block text-4xl md:text-5xl mt-4 text-gray-100">
+            <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl mt-4 text-gray-100">
               Where Dreams Meet Reality
             </span>
           </h1>
           
-          <p className="text-xl md:text-2xl mb-12 text-gray-200 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl mb-12 text-gray-200 max-w-4xl mx-auto leading-relaxed px-4">
             Premium real estate • Custom construction • Interior design
             <br className="hidden md:block" />
             Your complete home solution partner

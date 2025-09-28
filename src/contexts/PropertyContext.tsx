@@ -149,6 +149,10 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const searchProperties = (filters: PropertyFilters) => {
     return properties.filter(property => {
+      // Only show available properties
+      if (!property.available) {
+        return false;
+      }
       if (filters.search && !property.title.toLowerCase().includes(filters.search.toLowerCase()) &&
           !property.location.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;

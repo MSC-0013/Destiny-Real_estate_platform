@@ -9,6 +9,7 @@ import { ConstructionProvider } from "@/contexts/ConstructionContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import Navbar from "@/components/Navbar";
+import Chatbot from "@/components/Chatbot";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -54,6 +55,7 @@ const App = () => (
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/orderspage" element={<Orders />} />
                     <Route path="/tenant-dashboard" element={<TenantDashboard />} />
                     <Route path="/seller-dashboard" element={<SellerDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -66,6 +68,7 @@ const App = () => (
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <Chatbot />
                 </div>
               </BrowserRouter>
             </TooltipProvider>

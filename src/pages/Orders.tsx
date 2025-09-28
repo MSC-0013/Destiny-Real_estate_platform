@@ -53,7 +53,7 @@ const Orders = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Amount</p>
-                      <p className="font-semibold">${order.amount.toLocaleString()}</p>
+                      <p className="font-semibold">₹{order.amount.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Order Date</p>
