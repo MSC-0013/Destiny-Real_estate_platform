@@ -28,6 +28,8 @@ import WorkerDashboard from "./pages/WorkerDashboard";
 import DesignerDashboard from "./pages/DesignerDashboard";
 import Construction from "./pages/Construction";
 import ConstructionDetails from "./pages/ConstructionDetails";
+import ConstructionRentals from "./pages/ConstructionRentals";
+import ConstructionSales from "./pages/ConstructionSales";
 import Contract from "./pages/Contract";
 
 const queryClient = new QueryClient();
@@ -62,8 +64,10 @@ const App = () => (
                     <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
                     <Route path="/worker-dashboard" element={<WorkerDashboard />} />
                     <Route path="/designer-dashboard" element={<DesignerDashboard />} />
-                    <Route path="/construction" element={<Construction />} />
-                    <Route path="/construction/:id" element={<ConstructionDetails />} />
+              <Route path="/construction" element={<Construction />} />
+              <Route path="/construction/rentals" element={<ConstructionRentals />} />
+              <Route path="/construction/sales" element={<ConstructionSales />} />
+              <Route path="/construction/:id" element={<ConstructionDetails />} />
                     <Route path="/contract/:id/:type" element={<Contract />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />

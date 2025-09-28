@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useProperty } from '@/contexts/PropertyContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrder } from '@/contexts/OrderContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ const Contract = () => {
   const navigate = useNavigate();
   const { getProperty, updateProperty } = useProperty();
   const { user } = useAuth();
+  const { createOrder } = useOrder();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -134,7 +136,23 @@ const Contract = () => {
       // Update property as unavailable
       updateProperty(id, { available: false });
 
-      // Create contract record (in real app, this would be stored in database)
+      // Create order in OrderContext
+      const orderData = {
+        propertyId: id,
+        property: property,
+        buyerId: user.id,
+        sellerId: property.sellerId || 'seller-1',
+        type: type === 'buy' ? 'purchase' as const : 'rental' as const,
+        amount: calculateTotal().total,
+        status: 'confirmed' as const,
+        startDate: type === 'rent' ? new Date().toISOString() : undefined,
+        endDate: type === 'rent' ? new Date(Date.now() + getDurationInMonths() * 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+        duration: type === 'rent' ? `${getDurationInMonths()} months` : undefined,
+      };
+
+      createOrder(orderData);
+
+      // Store contract in localStorage (for demo purposes)
       const contractData = {
         propertyId: id,
         userId: user.id,
@@ -145,7 +163,6 @@ const Contract = () => {
         ...formData
       };
       
-      // Store contract in localStorage (for demo purposes)
       const contracts = JSON.parse(localStorage.getItem('contracts') || '[]');
       contracts.push({ id: Date.now().toString(), ...contractData });
       localStorage.setItem('contracts', JSON.stringify(contracts));
