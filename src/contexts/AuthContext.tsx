@@ -7,6 +7,11 @@ export interface User {
   phone: string;
   role: 'tenant' | 'seller' | 'admin' | 'contractor' | 'worker' | 'designer';
   avatar?: string;
+  address?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  bio?: string;
+  profileImage?: string;
 }
 
 interface AuthContextType {
