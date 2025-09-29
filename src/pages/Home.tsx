@@ -20,6 +20,7 @@ import {
   Clock,
   Star
 } from 'lucide-react';
+import heroRealEstate from '@/assets/hero-real-estate.jpg';
 import { useNavigate } from 'react-router-dom';
 import { useProperty, PropertyFilters } from '@/contexts/PropertyContext';
 import { useConstruction } from '@/contexts/ConstructionContext';
@@ -83,211 +84,197 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Modern Black & White Design */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(59, 130, 246, 0.3)), url('/src/assets/hero-villa.jpg')`
+            backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4)), url(${heroRealEstate})`
           }}
         />
         
-        {/* Floating Elements */}
+        {/* Subtle Geometric Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 md:w-40 md:h-40 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 right-1/3 w-16 h-16 md:w-24 md:h-24 bg-green-500/10 rounded-full blur-xl animate-pulse delay-2000" />
+          <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-white/5 rounded-full blur-xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 md:w-40 md:h-40 bg-white/3 rounded-full blur-xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 right-1/3 w-16 h-16 md:w-24 md:h-24 bg-white/5 rounded-full blur-xl animate-pulse delay-2000" />
         </div>
-        
-        <div className="relative z-10 text-center text-white px-4 py-8 max-w-6xl mx-auto">
-          <div className="mb-6">
-            <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 mb-4 px-4 py-2 md:px-6 md:py-2 text-sm md:text-lg">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Welcome to Destiny
-            </Badge>
-          </div>
+
+        <div className="relative z-10 text-center max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Badge className="mb-6 bg-white/10 text-white border-white/20 backdrop-blur-sm">
+            India's Premier Real Estate Platform
+          </Badge>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-8 leading-tight">
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-pulse">
-              Destiny
-            </span>
-            <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl mt-4 text-gray-100">
-              Where Dreams Meet Reality
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-8 leading-tight">
+            Find Your Perfect
+            <span className="block text-white drop-shadow-2xl">
+              Dream Home
             </span>
           </h1>
           
-          <p className="text-lg sm:text-xl md:text-2xl mb-12 text-gray-200 max-w-4xl mx-auto leading-relaxed px-4">
-            Premium real estate • Custom construction • Interior design
-            <br className="hidden md:block" />
-            Your complete home solution partner
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed">
+            Discover premium properties, custom construction services, and interior design solutions 
+            all in one place. Your journey to the perfect home starts here.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <HomeIcon className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Premium Properties</h3>
-              <p className="text-gray-300 text-sm">Luxury homes in prime locations</p>
-            </div>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <Hammer className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Custom Construction</h3>
-              <p className="text-gray-300 text-sm">Build your dream home from scratch</p>
-            </div>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <Palette className="h-12 w-12 text-pink-400 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Interior Design</h3>
-              <p className="text-gray-300 text-sm">Professional design services</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
             <Button 
               size="lg" 
+              className="bg-white text-black hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-xl"
               onClick={() => navigate('/properties')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all"
             >
-              <Search className="mr-3 h-5 w-5" />
-              Explore Properties
-              <ArrowRight className="ml-3 h-5 w-5" />
+              Browse Properties
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            
             <Button 
               size="lg" 
+              variant="outline" 
+              className="border-white/50 text-white hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
               onClick={() => navigate('/construction')}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-10 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all"
             >
-              <Building className="mr-3 h-5 w-5" />
-              Start Construction
-              <ArrowRight className="ml-3 h-5 w-5" />
+              Start Building
+              <Hammer className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-20 bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Our Premium Services</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              From finding your perfect property to building your dream home, we provide end-to-end solutions 
-              with unmatched quality and expertise.
+      {/* Services Section - Black & White Theme */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <Badge className="mb-6 bg-black text-white">Our Services</Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black mb-8">
+              Complete Real Estate Solutions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              From finding your dream property to building it from scratch, we provide end-to-end solutions
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-            {services.map((service, index) => {
-              const IconComponent = service.icon;
-              return (
-                <Card key={index} className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all hover:shadow-2xl">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                  
-                  <CardHeader className="relative">
-                    <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${service.color} text-white rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                      <IconComponent className="h-8 w-8" />
-                    </div>
-                    <CardTitle className="text-2xl">{service.title}</CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent className="relative space-y-4">
-                    <p className="text-muted-foreground leading-relaxed">{service.description}</p>
-                    
-                    <div className="space-y-2">
-                      {service.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button 
-                      onClick={() => navigate(service.link)}
-                      className="w-full mt-6 group-hover:scale-105 transition-transform"
-                    >
-                      Learn More
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid md:grid-cols-3 gap-8">
+            {services.map((service, index) => (
+              <Card key={index} className="group hover:shadow-2xl transition-all duration-500 border border-gray-200 bg-white hover:bg-gray-50">
+                <CardHeader className="text-center pb-4">
+                  <div className="inline-flex p-6 rounded-full bg-black mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <service.icon className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-black mb-4">{service.title}</CardTitle>
+                  <p className="text-gray-600 leading-relaxed">{service.description}</p>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <ul className="space-y-4 mb-8">
+                    {service.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center text-gray-700">
+                        <CheckCircle className="h-5 w-5 text-black mr-3 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button 
+                    className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3"
+                    onClick={() => navigate(service.link)}
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-r from-primary/5 via-purple-500/5 to-pink-500/5">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Trusted by Thousands</h2>
-            <p className="text-muted-foreground">Numbers that speak for our excellence</p>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            {stats.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div key={index} className="text-center group">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-purple-600 text-white rounded-2xl mb-4 group-hover:scale-110 transition-transform ${stat.color}`}>
-                    <IconComponent className="h-8 w-8" />
+      {/* Stats Section - Refined Black & White */}
+      <section className="py-20 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center group">
+                <div className="flex justify-center mb-6">
+                  <div className="p-4 bg-white/10 rounded-full group-hover:bg-white/20 transition-all duration-300">
+                    <stat.icon className="h-10 w-10 text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
-                  <div className="text-muted-foreground">{stat.label}</div>
                 </div>
-              );
-            })}
+                <div className="text-4xl md:text-5xl font-bold text-white mb-3">{stat.value}</div>
+                <div className="text-gray-300 text-lg">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Search Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Find Your Perfect Property</h2>
-            <p className="text-muted-foreground">Search through thousands of verified properties</p>
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-black text-white">Property Search</Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-black mb-6">
+              Find Your Dream Property
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Use our advanced search to filter properties by location, price, type, and more
+            </p>
           </div>
-          <div className="max-w-4xl mx-auto">
+          
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
             <SearchBar onSearch={handleSearch} />
           </div>
         </div>
       </section>
 
       {/* Featured Properties */}
-      <section className="py-16">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-black text-white">
               {hasSearched ? 'Search Results' : 'Featured Properties'}
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-black mb-6">
+              {hasSearched ? `Found ${searchResults.length} Properties` : 'Premium Properties'}
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               {hasSearched 
-                ? `Found ${searchResults.length} properties matching your criteria`
-                : 'Discover our handpicked selection of premium properties'
+                ? 'Properties matching your search criteria'
+                : 'Handpicked premium properties in prime locations across India'
               }
             </p>
           </div>
 
           {searchResults.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {searchResults.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No properties found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria</p>
+            <div className="text-center py-16">
+              <Building className="h-24 w-24 text-gray-300 mx-auto mb-6" />
+              <h3 className="text-2xl font-semibold text-gray-600 mb-4">
+                {hasSearched ? 'No properties found' : 'No featured properties'}
+              </h3>
+              <p className="text-gray-500 mb-8">
+                {hasSearched 
+                  ? 'Try adjusting your search criteria to find more properties'
+                  : 'Check back later for featured properties'
+                }
+              </p>
+              <Button 
+                onClick={() => navigate('/properties')}
+                className="bg-black hover:bg-gray-800 text-white px-8 py-3"
+              >
+                View All Properties
+              </Button>
             </div>
           )}
 
-          {!hasSearched && (
-            <div className="text-center">
-              <Button onClick={() => navigate('/properties')} size="lg">
+          {!hasSearched && searchResults.length > 0 && (
+            <div className="text-center mt-12">
+              <Button 
+                onClick={() => navigate('/properties')}
+                size="lg"
+                className="bg-black hover:bg-gray-800 text-white px-8 py-3"
+              >
                 View All Properties
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -296,73 +283,61 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary via-purple-600 to-pink-600 text-white relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-white/10"></div>
-        </div>
-        
-        <div className="container relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <Badge className="mb-6 bg-white/20 text-white border-white/30 px-6 py-2 text-lg">
-              <Star className="mr-2 h-4 w-4" />
-              Start Your Journey Today
-            </Badge>
-            
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Ready to Build Your
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
-                Dream Future?
-              </span>
-            </h2>
-            
-            <p className="text-xl mb-12 text-white/90 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of satisfied customers who found their dream homes and built their perfect properties with Destiny. 
-              Your journey to the perfect home starts here.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <IndianRupee className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
-                <h3 className="font-bold mb-2">Best Prices</h3>
-                <p className="text-sm text-white/80">Competitive pricing with no hidden costs</p>
+      {/* CTA Section - Enhanced Black & White */}
+      <section className="py-24 bg-black text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <Badge className="mb-6 bg-white/10 text-white border-white/20">Get Started Today</Badge>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8">
+            Ready to Find Your Perfect Home?
+          </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
+            Join thousands of satisfied customers who have found their dream properties with us. 
+            Whether you're buying, renting, or building, we're here to help.
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center">
+              <div className="p-4 bg-white/10 rounded-full inline-flex mb-4">
+                <Shield className="h-8 w-8 text-white" />
               </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <Shield className="h-8 w-8 mx-auto mb-3 text-green-300" />
-                <h3 className="font-bold mb-2">100% Secure</h3>
-                <p className="text-sm text-white/80">All transactions are safe and verified</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <Clock className="h-8 w-8 mx-auto mb-3 text-blue-300" />
-                <h3 className="font-bold mb-2">Quick Process</h3>
-                <p className="text-sm text-white/80">Fast approval and instant processing</p>
-              </div>
+              <h3 className="text-xl font-semibold mb-2">Verified Properties</h3>
+              <p className="text-gray-300">All properties are thoroughly verified for authenticity</p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button 
-                size="lg" 
-                onClick={() => navigate(user ? '/properties' : '/signup')}
-                className="bg-white text-primary hover:bg-white/90 px-10 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all"
-              >
-                <HomeIcon className="mr-3 h-5 w-5" />
-                {user ? 'Browse Properties' : 'Get Started'}
-                <ArrowRight className="ml-3 h-5 w-5" />
-              </Button>
-              
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/construction')}
-                variant="outline" 
-                className="border-2 border-white text-white hover:bg-white hover:text-primary px-10 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all"
-              >
-                <Hammer className="mr-3 h-5 w-5" />
-                Start Building
-              </Button>
+            <div className="text-center">
+              <div className="p-4 bg-white/10 rounded-full inline-flex mb-4">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Expert Support</h3>
+              <p className="text-gray-300">Professional guidance throughout your property journey</p>
             </div>
+            <div className="text-center">
+              <div className="p-4 bg-white/10 rounded-full inline-flex mb-4">
+                <Star className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Best Prices</h3>
+              <p className="text-gray-300">Competitive pricing with transparent fee structure</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Button 
+              size="lg" 
+              className="bg-white text-black hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-xl"
+              onClick={() => navigate('/properties')}
+            >
+              Get Started Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white/50 text-white hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
+              onClick={() => navigate('/help')}
+            >
+              Need Help?
+              <Search className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         </div>
       </section>
