@@ -129,7 +129,7 @@ const Home = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white/50 text-white hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
+              className="border-white/50 text-black hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
               onClick={() => navigate('/construction')}
             >
               Start Building
@@ -332,7 +332,7 @@ const Home = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white/50 text-white hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
+              className="border-white/50 text-black hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
               onClick={() => navigate('/help')}
             >
               Need Help?
