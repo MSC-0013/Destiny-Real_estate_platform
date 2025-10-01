@@ -34,6 +34,10 @@ import ConstructionSales from "./pages/ConstructionSales";
 import Contract from "./pages/Contract";
 import Help from "./pages/Help";
 import SellerDashboard from "./pages/SellerDashboard";
+import EditProperty from './pages/EditProperty'; // import at the top
+
+
+
 
 const queryClient = new QueryClient();
 
@@ -72,6 +76,7 @@ const App = () => (
               <Route path="/construction/sales" element={<ConstructionSales />} />
               <Route path="/construction/:id" element={<ConstructionDetails />} />
                     <Route path="/contract/:id/:type" element={<Contract />} />
+                    <Route path="/edit-property/:id" element={<EditProperty />} />
                     <Route path="/help" element={<Help />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />

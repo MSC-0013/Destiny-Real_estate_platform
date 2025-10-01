@@ -7,14 +7,15 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { 
-  Download, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  IndianRupee, 
-  FileText, 
-  User, 
+import { OrderPdf } from '@/components/analytics/downloadOrderPDF';
+import {
+  Download,
+  MapPin,
+  Calendar,
+  Clock,
+  IndianRupee,
+  FileText,
+  User,
   Home,
   Building,
   CheckCircle,
@@ -38,40 +39,40 @@ const Orders = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': 
-        return { 
-          bg: 'bg-emerald-50', 
-          text: 'text-emerald-700', 
+      case 'completed':
+        return {
+          bg: 'bg-emerald-50',
+          text: 'text-emerald-700',
           border: 'border-emerald-200',
-          icon: CheckCircle 
+          icon: CheckCircle
         };
-      case 'confirmed': 
-        return { 
-          bg: 'bg-blue-50', 
-          text: 'text-blue-700', 
+      case 'confirmed':
+        return {
+          bg: 'bg-blue-50',
+          text: 'text-blue-700',
           border: 'border-blue-200',
-          icon: Timer 
+          icon: Timer
         };
-      case 'pending': 
-        return { 
-          bg: 'bg-yellow-50', 
-          text: 'text-yellow-700', 
+      case 'pending':
+        return {
+          bg: 'bg-yellow-50',
+          text: 'text-yellow-700',
           border: 'border-yellow-200',
-          icon: AlertCircle 
+          icon: AlertCircle
         };
-      case 'cancelled': 
-        return { 
-          bg: 'bg-red-50', 
-          text: 'text-red-700', 
+      case 'cancelled':
+        return {
+          bg: 'bg-red-50',
+          text: 'text-red-700',
           border: 'border-red-200',
-          icon: XCircle 
+          icon: XCircle
         };
-      default: 
-        return { 
-          bg: 'bg-gray-50', 
-          text: 'text-gray-700', 
+      default:
+        return {
+          bg: 'bg-gray-50',
+          text: 'text-gray-700',
           border: 'border-gray-200',
-          icon: Clock 
+          icon: Clock
         };
     }
   };
@@ -171,7 +172,7 @@ Contact: support@destiny.com | +91 1800-123-4567
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -185,7 +186,7 @@ Contact: support@destiny.com | +91 1800-123-4567
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -199,7 +200,7 @@ Contact: support@destiny.com | +91 1800-123-4567
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -214,13 +215,13 @@ Contact: support@destiny.com | +91 1800-123-4567
             </CardContent>
           </Card>
         </div>
-        
+
         {userOrders.length > 0 ? (
           <div className="space-y-8">
             {userOrders.map((order) => {
               const statusInfo = getStatusColor(order.status);
               const StatusIcon = statusInfo.icon;
-              
+
               return (
                 <Card key={order.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                   {/* Property Image Header */}
@@ -239,17 +240,30 @@ Contact: support@destiny.com | +91 1800-123-4567
                         {order.property.location}
                       </div>
                     </div>
-                    <div className="absolute top-6 right-6">
+                    <div className="absolute top-6 right-6 flex flex-col sm:flex-row gap-2">
+                      {/* Invoice Button */}
                       <Button
                         onClick={() => downloadInvoice(order)}
                         variant="outline"
                         size="sm"
-                        className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-black backdrop-blur-sm"
+                        className="flex items-center bg-white/20 border-white/30 text-white hover:bg-white hover:text-black backdrop-blur-sm px-3 py-1.5 font-medium transition-all"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Invoice
                       </Button>
+
+                      {/* Download PDF Button */}
+                      <Button
+                        onClick={() => OrderPdf(order)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center border-black-300 bg-white text-black hover:bg-white hover:text-black px-3 py-1.5 font-medium transition-all"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                      </Button>
                     </div>
+
                   </div>
 
                   <CardContent className="p-8">
@@ -311,7 +325,7 @@ Contact: support@destiny.com | +91 1800-123-4567
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Rental Details */}
                     {order.type === 'rental' && order.startDate && order.endDate && (
                       <>
@@ -372,17 +386,23 @@ Contact: support@destiny.com | +91 1800-123-4567
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-3 mt-8">
-                      <Button 
+                      <Button
                         onClick={() => downloadInvoice(order)}
                         className="bg-black hover:bg-gray-800 text-white"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download Invoice
                       </Button>
-                      <Button variant="outline" className="border-gray-300">
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Contract
+                      <Button
+                        onClick={() => OrderPdf(order)}
+                        variant="outline"
+                        className="border-gray-300"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
                       </Button>
+
+
                       {order.status === 'completed' && (
                         <Button variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
                           <Star className="mr-2 h-4 w-4" />
@@ -407,15 +427,15 @@ Contact: support@destiny.com | +91 1800-123-4567
                   Start your property journey by browsing our premium listings and making your first order.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = '/properties'}
                     className="bg-black hover:bg-gray-800 text-white px-8 py-3"
                   >
                     <Building className="mr-2 h-4 w-4" />
                     Browse Properties
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => window.location.href = '/construction'}
                     className="border-gray-300 px-8 py-3"
                   >

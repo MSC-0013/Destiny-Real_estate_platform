@@ -242,9 +242,9 @@ const LandlordDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {landlordProperties.slice(0, 6).map(property => (
                   <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <img 
-                      src={property.images[0]} 
-                      alt={property.title} 
+                    <img
+                      src={property.images[0]}
+                      alt={property.title}
                       className="w-full h-40 object-cover"
                     />
                     <CardContent className="p-4">
@@ -258,6 +258,13 @@ const LandlordDashboard = () => {
                           {property.available ? 'Available' : 'Unavailable'}
                         </Badge>
                       </div>
+
+                      <Button asChild variant="outline" className="w-full mt-2">
+                        <Link to={`/edit-property/${property.id}`}>
+                          Edit Property
+                        </Link>
+                      </Button>
+
                     </CardContent>
                   </Card>
                 ))}

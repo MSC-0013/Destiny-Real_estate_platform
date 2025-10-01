@@ -129,6 +129,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
   };
 
+  // Update an existing property
   const updateProperty = (id: string, updates: Partial<Property>) => {
     const updatedProperties = properties.map(property =>
       property.id === id ? { ...property, ...updates } : property
@@ -136,6 +137,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setProperties(updatedProperties);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
   };
+
 
   const deleteProperty = (id: string) => {
     const updatedProperties = properties.filter(property => property.id !== id);
@@ -154,7 +156,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
       if (filters.search && !property.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !property.location.toLowerCase().includes(filters.search.toLowerCase())) {
+        !property.location.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
       if (filters.location && property.location !== filters.location) {

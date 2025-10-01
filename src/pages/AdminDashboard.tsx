@@ -11,10 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { ConstructionPdf } from '@/components/analytics/Constructionpdf';
 import { generateRepairPDF } from "@/components/analytics/Reapairform";
+import { OrderPdf } from '@/components/analytics/downloadOrderPDF';
+import AnalyticsTab from '@/components/analytics/AdminAnalyics';
+
 
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, getAllUsers, updateProfile, logout } = useAuth();
   const { properties } = useProperty();
   const { orders } = useOrder();
   const {
@@ -81,6 +84,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
+            <AnalyticsTab />
             {/* Analytics content */}
           </TabsContent>
 
@@ -147,18 +151,16 @@ const AdminDashboard = () => {
 
         {activeTab === 'constructionRequests' && (
           <div className="p-6 space-y-6">
-            {/* Header with count */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold text-gray-800 animate-fadeIn">
-                Construction Requests
-              </h2>
-              <span className="text-gray-600 font-medium">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">🏗 Construction Requests</h2>
+              <span className="text-gray-700 font-semibold text-lg bg-gray-200 px-3 py-1 rounded-full shadow">
                 Total: {constructionRequests.length}
               </span>
             </div>
 
             {constructionRequests.length > 0 ? (
-              constructionRequests.map(req => {
+              constructionRequests.map((req) => {
                 const {
                   id,
                   title,
@@ -180,125 +182,130 @@ const AdminDashboard = () => {
                 } = req;
 
                 return (
-                  <motion.div
-                    key={id}
-                    initial="hidden"
-                    animate="visible"
-                    variants={cardVariants}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Card className="shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 rounded-xl">
-                      <CardContent className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0 md:space-x-6">
+                  <Card key={id} className="border border-gray-300 rounded-xl shadow-sm bg-white">
+                    <CardContent className="p-6 flex flex-col space-y-6">
 
-                        {/* Left side: Request details */}
-                        <div className="flex-1 space-y-6">
-
-                          {/* Title */}
-                          <p className="text-2xl md:text-3xl font-bold text-gray-900">{title}</p>
-
-                          {/* Personal Summary */}
-                          <div className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-800 mb-2">👤 Personal Summary</h3>
-                            <div className="space-y-1 text-sm text-gray-700">
-                              <p><span className="font-medium">Full Name:</span> {clientName}</p>
-                              <p><span className="font-medium">Email:</span> {email}</p>
-                              <p><span className="font-medium">Phone:</span> {phone}</p>
-                            </div>
-                          </div>
-
-                          {/* Project Details */}
-                          <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-800 mb-2">🏗 Project Details</h3>
-                            <div className="space-y-1 text-sm text-gray-700">
-                              <p><span className="font-medium">Type:</span> {projectType}</p>
-                              <p><span className="font-medium">Location:</span> {location}</p>
-                              <p><span className="font-medium">Area:</span> {area} sq. ft.</p>
-                              <p><span className="font-medium">Bedrooms:</span> {bedrooms}</p>
-                              <p><span className="font-medium">Bathrooms:</span> {bathrooms}</p>
-                              <p><span className="font-medium">Floors:</span> {floors}</p>
-                            </div>
-                          </div>
-
-                          {/* Budget & Timeline */}
-                          <div className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-800 mb-2">💰 Budget & Timeline</h3>
-                            <div className="space-y-1 text-sm text-gray-700">
-                              <p><span className="font-medium">Budget:</span> {budget}</p>
-                              <p><span className="font-medium">Timeline:</span> {timeline}</p>
-                            </div>
-                          </div>
-
-                          {/* Special Requirements */}
+                      {/* Request Details Table */}
+                      <table className="min-w-full border-collapse table-auto text-sm">
+                        <tbody className="divide-y divide-gray-300">
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
+                            <td className="px-4 py-2 text-gray-800">{title}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">👤 Client Name</td>
+                            <td className="px-4 py-2 text-gray-800">{clientName}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">✉ Email</td>
+                            <td className="px-4 py-2 text-gray-800">{email}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">📞 Phone</td>
+                            <td className="px-4 py-2 text-gray-800">{phone}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏗 Project Type</td>
+                            <td className="px-4 py-2 text-gray-800">{projectType}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">📍 Location</td>
+                            <td className="px-4 py-2 text-gray-800">{location}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">📐 Area</td>
+                            <td className="px-4 py-2 text-gray-800">{area} sq.ft.</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🛏 Bedrooms</td>
+                            <td className="px-4 py-2 text-gray-800">{bedrooms}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🛁 Bathrooms</td>
+                            <td className="px-4 py-2 text-gray-800">{bathrooms}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏠 Floors</td>
+                            <td className="px-4 py-2 text-gray-800">{floors}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">💰 Budget</td>
+                            <td className="px-4 py-2 text-gray-800">{budget}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">⏱ Timeline</td>
+                            <td className="px-4 py-2 text-gray-800">{timeline}</td>
+                          </tr>
                           {specialRequirements && (
-                            <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                              <h3 className="font-bold text-gray-800 mb-2">⭐ Special Requirements</h3>
-                              <p className="text-sm text-gray-700">{specialRequirements}</p>
-                            </div>
+                            <tr>
+                              <td className="px-4 py-2 font-semibold">⭐ Special Requirements</td>
+                              <td className="px-4 py-2 text-gray-800">{specialRequirements}</td>
+                            </tr>
                           )}
-
-                          {/* Project Description */}
                           {description && (
-                            <div className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                              <h3 className="font-bold text-gray-800 mb-2">📝 Project Description</h3>
-                              <p className="text-sm text-gray-700">{description}</p>
-                            </div>
+                            <tr>
+                              <td className="px-4 py-2 font-semibold">📝 Description</td>
+                              <td className="px-4 py-2 text-gray-800">{description}</td>
+                            </tr>
                           )}
-
-                          {/* Documents */}
                           {documents && (
-                            <div className="mt-2">
-                              <a
-                                href={documents}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all"
-                              >
-                                📎 Download Documents
-                              </a>
-                            </div>
+                            <tr>
+                              <td className="px-4 py-2 font-semibold">📎 Documents</td>
+                              <td className="px-4 py-2">
+                                <a
+                                  href={documents}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 font-semibold underline"
+                                >
+                                  Download
+                                </a>
+                              </td>
+                            </tr>
                           )}
-                        </div>
+                        </tbody>
+                      </table>
 
-                        {/* Right side: Action buttons */}
-                        <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-3 mt-3 md:mt-0">
-
-                          {status === 'pending' ? (
-                            <>
-                              <Button
-                                onClick={() => approveConstructionRequest(id)}
-                                variant="outline"
-                                className="text-green-600 hover:bg-green-50 transition-all"
-                              >
-                                <Check className="w-4 h-4 mr-1" /> Approve
-                              </Button>
-                              <Button
-                                onClick={() => rejectConstructionRequest(id)}
-                                variant="outline"
-                                className="text-red-600 hover:bg-red-50 transition-all"
-                              >
-                                <X className="w-4 h-4 mr-1" /> Reject
-                              </Button>
-                            </>
-                          ) : (
-                            <span
-                              className={`font-bold px-4 py-2 rounded-lg text-sm ${status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      {/* Bottom Actions */}
+                      <div className="flex flex-wrap justify-end gap-3 mt-4">
+                        {status === 'pending' ? (
+                          <>
+                            <Button
+                              onClick={() => approveConstructionRequest(id)}
+                              variant="outline"
+                              className="text-black border-black"
                             >
-                              {status === 'approved' ? 'Approved' : 'Rejected'}
-                            </span>
-                          )}
-
-                          {/* PDF Generation Button */}
-                          <Button
-                            onClick={() => ConstructionPdf(req, 'Construction')}
-                            variant="outline"
-                            className="text-blue-600 hover:bg-blue-50 transition-all"
+                              <Check className="w-4 h-4 mr-1" /> Approve
+                            </Button>
+                            <Button
+                              onClick={() => rejectConstructionRequest(id)}
+                              variant="outline"
+                              className="text-black border-black"
+                            >
+                              <X className="w-4 h-4 mr-1" /> Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <span
+                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === 'approved'
+                                ? 'bg-gray-200 text-black'
+                                : 'bg-gray-300 text-black'
+                              }`}
                           >
-                            📄 Generate PDF
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                            {status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+                          </span>
+                        )}
+
+                        <Button
+                          onClick={() => ConstructionPdf(req, 'Construction')}
+                          variant="outline"
+                          className="text-black border-black"
+                        >
+                          📄 Generate PDF
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })
             ) : (
@@ -309,18 +316,16 @@ const AdminDashboard = () => {
 
         {activeTab === 'repairRequests' && (
           <div className="p-6 space-y-6">
-            {/* Header with count */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold text-gray-800 animate-fadeIn">
-                Repair Requests
-              </h2>
-              <span className="text-gray-600 font-medium">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">🔧 Repair Requests</h2>
+              <span className="text-gray-700 font-semibold text-lg bg-gray-200 px-3 py-1 rounded-full shadow">
                 Total: {repairRequests.length}
               </span>
             </div>
 
             {repairRequests.length > 0 ? (
-              repairRequests.map(req => {
+              repairRequests.map((req) => {
                 const {
                   id,
                   title,
@@ -339,102 +344,117 @@ const AdminDashboard = () => {
                 } = req;
 
                 return (
-                  <motion.div
+                  <Card
                     key={id}
-                    initial="hidden"
-                    animate="visible"
-                    variants={cardVariants}
-                    transition={{ duration: 0.4 }}
+                    className="border border-gray-300 rounded-xl shadow-sm bg-white"
                   >
-                    <Card className="shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 rounded-xl">
-                      <CardContent className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0 md:space-x-6">
+                    <CardContent className="p-6 flex flex-col space-y-6">
 
-                        {/* Left side: Request details */}
-                        <div className="flex-1 space-y-6">
-
-                          {/* Title */}
-                          <p className="text-2xl md:text-3xl font-bold text-gray-900">Title: {title}</p>
-
-                          {/* Personal Summary */}
-                          <div className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-800 mb-2">👤 Personal Summary</h3>
-                            <div className="space-y-1 text-sm text-gray-700">
-                              <p><span className="font-medium">Full Name:</span> {clientName}</p>
-                              <p><span className="font-medium">Email:</span> {email}</p>
-                              <p><span className="font-medium">Phone:</span> {phone}</p>
-                              <p><span className="font-medium">City/State:</span> {city}</p>
-                            </div>
-                          </div>
-
-                          {/* Repair Details */}
-                          <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-800 mb-2">🔧 Repair Details</h3>
-                            <div className="space-y-1 text-sm text-gray-700">
-                              <p><span className="font-medium">Repair Title:</span> {repairTitle}</p>
-                              <p><span className="font-medium">Description:</span> {description}</p>
-                              <p><span className="font-medium">Address:</span> {address}</p>
-                              <p><span className="font-medium">Estimated Cost:</span> {estimatedCost || 'N/A'}</p>
-                              <p><span className="font-medium">Project Type:</span> {projectType}</p>
-                              <p><span className="font-medium">Urgency:</span> {urgency}</p>
-                            </div>
-                          </div>
-
-                          {/* Documents */}
+                      {/* Request Details Table */}
+                      <table className="w-full table-auto text-sm border-collapse">
+                        <tbody className="divide-y divide-gray-300">
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
+                            <td className="px-4 py-2">{title}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">👤 Client Name</td>
+                            <td className="px-4 py-2">{clientName}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">✉ Email</td>
+                            <td className="px-4 py-2">{email}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">📞 Phone</td>
+                            <td className="px-4 py-2">{phone}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏙 City/State</td>
+                            <td className="px-4 py-2">{city}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🔧 Repair Title</td>
+                            <td className="px-4 py-2">{repairTitle}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">📝 Description</td>
+                            <td className="px-4 py-2">{description}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏠 Address</td>
+                            <td className="px-4 py-2">{address}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">💰 Estimated Cost</td>
+                            <td className="px-4 py-2">{estimatedCost || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">🏗 Project Type</td>
+                            <td className="px-4 py-2">{projectType}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 font-semibold">⚡ Urgency</td>
+                            <td className="px-4 py-2">{urgency}</td>
+                          </tr>
                           {documents && (
-                            <div className="mt-2">
-                              <a
-                                href={documents}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all"
-                              >
-                                📎 Download Documents
-                              </a>
-                            </div>
+                            <tr>
+                              <td className="px-4 py-2 font-semibold">📎 Documents</td>
+                              <td className="px-4 py-2">
+                                <a
+                                  href={documents}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-900 font-medium underline"
+                                >
+                                  Download
+                                </a>
+                              </td>
+                            </tr>
                           )}
+                        </tbody>
+                      </table>
 
-                        </div>
-
-                        {/* Right side: Action buttons */}
-                        <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-3 mt-3 md:mt-0">
-                          {status === 'pending' ? (
-                            <>
-                              <Button
-                                onClick={() => approveRepairRequest(id)}
-                                variant="outline"
-                                className="text-green-600 hover:bg-green-50 transition-all"
-                              >
-                                <Check className="w-4 h-4 mr-1" /> Approve
-                              </Button>
-                              <Button
-                                onClick={() => rejectRepairRequest(id)}
-                                variant="outline"
-                                className="text-red-600 hover:bg-red-50 transition-all"
-                              >
-                                <X className="w-4 h-4 mr-1" /> Reject
-                              </Button>
-                            </>
-                          ) : (
-                            <span
-                              className={`font-bold px-4 py-2 rounded-lg text-sm ${status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      {/* Bottom Actions: PDF & Approve/Reject */}
+                      <div className="flex justify-end gap-3 mt-4">
+                        {status === 'pending' ? (
+                          <>
+                            <Button
+                              onClick={() => approveRepairRequest(id)}
+                              variant="outline"
+                              className="text-black border-black"
                             >
-                              {status === 'approved' ? 'Approved' : 'Rejected'}
-                            </span>
-                          )}
-
-                          {/* PDF Generation Button */}
-                          <Button
-                            onClick={() => generateRepairPDF(req)}
-                            variant="outline"
-                            className="text-blue-600 hover:bg-blue-50 transition-all"
+                              <Check className="w-4 h-4 mr-1" /> Approve
+                            </Button>
+                            <Button
+                              onClick={() => rejectRepairRequest(id)}
+                              variant="outline"
+                              className="text-black border-black"
+                            >
+                              <X className="w-4 h-4 mr-1" /> Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <span
+                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === 'approved'
+                              ? 'bg-gray-200 text-black'
+                              : 'bg-gray-300 text-black'
+                              }`}
                           >
-                            📄 Generate PDF
-                          </Button>
-                        </div>
+                            {status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+                          </span>
+                        )}
 
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                        <Button
+                          onClick={() => generateRepairPDF(req)}
+                          variant="outline"
+                          className="text-black border-black"
+                        >
+                          📄 Generate PDF
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })
             ) : (
@@ -443,21 +463,70 @@ const AdminDashboard = () => {
           </div>
         )}
 
-
-
-        {activeTab === 'analytics' && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Analytics</h2>
-            <p className="text-muted-foreground">Charts and statistics go here</p>
-          </div>
-        )}
-
         {activeTab === 'users' && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Users</h2>
-            <p className="text-muted-foreground">Details of all users go here</p>
+          <div className="p-4 space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Users Management</h2>
+              <span className="text-gray-600 font-medium">
+                Total Users: {getAllUsers().length}
+              </span>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              View, edit, and manage all registered users.
+            </p>
+
+            {/* Users Table */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border-collapse border border-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Name</th>
+                    <th className="border px-4 py-2 text-left">Email</th>
+                    <th className="border px-4 py-2 text-left">Role</th>
+                    <th className="border px-4 py-2 text-left">Phone</th>
+                    <th className="border px-4 py-2 text-left">Verified</th>
+                    <th className="border px-4 py-2 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {getAllUsers().map((u) => (
+                    <tr key={u.id} className="hover:bg-gray-50">
+                      <td className="border px-4 py-2">{u.name}</td>
+                      <td className="border px-4 py-2">{u.email}</td>
+                      <td className="border px-4 py-2 capitalize">{u.role}</td>
+                      <td className="border px-4 py-2">{u.phone || '-'}</td>
+                      <td className="border px-4 py-2">{u.verified ? '✅' : '❌'}</td>
+                      <td className="border px-4 py-2 space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const newName = prompt('Enter new name', u.name);
+                            if (newName) updateUser(u.id, { name: newName });
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete ${u.name}?`)) {
+                              deleteUser(u.id);
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
+
 
         {activeTab === 'workers' && (
           <div className="p-4">
