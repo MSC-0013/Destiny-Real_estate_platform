@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Heart, User, LogOut, Plus, Search } from 'lucide-react';
+import { Home, Heart, User, LogOut, Plus, Search, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
@@ -43,30 +43,38 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-luxury" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-luxury bg-clip-text text-transparent">
-              Destiny
-            </span>
-          </Link>
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2">
+          <img
+            src="/Destiny Homes Logo Design.png"
+            alt="Destiny Homes"
+            className="h-8 w-8 object-contain"
+          />
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-luxury bg-clip-text text-transparent">
+            Destiny
+          </span>
+        </Link>
 
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/properties" className="text-sm font-medium text-foreground/80 hover:text-foreground">
-              Properties
-            </Link>
-            <Link to="/properties?category=rent" className="text-sm font-medium text-foreground/80 hover:text-foreground">
-              Rentals
-            </Link>
-            <Link to="/properties?category=sale" className="text-sm font-medium text-foreground/80 hover:text-foreground">
-              Buy
-            </Link>
-            <Link to="/construction" className="text-sm font-medium text-foreground/80 hover:text-foreground">
-              Construction
-            </Link>
-          </div>
+        {/* Centered links */}
+        <div className="hidden md:flex items-center space-x-6">
+          <Link to="/properties" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            Properties
+          </Link>
+          <Link to="/properties?category=rent" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            Rentals
+          </Link>
+          <Link to="/properties?category=sale" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            Buy
+          </Link>
+          <Link to="/construction" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            Construction
+          </Link>
+          <Link to="/help" className="text-sm font-medium text-foreground/80 hover:text-foreground flex items-center">
+            <HelpCircle className="mr-1 h-4 w-4" /> Help
+          </Link>
         </div>
 
+        {/* Right side buttons */}
         <div className="flex items-center space-x-4">
           {user ? (
             <>
@@ -125,9 +133,7 @@ const Navbar = () => {
               <Button variant="ghost" onClick={() => navigate('/login')}>
                 Login
               </Button>
-              <Button onClick={() => navigate('/signup')}>
-                Sign Up
-              </Button>
+              <Button onClick={() => navigate('/signup')}>Sign Up</Button>
             </div>
           )}
         </div>
