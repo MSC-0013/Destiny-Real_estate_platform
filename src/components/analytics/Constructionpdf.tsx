@@ -1,84 +1,136 @@
 import { jsPDF } from "jspdf";
 
-const ConstructionPdf = (req, type = 'Construction') => {
-  const doc = new jsPDF('p', 'pt', 'a4');
-  let y = 40;
+const ConstructionPdf = (req, type = "Construction") => {
+  const doc = new jsPDF("p", "pt", "a4");
+  const pageWidth = doc.internal.pageSize.getWidth();
   const left = 40;
-  const pageWidth = 520; // approximate width for wrapping
+  const col1Width = 120; // Label column width
+  const col2Width = pageWidth - left * 2 - col1Width - 20; // Value column width
+  let y = 80;
 
-  // Helper to print field if exists
-  const addField = (label, value, fontSize = 12) => {
-    if (value) {
-      doc.setFontSize(fontSize);
-      const lines = doc.splitTextToSize(`${label}: ${value}`, pageWidth);
-      doc.text(lines, left, y);
-      y += lines.length * 14;
-    }
+  // Clean safe text
+  const cleanText = (txt) =>
+    txt ? String(txt).replace(/[^\x20-\x7E\n]/g, "") : "N/A";
+
+  // Section Header
+  const drawSection = (title, color = [52, 152, 219]) => {
+    doc.setFillColor(...color);
+    doc.rect(left, y, pageWidth - 2 * left, 28, "F");
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(cleanText(title), left + 10, y + 18);
+    y += 40;
+    doc.setTextColor(0, 0, 0);
   };
 
-  // Title
+  // Add table row
+  const addRow = (label, value) => {
+    label = cleanText(label);
+    value = cleanText(value);
+
+    doc.setFontSize(11);
+
+    // Label column
+    doc.setFont("helvetica", "bold");
+    doc.text(`${label}:`, left + 10, y);
+
+    // Value column (wrapped)
+    doc.setFont("helvetica", "normal");
+    const text = doc.splitTextToSize(value, col2Width);
+    doc.text(text, left + col1Width + 20, y);
+
+    // Increase Y correctly based on wrapped text height
+    y += text.length * 14 + 6; // row spacing
+  };
+
+  // Title Banner
+  doc.setFillColor(41, 128, 185);
+  doc.rect(0, 0, pageWidth, 60, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text(`${type} Request Details`, left, y);
-  y += 30;
+  doc.text(
+    cleanText(`${type} Request Report`),
+    pageWidth / 2,
+    35,
+    { align: "center" }
+  );
+  doc.setTextColor(0, 0, 0);
 
-  // Personal Info
-  doc.setFontSize(16);
-  doc.text("Personal Information", left, y); y += 20;
-  addField("Full Name", req.clientName);
-  addField("Email", req.email);
-  addField("Phone", req.phone);
-  if (type === 'Repair') addField("City/State", req.city);
-  y += 10;
+  // --- Personal Info ---
+  drawSection("👤 Personal Information", [52, 152, 219]);
+  addRow("Full Name", req.clientName);
+  addRow("Email", req.email);
+  addRow("Phone", req.phone);
+  if (type === "Repair") addRow("City/State", req.city);
 
-  // Project / Repair Details
-  doc.setFontSize(16);
-  doc.text(type === 'Construction' ? "Project Details" : "Repair Details", left, y);
-  y += 20;
-
-  if (type === 'Construction') {
-    addField("Type", req.projectType);
-    addField("Location", req.location);
-    addField("Area", req.area ? `${req.area} sq. ft.` : '');
-    addField("Bedrooms", req.bedrooms);
-    addField("Bathrooms", req.bathrooms);
-    addField("Floors", req.floors);
+  // --- Project / Repair Details ---
+  drawSection(type === "Construction" ? "🏗 Project Details" : "🛠 Repair Details", [46, 204, 113]);
+  if (type === "Construction") {
+    addRow("Type", req.projectType);
+    addRow("Location", req.location);
+    addRow("Area", req.area ? `${req.area} sq. ft.` : "");
+    addRow("Bedrooms", req.bedrooms);
+    addRow("Bathrooms", req.bathrooms);
+    addRow("Floors", req.floors);
   } else {
-    addField("Repair Title", req.repairTitle);
-    addField("Description", req.description);
-    addField("Address", req.address);
-    addField("Estimated Cost", req.estimatedCost || 'N/A');
-    addField("Project Type", req.projectType);
-    addField("Urgency", req.urgency);
-  }
-  y += 10;
-
-  // Budget & Timeline (construction)
-  if (type === 'Construction') {
-    doc.setFontSize(16);
-    doc.text("Budget & Timeline", left, y); y += 20;
-    addField("Budget", req.budget);
-    addField("Timeline", req.timeline);
-    y += 10;
+    addRow("Repair Title", req.repairTitle);
+    addRow("Description", req.description);
+    addRow("Address", req.address);
+    addRow("Estimated Cost", req.estimatedCost || "N/A");
+    addRow("Project Type", req.projectType);
+    addRow("Urgency", req.urgency);
   }
 
-  // Special Requirements (construction)
-  if (type === 'Construction' && req.specialRequirements) {
-    doc.setFontSize(16);
-    doc.text("Special Requirements", left, y); y += 20;
-    addField("Details", req.specialRequirements);
-    y += 10;
+  // --- Budget & Timeline ---
+  if (type === "Construction") {
+    drawSection("💰 Budget & Timeline", [230, 126, 34]);
+    addRow("Budget", req.budget);
+    addRow("Timeline", req.timeline);
   }
 
-  // Project / Repair Description
+  // --- Special Requirements ---
+  if (type === "Construction" && req.specialRequirements) {
+    drawSection("📌 Special Requirements", [155, 89, 182]);
+    addRow("Details", req.specialRequirements);
+  }
+
+  // --- Description ---
   if (req.description) {
-    doc.setFontSize(16);
-    doc.text("Description", left, y); y += 20;
-    addField("Details", req.description);
-    y += 10;
+    drawSection("📝 Description", [231, 76, 60]);
+    addRow("Details", req.description);
   }
 
-  // Save PDF
-  const fileName = `${req.clientName ? req.clientName.replace(/\s/g, "_") : 'request'}_${type}Request.pdf`;
+  // --- Location Details ---
+  if (req.city || req.address) {
+    drawSection("📍 Location Details", [39, 174, 96]);
+    addRow("City/Area", req.city);
+    addRow("Full Address", req.address);
+  }
+
+  // --- Status ---
+  drawSection("✅ Status", [52, 73, 94]);
+  addRow("Current Status", req.status || "Pending");
+
+  // Footer
+  const footerY = doc.internal.pageSize.getHeight() - 40;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(left, footerY, pageWidth - left, footerY);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(100, 100, 100);
+  doc.text(
+    cleanText("Generated by Admin System • Confidential"),
+    pageWidth / 2,
+    footerY + 20,
+    { align: "center" }
+  );
+
+  // Save
+  const fileName = `${
+    req.clientName ? cleanText(req.clientName).replace(/\s/g, "_") : "request"
+  }_${type}Request.pdf`;
   doc.save(fileName);
 };
 
