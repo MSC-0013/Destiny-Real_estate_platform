@@ -15,7 +15,7 @@ const SellerDashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'seller') {
+  if (user.role !== 'landlord') {
     return <Navigate to="/" replace />;
   }
 

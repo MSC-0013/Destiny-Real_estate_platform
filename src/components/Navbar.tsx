@@ -25,7 +25,7 @@ const Navbar = () => {
     switch (user.role) {
       case 'admin':
         return '/admin-dashboard';
-      case 'seller':
+      case 'landlord':
         return '/seller-dashboard';
       case 'tenant':
         return '/tenant-dashboard';
@@ -79,7 +79,7 @@ const Navbar = () => {
                 <Heart className="h-5 w-5" />
               </Button>
 
-              {(user.role === 'seller' || user.role === 'admin') && (
+              {(user.role === 'landlord' || user.role === 'admin') && (
                 <Button
                   variant="ghost"
                   size="icon"

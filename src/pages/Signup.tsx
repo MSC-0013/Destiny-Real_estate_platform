@@ -23,7 +23,7 @@ const Signup = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'tenant' as 'tenant' | 'seller' | 'admin',
+    role: 'tenant' as 'tenant' | 'landlord' | 'admin' | 'contractor' | 'worker' | 'designer',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +134,10 @@ const Signup = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tenant">Tenant (Looking to rent)</SelectItem>
-                  <SelectItem value="seller">Seller/Landlord (Have properties)</SelectItem>
+                  <SelectItem value="landlord">Landlord (Have properties)</SelectItem>
+                  <SelectItem value="contractor">Contractor</SelectItem>
+                  <SelectItem value="worker">Worker</SelectItem>
+                  <SelectItem value="designer">Designer</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

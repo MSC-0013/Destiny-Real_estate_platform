@@ -13,6 +13,8 @@ import Chatbot from "@/components/Chatbot";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import LandlordDashboard from './pages/LandlordDashboard';
+import WorkerDesignerContractorDashboard from './pages/WorkerDesignerContractorDashboard';
 import NotFound from "./pages/NotFound";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
@@ -21,11 +23,7 @@ import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import TenantDashboard from "./pages/TenantDashboard";
-import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import ContractorDashboard from "./pages/ContractorDashboard";
-import WorkerDashboard from "./pages/WorkerDashboard";
-import DesignerDashboard from "./pages/DesignerDashboard";
 import Construction from "./pages/Construction";
 import ConstructionDetails from "./pages/ConstructionDetails";
 import ConstructionRentals from "./pages/ConstructionRentals";
@@ -60,11 +58,11 @@ const App = () => (
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orderspage" element={<Orders />} />
                     <Route path="/tenant-dashboard" element={<TenantDashboard />} />
-                    <Route path="/seller-dashboard" element={<SellerDashboard />} />
+                    <Route path="/seller-dashboard" element={<LandlordDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                    <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
-                    <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-                    <Route path="/designer-dashboard" element={<DesignerDashboard />} />
+                    <Route path="/contractor-dashboard" element={<WorkerDesignerContractorDashboard />} />
+                    <Route path="/worker-dashboard" element={<WorkerDesignerContractorDashboard />} />
+                    <Route path="/designer-dashboard" element={<WorkerDesignerContractorDashboard />} />
               <Route path="/construction" element={<Construction />} />
               <Route path="/construction/rentals" element={<ConstructionRentals />} />
               <Route path="/construction/sales" element={<ConstructionSales />} />

@@ -5,13 +5,24 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'tenant' | 'seller' | 'admin' | 'contractor' | 'worker' | 'designer';
+  role: 'tenant' | 'landlord' | 'admin' | 'contractor' | 'worker' | 'designer';
   avatar?: string;
   address?: string;
   dateOfBirth?: string;
   occupation?: string;
   bio?: string;
   profileImage?: string;
+  verified?: boolean;
+  documents?: string[];
+  portfolio?: {
+    title: string;
+    description: string;
+    images: string[];
+    completedDate?: string;
+  }[];
+  earnings?: number;
+  rating?: number;
+  completedJobs?: number;
 }
 
 interface AuthContextType {
@@ -38,11 +49,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    const loadUser = async () => {
+      // Try to get from localStorage first
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+        setIsLoading(false);
+        return;
+      }
+
+      // Try IndexedDB for offline persistence
+      try {
+        const { getSession } = await import('@/utils/indexedDB');
+        const session = await getSession();
+        if (session && session.user) {
+          setUser(session.user);
+        }
+      } catch (error) {
+        console.error('Failed to load session from IndexedDB:', error);
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadUser();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -53,6 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { password: _, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
       localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+      
+      // Save to IndexedDB for offline support
+      try {
+        const { saveSession } = await import('@/utils/indexedDB');
+        await saveSession({ user: userWithoutPassword });
+      } catch (error) {
+        console.error('Failed to save session to IndexedDB:', error);
+      }
+      
       return true;
     }
     return false;
@@ -80,9 +119,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     localStorage.removeItem('currentUser');
+    
+    // Clear IndexedDB session
+    try {
+      const { clearSession } = await import('@/utils/indexedDB');
+      await clearSession();
+    } catch (error) {
+      console.error('Failed to clear session from IndexedDB:', error);
+    }
   };
 
   const updateProfile = (userData: Partial<User>) => {

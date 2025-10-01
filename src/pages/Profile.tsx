@@ -239,7 +239,7 @@ const Profile = () => {
                       <Label>Role</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(value: 'tenant' | 'seller' | 'admin' | 'contractor' | 'designer' | 'worker') => 
+                        onValueChange={(value: 'tenant' | 'landlord' | 'admin' | 'contractor' | 'designer' | 'worker') => 
                           setFormData(prev => ({ ...prev, role: value }))}
                         disabled={!isEditing}
                       >
@@ -248,7 +248,7 @@ const Profile = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="tenant">Tenant</SelectItem>
-                          <SelectItem value="seller">Seller</SelectItem>
+                          <SelectItem value="landlord">Landlord</SelectItem>
                           <SelectItem value="contractor">Contractor</SelectItem>
                           <SelectItem value="designer">Designer</SelectItem>
                           <SelectItem value="worker">Worker</SelectItem>
@@ -342,19 +342,19 @@ const Profile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-black mb-2">
-                        {user.role === 'tenant' ? '5' : user.role === 'seller' ? '12' : '8'}
+                        {user.role === 'tenant' ? '5' : user.role === 'landlord' ? '12' : '8'}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {user.role === 'tenant' ? 'Properties Viewed' : user.role === 'seller' ? 'Properties Listed' : 'Projects Managed'}
+                        {user.role === 'tenant' ? 'Properties Viewed' : user.role === 'landlord' ? 'Properties Listed' : 'Projects Managed'}
                       </div>
                     </div>
                     
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-black mb-2">
-                        {user.role === 'tenant' ? '2' : user.role === 'seller' ? '8' : '15'}
+                        {user.role === 'tenant' ? '2' : user.role === 'landlord' ? '8' : '15'}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {user.role === 'tenant' ? 'Bookmarks' : user.role === 'seller' ? 'Sold Properties' : 'Completed Projects'}
+                        {user.role === 'tenant' ? 'Bookmarks' : user.role === 'landlord' ? 'Sold Properties' : 'Completed Projects'}
                       </div>
                     </div>
                     
