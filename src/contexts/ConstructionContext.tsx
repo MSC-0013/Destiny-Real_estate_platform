@@ -87,6 +87,9 @@ export interface RepairRequest {
   clientName: string;
   location: string;
   address: string;
+  projectType: 'residential' | 'commercial' | 'renovation' | 'interior'; // ADD THIS
+  urgency: 'low' | 'medium' | 'high'; // ADD THIS
+  attachments?: File[];           // ADD THIS
   estimatedCost?: number;
   status: 'pending' | 'approved' | 'in-progress' | 'completed' | 'rejected';
   createdAt: string;
@@ -109,6 +112,13 @@ interface ConstructionContextType {
   approveRequest: (projectId: string, requestId: string, approve: boolean) => void;
   repairRequests: RepairRequest[];
   addRepairRequest: (request: Omit<RepairRequest, 'id' | 'createdAt' | 'status'>) => void;
+
+  constructionRequests: ApprovalRequest[];
+  approveRepairRequest: (id: string) => void;
+  rejectRepairRequest: (id: string) => void;
+  approveConstructionRequest: (id: string) => void;
+  rejectConstructionRequest: (id: string) => void;
+
 }
 
 // -------------------- Context --------------------
@@ -168,6 +178,8 @@ const dbPromise = openDB<ConstructionDB>('construction-db', 1, {
 export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<ConstructionProject[]>([]);
   const [repairRequests, setRepairRequests] = useState<RepairRequest[]>([]);
+  const [constructionRequests, setConstructionRequests] = useState<ApprovalRequest[]>([]);
+
 
   // Load data from LocalStorage / IndexedDB
   useEffect(() => {
@@ -191,6 +203,9 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Repair Requests
       const savedRepairRequests = localStorage.getItem('repairRequests');
       if (savedRepairRequests) setRepairRequests(JSON.parse(savedRepairRequests));
+      // Construction Requests  <-- ADD THIS
+      const savedConstructionRequests = localStorage.getItem('constructionRequests');
+      if (savedConstructionRequests) setConstructionRequests(JSON.parse(savedConstructionRequests));
     };
     loadData();
   }, []);
@@ -210,6 +225,13 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     localStorage.setItem('repairRequests', JSON.stringify(requests));
     // Optional: store in IndexedDB if needed
   };
+  const saveConstructionRequests = (requests: ApprovalRequest[]) => {
+    setConstructionRequests(requests); // THIS triggers re-render
+    localStorage.setItem("constructionRequests", JSON.stringify(requests));
+  };
+  
+
+
 
   // -------------------- CRUD for Projects --------------------
   const addProject = (projectData: Omit<ConstructionProject, 'id' | 'createdAt' | 'actualCost' | 'tasks' | 'materials' | 'payments' | 'requests'>) => {
@@ -287,6 +309,32 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const newRequest: RepairRequest = { ...requestData, id: Date.now().toString(), createdAt: new Date().toISOString(), status: 'pending' };
     saveRepairRequests([...repairRequests, newRequest]);
   };
+  // -------------------- Approve / Reject Repair Requests --------------------
+  const approveRepairRequest = (id: string) => {
+    const updated = repairRequests.map(r => (r.id === id ? { ...r, status: 'approved' } : r));
+    saveRepairRequests(updated);
+  };
+
+  const rejectRepairRequest = (id: string) => {
+    const updated = repairRequests.map(r => (r.id === id ? { ...r, status: 'rejected' } : r));
+    saveRepairRequests(updated);
+  };
+
+  // -------------------- Approve / Reject Construction Requests --------------------
+  const approveConstructionRequest = (id: string) => {
+    const updated = constructionRequests.map(r =>
+      r.id === id ? { ...r, status: "approved" } : r
+    );
+    saveConstructionRequests(updated);
+  };
+
+  const rejectConstructionRequest = (id: string) => {
+    const updated = constructionRequests.map(r =>
+      r.id === id ? { ...r, status: "rejected" } : r
+    );
+    saveConstructionRequests(updated);
+  };
+
 
   // -------------------- Provider --------------------
   return (
@@ -306,8 +354,14 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         approveRequest,
         repairRequests,
         addRepairRequest,
+        constructionRequests,
+        approveRepairRequest,
+        rejectRepairRequest,
+        approveConstructionRequest,
+        rejectConstructionRequest,
       }}
     >
+
       {children}
     </ConstructionContext.Provider>
   );

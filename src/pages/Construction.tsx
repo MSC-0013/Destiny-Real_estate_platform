@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ConstructionRequestForm from '@/components/ConstructionRequestForm';
-import RepairRequestForm from '@/contexts/RepairRequestForm';
+import RepairRequestForm from '@/components/RepairRequestForm';
 
 import {
   Building,
