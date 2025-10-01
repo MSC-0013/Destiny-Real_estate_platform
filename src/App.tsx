@@ -15,6 +15,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import LandlordDashboard from './pages/LandlordDashboard';
 import WorkerDesignerContractorDashboard from './pages/WorkerDesignerContractorDashboard';
+import ContractorDashboard from "./pages/ContractorDashboard";
+import WorkerDashboard from "./pages/WorkerDashboard";
+import DesignerDashboard from "./pages/DesignerDashboard";
 import NotFound from "./pages/NotFound";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
@@ -30,6 +33,7 @@ import ConstructionRentals from "./pages/ConstructionRentals";
 import ConstructionSales from "./pages/ConstructionSales";
 import Contract from "./pages/Contract";
 import Help from "./pages/Help";
+import SellerDashboard from "./pages/SellerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -58,11 +62,11 @@ const App = () => (
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orderspage" element={<Orders />} />
                     <Route path="/tenant-dashboard" element={<TenantDashboard />} />
-                    <Route path="/seller-dashboard" element={<LandlordDashboard />} />
+                    <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                    <Route path="/contractor-dashboard" element={<WorkerDesignerContractorDashboard />} />
-                    <Route path="/worker-dashboard" element={<WorkerDesignerContractorDashboard />} />
-                    <Route path="/designer-dashboard" element={<WorkerDesignerContractorDashboard />} />
+                    <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
+                    <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+                    <Route path="/designer-dashboard" element={<DesignerDashboard />} />
               <Route path="/construction" element={<Construction />} />
               <Route path="/construction/rentals" element={<ConstructionRentals />} />
               <Route path="/construction/sales" element={<ConstructionSales />} />

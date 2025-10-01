@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ConstructionRequestForm from '@/components/ConstructionRequestForm';
-import { 
-  Building, 
-  MapPin, 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import RepairRequestForm from '@/contexts/RepairRequestForm';
+
+import {
+  Building,
+  MapPin,
+  Users,
+  Calendar,
+  DollarSign,
   Search,
   Filter,
   Plus,
@@ -37,10 +39,10 @@ const Construction = () => {
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.location.toLowerCase().includes(searchTerm.toLowerCase());
+      project.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     const matchesType = typeFilter === 'all' || project.projectType === typeFilter;
-    
+
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -93,23 +95,19 @@ const Construction = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="projects" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="projects" className="text-lg py-3">
-              <Building className="mr-2 h-4 w-4" />
-              View Projects
-            </TabsTrigger>
-            <TabsTrigger value="request" className="text-lg py-3">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Request Construction
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="projects">View Projects</TabsTrigger>
+            <TabsTrigger value="request">Request Construction</TabsTrigger>
+            <TabsTrigger value="repair">Request Repair</TabsTrigger>
           </TabsList>
+
 
           {/* Projects Tab */}
           <TabsContent value="projects" className="space-y-8">
             {user?.role === 'admin' && (
               <div className="flex justify-center">
-                <Button 
-                  onClick={() => navigate('/add-construction')} 
+                <Button
+                  onClick={() => navigate('/add-construction')}
                   size="lg"
                   className="bg-black hover:bg-gray-800 text-white"
                 >
@@ -154,7 +152,7 @@ const Construction = () => {
                       className="pl-10"
                     />
                   </div>
-                  
+
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Status" />
@@ -197,8 +195,8 @@ const Construction = () => {
                   <Card key={project.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-0 shadow-lg">
                     <div className="relative">
                       {project.progressImages.length > 0 ? (
-                        <img 
-                          src={project.progressImages[0]} 
+                        <img
+                          src={project.progressImages[0]}
                           alt={project.title}
                           className="w-full h-48 object-cover rounded-t-lg"
                         />
@@ -258,8 +256,8 @@ const Construction = () => {
                       </div>
 
                       <div className="mt-6 flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="flex-1 bg-black hover:bg-gray-800"
                           onClick={() => navigate(`/construction/${project.id}`)}
                         >
@@ -281,7 +279,7 @@ const Construction = () => {
                   <HardHat className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No Construction Projects</h3>
                   <p className="text-muted-foreground mb-6">
-                    {user?.role === 'admin' 
+                    {user?.role === 'admin'
                       ? "Start building dreams by creating your first construction project."
                       : "No construction projects available at the moment."
                     }
@@ -336,13 +334,25 @@ const Construction = () => {
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Request Custom Construction</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Have a specific vision? Let our expert team bring your dream property to life. 
+                Have a specific vision? Let our expert team bring your dream property to life.
                 Fill out the form below and we'll get back to you within 24 hours.
               </p>
             </div>
-            
+
             <ConstructionRequestForm />
           </TabsContent>
+          <TabsContent value="repair" className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">Request Repair Service</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Need a repair? Fill out the form below and our team will handle it promptly.
+              </p>
+            </div>
+            <RepairRequestForm />
+          </TabsContent>
+
+
+
         </Tabs>
       </div>
     </main>

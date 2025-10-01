@@ -9,11 +9,16 @@ import { Navigate, Link } from 'react-router-dom';
 import { Home, Plus, TrendingUp, Eye, DollarSign, Package } from 'lucide-react';
 import RevenueChart from '@/components/analytics/RevenueChart';
 import IncomeExpenseChart from '@/components/analytics/IncomeExpenseChart';
+import { useConstruction } from '@/contexts/ConstructionContext';
+
+
 
 const LandlordDashboard = () => {
   const { user } = useAuth();
   const { properties } = useProperty();
   const { getSellerOrders } = useOrder();
+  const { addProject } = useConstruction();
+
 
   if (!user) {
     return <Navigate to="/login" replace />;

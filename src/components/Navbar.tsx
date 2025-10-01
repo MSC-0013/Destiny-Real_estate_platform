@@ -26,7 +26,7 @@ const Navbar = () => {
       case 'admin':
         return '/admin-dashboard';
       case 'landlord':
-        return '/seller-dashboard';
+        return '/landlord-dashboard';
       case 'tenant':
         return '/tenant-dashboard';
       case 'contractor':
