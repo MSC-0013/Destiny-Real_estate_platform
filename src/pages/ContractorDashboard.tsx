@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import JobApplicationForm from '@/components/JobApplicationForm';
+import {
   Building,
   Users,
   Calendar,
@@ -23,7 +24,7 @@ import {
 const ContractorDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
-  
+
   const myProjects = getProjectsByRole(user?.id || '', 'contractor');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress');
   const completedProjects = myProjects.filter(p => p.status === 'completed');
@@ -89,11 +90,12 @@ const ContractorDashboard = () => {
         </div>
 
         <Tabs defaultValue="active" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="active">Active Projects</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="apply-job">Apply for Job</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
@@ -125,7 +127,7 @@ const ContractorDashboard = () => {
                         <p className="text-xs text-muted-foreground">
                           Current Phase: {project.phase.replace('-', ' ')}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Client</p>
@@ -181,7 +183,7 @@ const ContractorDashboard = () => {
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {project.description}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Client</p>
@@ -236,7 +238,7 @@ const ContractorDashboard = () => {
                     <CardContent>
                       <div className="space-y-4">
                         <Progress value={100} className="h-2" />
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Completed</p>
@@ -332,6 +334,16 @@ const ContractorDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+          <TabsContent value="apply-job" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply for a Job</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <JobApplicationForm />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

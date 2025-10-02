@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import JobApplicationForm from '@/components/JobApplicationForm';
 
-import { 
+import {
   Wrench,
   Clock,
   CheckCircle,
@@ -26,10 +26,10 @@ import {
 const WorkerDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
-  
+
   const myProjects = getProjectsByRole(user?.id || '', 'worker');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress');
-  
+
   // Get all tasks assigned to this worker
   const allTasks = myProjects.flatMap(p => p.tasks.filter(t => t.assignedTo === user?.id));
   const pendingTasks = allTasks.filter(t => t.status === 'pending');
@@ -239,7 +239,7 @@ const WorkerDashboard = () => {
                             {project.tasks.filter(t => t.assignedTo === user?.id).length} assigned
                           </span>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Contractor</p>
@@ -348,10 +348,9 @@ const WorkerDashboard = () => {
                   <div className="space-y-4">
                     {allTasks.slice(0, 6).map((task, index) => (
                       <div key={task.id} className="flex items-center space-x-3">
-                        <div className={`w-2 h-2 rounded-full ${
-                          task.status === 'completed' ? 'bg-green-500' :
-                          task.status === 'in-progress' ? 'bg-blue-500' : 'bg-orange-500'
-                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full ${task.status === 'completed' ? 'bg-green-500' :
+                            task.status === 'in-progress' ? 'bg-blue-500' : 'bg-orange-500'
+                          }`}></div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{task.title}</p>
                           <p className="text-xs text-muted-foreground">
@@ -366,15 +365,15 @@ const WorkerDashboard = () => {
             </div>
           </TabsContent>
           <TabsContent value="apply-job" className="space-y-6">
-  <Card>
-    <CardHeader>
-      <CardTitle>Apply for a Job</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <JobApplicationForm />
-    </CardContent>
-  </Card>
-</TabsContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply for a Job</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <JobApplicationForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
         </Tabs>
       </div>

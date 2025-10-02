@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import JobApplicationForm from '@/components/JobApplicationForm';
+import {
   Palette,
   FileImage,
   Calendar,
@@ -26,7 +27,7 @@ import {
 const DesignerDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
-  
+
   const myProjects = getProjectsByRole(user?.id || '', 'designer');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress' || p.status === 'approved');
   const completedProjects = myProjects.filter(p => p.status === 'completed');
@@ -78,11 +79,13 @@ const DesignerDashboard = () => {
         </div>
 
         <Tabs defaultValue="active" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="active">Active Projects</TabsTrigger>
             <TabsTrigger value="pending">Pending Approval</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="apply-job">Apply for Job</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
@@ -109,7 +112,7 @@ const DesignerDashboard = () => {
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {project.description}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Client</p>
@@ -177,7 +180,7 @@ const DesignerDashboard = () => {
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {project.description}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Client</p>
@@ -237,12 +240,12 @@ const DesignerDashboard = () => {
                     <CardContent>
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                          {[1,2,3,4,5].map((star) => (
+                          {[1, 2, 3, 4, 5].map((star) => (
                             <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           ))}
                           <span className="text-sm text-muted-foreground ml-2">Excellent</span>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Completed</p>
@@ -364,6 +367,16 @@ const DesignerDashboard = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="apply-job" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply for a Job</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <JobApplicationForm />
               </CardContent>
             </Card>
           </TabsContent>
