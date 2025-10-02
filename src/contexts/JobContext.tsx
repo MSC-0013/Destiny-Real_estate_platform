@@ -238,7 +238,7 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const assignJob = useCallback(
     (jobId: string, projectId: string) => {
       const updated = jobs.map((j) =>
-        j.id === jobId ? { ...j, status: "assigned", assignedProjectId: projectId } : j
+        j.id === jobId ? { ...j, assignedProjectId: projectId } : j
       );
       saveJobs(updated);
     },
