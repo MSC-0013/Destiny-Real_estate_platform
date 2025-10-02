@@ -1,6 +1,8 @@
 // -------------------- ConstructionContext.tsx --------------------
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { openDB, DBSchema } from 'idb';
+import { v4 as uuidv4 } from 'uuid';
+
 
 // -------------------- Interfaces --------------------
 export interface ConstructionProject {
@@ -234,20 +236,23 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 
   // -------------------- CRUD for Projects --------------------
-  const addProject = (projectData: Omit<ConstructionProject, 'id' | 'createdAt' | 'actualCost' | 'tasks' | 'materials' | 'payments' | 'requests'>) => {
-    const newProject: ConstructionProject = {
-      ...projectData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      actualCost: 0,
-      tasks: [],
-      materials: [],
-      payments: [],
-      requests: [],
-    };
-    saveProjects([...projects, newProject]);
+  const addProject = (project: Omit<ConstructionProject, 'id' | 'createdAt'>) => {
+  const newProject: ConstructionProject = {
+    ...project,
+    id: uuidv4(),
+    createdAt: new Date().toISOString(),
+    actualCost: 0,
+    workers: [],
+    blueprints: [],
+    progressImages: [],
+    tasks: [],
+    materials: [],
+    payments: [],
+    requests: [],
   };
-
+  setProjects((prev) => [...prev, newProject]);
+};
+  
   const updateProject = (id: string, updates: Partial<ConstructionProject>) => {
     const updatedProjects = projects.map(p => (p.id === id ? { ...p, ...updates } : p));
     saveProjects(updatedProjects);

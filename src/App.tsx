@@ -37,6 +37,9 @@ import SellerDashboard from "./pages/SellerDashboard";
 import EditProperty from './pages/EditProperty'; 
 import { JobProvider } from "@/contexts/JobContext";
 import { ToastProvider } from "@/components/ui/toast"; // add this
+import {AddConstruction} from "./pages/AddConstruction";
+import {ConstructionPage} from "./pages/ConstructionPage";
+import {ConstructionChart} from "./pages/ConstructionChart";
 
 
 
@@ -72,6 +75,9 @@ const App = () => (
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orderspage" element={<Orders />} />
+                    <Route path="/constructionpage" element={<ConstructionPage />} />
+                    <Route path="/construction/add" element={<AddConstruction />} />
+                    <Route path="/construction/chart" element={<ConstructionChart projects={[]} />} />
                     <Route path="/tenant-dashboard" element={<TenantDashboard />} />
                     <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
