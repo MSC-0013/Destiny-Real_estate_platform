@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import JobApplicationForm from '@/components/JobApplicationForm';
+
 import { 
   Wrench,
   Clock,
@@ -88,11 +90,13 @@ const WorkerDashboard = () => {
         </div>
 
         <Tabs defaultValue="tasks" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="tasks">My Tasks</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="apply-job">Apply for Jobs</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="tasks" className="space-y-6">
@@ -361,6 +365,17 @@ const WorkerDashboard = () => {
               </Card>
             </div>
           </TabsContent>
+          <TabsContent value="apply-job" className="space-y-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>Apply for a Job</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <JobApplicationForm />
+    </CardContent>
+  </Card>
+</TabsContent>
+
         </Tabs>
       </div>
     </main>

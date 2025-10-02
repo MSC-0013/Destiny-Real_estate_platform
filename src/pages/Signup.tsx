@@ -92,7 +92,7 @@ const Signup = () => {
             Create Account
           </CardTitle>
           <CardDescription className="text-black text-sm">
-            Join <span className="font-semibold">EstateHub</span> today
+            Join <span className="font-semibold">Destiny</span> today
           </CardDescription>
         </CardHeader>
 
@@ -112,7 +112,7 @@ const Signup = () => {
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Full Name"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"

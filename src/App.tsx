@@ -34,7 +34,10 @@ import ConstructionSales from "./pages/ConstructionSales";
 import Contract from "./pages/Contract";
 import Help from "./pages/Help";
 import SellerDashboard from "./pages/SellerDashboard";
-import EditProperty from './pages/EditProperty'; // import at the top
+import EditProperty from './pages/EditProperty'; 
+import { JobProvider } from "@/contexts/JobContext";
+import { ToastProvider } from "@/components/ui/toast"; // add this
+
 
 
 
@@ -46,6 +49,10 @@ const App = () => (
     <AuthProvider>
       <PropertyProvider>
         <ConstructionProvider>
+          <JobProvider>
+              <ToastProvider>
+
+
           <WishlistProvider>
             <OrderProvider>
             <TooltipProvider>
@@ -87,6 +94,10 @@ const App = () => (
             </TooltipProvider>
             </OrderProvider>
           </WishlistProvider>
+            </ToastProvider>
+
+          </JobProvider>
+
         </ConstructionProvider>
       </PropertyProvider>
     </AuthProvider>

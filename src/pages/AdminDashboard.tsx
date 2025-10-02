@@ -13,8 +13,7 @@ import { ConstructionPdf } from '@/components/analytics/Constructionpdf';
 import { generateRepairPDF } from "@/components/analytics/Reapairform";
 import { OrderPdf } from '@/components/analytics/downloadOrderPDF';
 import AnalyticsTab from '@/components/analytics/AdminAnalyics';
-
-
+import {useJob} from '@/contexts/JobContext';
 
 const AdminDashboard = () => {
   const { user, getAllUsers, updateProfile, logout } = useAuth();
@@ -28,6 +27,13 @@ const AdminDashboard = () => {
     approveConstructionRequest,
     rejectConstructionRequest
   } = useConstruction();
+  const { workerApplications, approveWorkerApplication, rejectWorkerApplication } = useJob();
+  const { approveJob, rejectJob } = useJob();
+
+  
+
+
+  
 
 
   const [activeTab, setActiveTab] = useState<
@@ -40,6 +46,7 @@ const AdminDashboard = () => {
   const totalRevenue = orders
     .filter(order => order.status === 'completed')
     .reduce((sum, order) => sum + order.amount, 0);
+  
 
   const pendingOrders = orders.filter(order => order.status === 'pending').length;
   const cardVariants = {
@@ -62,18 +69,74 @@ const AdminDashboard = () => {
           }
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="employees">Employees</TabsTrigger>
             <TabsTrigger value="constructionRequests">Construction Requests</TabsTrigger>
             <TabsTrigger value="repairRequests">Repair Requests</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="workers">Workers / Contractors / Designers</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="overview">
             {/* Overview cards */}
           </TabsContent>
+          <TabsContent value="employees">
+  <div className="p-6 space-y-6">
+    <h2 className="text-2xl font-bold mb-4">Approved Employees</h2>
+
+    {/* Workers / Contractors / Designers */}
+    {workerApplications.filter(w => w.status === 'approved').length > 0 ? (
+      <>
+        <h3 className="text-xl font-semibold">Workers / Contractors</h3>
+        <table className="min-w-full table-auto border-collapse border border-gray-200 mb-4">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-4 py-2">Name</th>
+              <th className="border px-4 py-2">Contractor / Worker</th>
+              <th className="border px-4 py-2">Phone</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {workerApplications
+              .filter(w => w.status === 'approved' && (w.positionApplied === 'Worker' || w.positionApplied === 'Contractor'))
+              .map(w => (
+                <tr key={w.id}>
+                  <td className="border px-4 py-2">{w.fullName}</td>
+                  <td className="border px-4 py-2">{w.positionApplied}</td>
+                  <td className="border px-4 py-2">{w.phone}</td>
+                </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <h3 className="text-xl font-semibold">Designers</h3>
+        <table className="min-w-full table-auto border-collapse border border-gray-200 mb-4">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-4 py-2">Name</th>
+              <th className="border px-4 py-2">Contact Number</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {workerApplications
+              .filter(w => w.status === 'approved' && w.positionApplied === 'Designer')
+              .map(w => (
+                <tr key={w.id}>
+                  <td className="border px-4 py-2">{w.fullName}</td>
+                  <td className="border px-4 py-2">{w.phone}</td>
+                </tr>
+            ))}
+          </tbody>
+        </table>
+      </>
+    ) : (
+      <p className="text-gray-500 italic">No approved employees</p>
+    )}
+  </div>
+</TabsContent>
 
           <TabsContent value="constructionRequests">
             {/* Construction Requests cards */}
@@ -148,6 +211,7 @@ const AdminDashboard = () => {
             </div>
           </>
         )}
+        
 
         {activeTab === 'constructionRequests' && (
           <div className="p-6 space-y-6">
@@ -271,19 +335,31 @@ const AdminDashboard = () => {
                         {status === 'pending' ? (
                           <>
                             <Button
-                              onClick={() => approveConstructionRequest(id)}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <Check className="w-4 h-4 mr-1" /> Approve
-                            </Button>
-                            <Button
-                              onClick={() => rejectConstructionRequest(id)}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <X className="w-4 h-4 mr-1" /> Reject
-                            </Button>
+  onClick={() => {
+    approveConstructionRequest(id);
+    // Update local state immediately
+    setConstructionRequests(prev =>
+      prev.map(req => (req.id === id ? { ...req, status: 'approved' } : req))
+    );
+  }}
+  variant="outline"
+  className="text-black border-black"
+>
+  <Check className="w-4 h-4 mr-1" /> Approve
+</Button>
+<Button
+  onClick={() => {
+    rejectConstructionRequest(id);
+    setConstructionRequests(prev =>
+      prev.map(req => (req.id === id ? { ...req, status: 'rejected' } : req))
+    );
+  }}
+  variant="outline"
+  className="text-black border-black"
+>
+  <X className="w-4 h-4 mr-1" /> Reject
+</Button>
+
                           </>
                         ) : (
                           <span
@@ -420,19 +496,30 @@ const AdminDashboard = () => {
                         {status === 'pending' ? (
                           <>
                             <Button
-                              onClick={() => approveRepairRequest(id)}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <Check className="w-4 h-4 mr-1" /> Approve
-                            </Button>
-                            <Button
-                              onClick={() => rejectRepairRequest(id)}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <X className="w-4 h-4 mr-1" /> Reject
-                            </Button>
+  onClick={() => {
+    approveRepairRequest(id);
+    setRepairRequests(prev =>
+      prev.map(r => (r.id === id ? { ...r, status: 'approved' } : r))
+    );
+  }}
+  variant="outline"
+  className="text-black border-black"
+>
+  <Check className="w-4 h-4 mr-1" /> Approve
+</Button>
+<Button
+  onClick={() => {
+    rejectRepairRequest(id);
+    setRepairRequests(prev =>
+      prev.map(r => (r.id === id ? { ...r, status: 'rejected' } : r))
+    );
+  }}
+  variant="outline"
+  className="text-black border-black"
+>
+  <X className="w-4 h-4 mr-1" /> Reject
+</Button>
+
                           </>
                         ) : (
                           <span
@@ -528,12 +615,95 @@ const AdminDashboard = () => {
         )}
 
 
-        {activeTab === 'workers' && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Workers / Contractors / Designers</h2>
-            <p className="text-muted-foreground">Details and forms for workers, contractors, and designers</p>
+      {activeTab === 'workers' && (
+  <div className="p-6 space-y-6">
+    <h2 className="text-2xl font-bold mb-4">Workers / Contractors / Designers</h2>
+    <p className="text-muted-foreground mb-6">
+      Review worker applications and approve or reject them
+    </p>
+
+    {workerApplications && workerApplications.length > 0 ? (
+  workerApplications.map((worker) => {
+    const {
+      id,
+      fullName,
+      email,
+      phone,
+      positionApplied,
+      experienceYears,
+      skillsServices = [],
+      constructionSkills = [],
+      certifications = [],
+      description,
+      educationLevel,
+      fieldOfStudy,
+      institutionName,
+      status,
+    } = worker;
+
+    return (
+      <Card key={id} className="border border-gray-300 rounded-xl shadow-sm bg-white">
+        <CardContent className="p-6 flex flex-col space-y-4">
+
+          {/* Worker Details */}
+          <table className="min-w-full table-auto text-sm border-collapse">
+            <tbody className="divide-y divide-gray-300">
+              <tr><td className="px-4 py-2 font-semibold">👤 Full Name</td><td>{fullName}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">✉ Email</td><td>{email}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">📞 Phone</td><td>{phone || '-'}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">💼 Position Applied</td><td>{positionApplied}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">📝 Description</td><td>{description || '-'}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">🎓 Education</td><td>{educationLevel} in {fieldOfStudy} ({institutionName})</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">⚡ Experience</td><td>{experienceYears} {experienceYears > 1 ? 'years' : 'year'}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">🛠 Construction Skills</td><td>{constructionSkills.length > 0 ? constructionSkills.join(', ') : '-'}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">🛠 Other Skills / Services</td><td>{skillsServices.length > 0 ? skillsServices.join(', ') : '-'}</td></tr>
+              <tr><td className="px-4 py-2 font-semibold">📜 Certifications</td><td>{certifications.length > 0 ? certifications.join(' | ') : '-'}</td></tr>
+            </tbody>
+          </table>
+
+          {/* Approve / Reject */}
+          <div className="flex justify-end gap-3 mt-4">
+            {status === 'pending' ? (
+              <>
+                <Button
+  onClick={() => approveJob(id)}
+  variant="outline"
+  className="text-black border-black"
+>
+  <Check className="w-4 h-4 mr-1" /> Approve
+</Button>
+
+<Button
+  onClick={() => rejectJob(id)}
+  variant="outline"
+  className="text-red-600 border-red-600"
+>
+  <X className="w-4 h-4 mr-1" /> Reject
+</Button>
+
+              </>
+            ) : (
+              <span
+                className={`font-bold px-4 py-2 rounded-full text-sm ${
+                  status === 'approved' ? 'bg-gray-200 text-black' : 'bg-gray-300 text-black'
+                }`}
+              >
+                {status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+              </span>
+            )}
           </div>
-        )}
+        </CardContent>
+      </Card>
+    );
+  })
+) : (
+  <p className="text-gray-500 italic">No worker applications</p>
+)}
+
+  </div>
+)}
+
+
       </div>
     </main >
   );
