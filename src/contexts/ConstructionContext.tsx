@@ -120,7 +120,7 @@ interface ConstructionContextType {
   rejectRepairRequest: (id: string) => void;
   approveConstructionRequest: (id: string) => void;
   rejectConstructionRequest: (id: string) => void;
-
+  updateProjectMaterials: (projectId: string, materials: Material[]) => void;
 }
 
 // -------------------- Context --------------------
@@ -231,28 +231,30 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setConstructionRequests(requests); // THIS triggers re-render
     localStorage.setItem("constructionRequests", JSON.stringify(requests));
   };
-  
+
 
 
 
   // -------------------- CRUD for Projects --------------------
-  const addProject = (project: Omit<ConstructionProject, 'id' | 'createdAt'>) => {
-  const newProject: ConstructionProject = {
-    ...project,
-    id: uuidv4(),
-    createdAt: new Date().toISOString(),
-    actualCost: 0,
-    workers: [],
-    blueprints: [],
-    progressImages: [],
-    tasks: [],
-    materials: [],
-    payments: [],
-    requests: [],
+  const addProject = async (project: Omit<ConstructionProject, 'id' | 'createdAt'>) => {
+    const newProject: ConstructionProject = {
+      ...project,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      actualCost: 0,
+      workers: [],
+      blueprints: [],
+      progressImages: [],
+      tasks: [],
+      materials: [],
+      payments: [],
+      requests: [],
+    };
+    const updatedProjects = [...projects, newProject];
+    await saveProjects(updatedProjects); 
   };
-  setProjects((prev) => [...prev, newProject]);
-};
-  
+
+
   const updateProject = (id: string, updates: Partial<ConstructionProject>) => {
     const updatedProjects = projects.map(p => (p.id === id ? { ...p, ...updates } : p));
     saveProjects(updatedProjects);
@@ -339,6 +341,12 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     );
     saveConstructionRequests(updated);
   };
+  const updateProjectMaterials = (projectId: string, materials: Material[]) => {
+    const updatedProjects = projects.map(p =>
+      p.id === projectId ? { ...p, materials } : p
+    );
+    saveProjects(updatedProjects);
+  };
 
 
   // -------------------- Provider --------------------
@@ -364,6 +372,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         rejectRepairRequest,
         approveConstructionRequest,
         rejectConstructionRequest,
+        updateProjectMaterials
       }}
     >
 

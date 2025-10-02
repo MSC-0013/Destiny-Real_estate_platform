@@ -6,10 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Building, 
-  MapPin, 
-  Calendar, 
+import ConstructionPage from "./ConstructionPage";
+import ConstructionChart from "./ConstructionChart";
+import MaterialsTab from '@/components/MaterialsTab';
+import PaymentsTab from './PaymentTab';
+import {
+  Building,
+  MapPin,
+  Calendar,
   IndianRupee,
   User,
   Hammer,
@@ -25,11 +29,11 @@ const ConstructionDetails = () => {
   const { id } = useParams();
   const { getProject } = useConstruction();
   const { user } = useAuth();
-  
+
   if (!id) return <Navigate to="/construction" replace />;
-  
+
   const project = getProject(id);
-  
+
   if (!project) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 pt-20">
@@ -75,7 +79,7 @@ const ConstructionDetails = () => {
             <span className="text-muted-foreground">/</span>
             <span className="text-foreground font-medium">{project.title}</span>
           </div>
-          
+
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">{project.title}</h1>
@@ -84,7 +88,7 @@ const ConstructionDetails = () => {
                 <span>{project.address}</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <Badge className={getStatusColor(project.status)}>
                 {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
@@ -164,14 +168,17 @@ const ConstructionDetails = () => {
           </Card>
         </div>
 
+
         {/* Detailed Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -185,7 +192,7 @@ const ConstructionDetails = () => {
                     <h4 className="font-semibold mb-2">Description</h4>
                     <p className="text-muted-foreground">{project.description}</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">Client Information</h4>
                     <div className="flex items-center gap-2">
@@ -193,7 +200,7 @@ const ConstructionDetails = () => {
                       <span>{project.clientName}</span>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">Location</h4>
                     <div className="flex items-center gap-2">
@@ -230,6 +237,30 @@ const ConstructionDetails = () => {
               </Card>
             </div>
           </TabsContent>
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Projects Dashboard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ConstructionPage />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ConstructionChart />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
 
           <TabsContent value="team">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -292,6 +323,7 @@ const ConstructionDetails = () => {
             </div>
           </TabsContent>
 
+
           <TabsContent value="tasks">
             <Card>
               <CardHeader>
@@ -318,12 +350,12 @@ const ConstructionDetails = () => {
                             <p className="text-sm text-muted-foreground mt-1">Assigned to: {task.assigneeName}</p>
                           </div>
                         </div>
-                        <Badge 
+                        <Badge
                           variant="outline"
                           className={
                             task.priority === 'high' ? 'border-red-500 text-red-500' :
-                            task.priority === 'medium' ? 'border-yellow-500 text-yellow-500' :
-                            'border-green-500 text-green-500'
+                              task.priority === 'medium' ? 'border-yellow-500 text-yellow-500' :
+                                'border-green-500 text-green-500'
                           }
                         >
                           {task.priority}
@@ -342,83 +374,18 @@ const ConstructionDetails = () => {
           </TabsContent>
 
           <TabsContent value="materials">
-            <Card>
-              <CardHeader>
-                <CardTitle>Materials & Supplies</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {project.materials.length > 0 ? (
-                  <div className="space-y-4">
-                    {project.materials.map((material) => (
-                      <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{material.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {material.quantity} {material.unit} from {material.supplier}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">₹{material.totalCost.toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground">₹{material.unitCost}/{material.unit}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Building className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No materials recorded yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MaterialsTab
+              projectId={project.id}
+              materials={project.materials}
+            />
+          </TabsContent>
+          <TabsContent value="payments">
+            <PaymentsTab projectId={project.id} />
           </TabsContent>
 
-          <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Schedule</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {project.payments.length > 0 ? (
-                  <div className="space-y-4">
-                    {project.payments.map((payment) => (
-                      <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{payment.description}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Due: {new Date(payment.dueDate).toLocaleDateString()}
-                          </p>
-                          <Badge 
-                            variant="outline"
-                            className={
-                              payment.status === 'paid' ? 'border-green-500 text-green-500' :
-                              payment.status === 'overdue' ? 'border-red-500 text-red-500' :
-                              'border-yellow-500 text-yellow-500'
-                            }
-                          >
-                            {payment.status}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">₹{payment.amount.toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground">{payment.type} payment</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <IndianRupee className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No payment schedule yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
-      </div>
-    </main>
+      </div >
+    </main >
   );
 };
 

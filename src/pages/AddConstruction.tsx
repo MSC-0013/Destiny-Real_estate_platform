@@ -1,99 +1,131 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useConstruction } from '@/contexts/ConstructionContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useConstruction } from "@/contexts/ConstructionContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface ConstructionRequest {
+  clientName: string;
+  email: string;
+  phone: string;
+  projectType: string;
+  location: string;
+  area: string;
+  bedrooms: string;
+  bathrooms: string;
+  floors: string;
+  budget: string;
+  timeline: string;
+  description: string;
+  requirements: string[];
+  designImages: string[];
+}
 
 const AddConstruction = () => {
   const { addProject } = useConstruction();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [location, setLocation] = useState('');
-  const [address, setAddress] = useState('');
-  const [projectType, setProjectType] = useState<'residential' | 'commercial' | 'renovation' | 'interior'>('residential');
-  const [estimatedCost, setEstimatedCost] = useState<number>(0);
+  const [formData, setFormData] = useState<ConstructionRequest>({
+    clientName: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    projectType: "",
+    location: "",
+    area: "",
+    bedrooms: "",
+    bathrooms: "",
+    floors: "1",
+    budget: "",
+    timeline: "",
+    description: "",
+    requirements: [],
+    designImages: [],
+  });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [newRequirement, setNewRequirement] = useState("");
+
+  const handleAddRequirement = () => {
+    if (newRequirement.trim() === "") return;
+    setFormData((prev) => ({
+      ...prev,
+      requirements: [...prev.requirements, newRequirement.trim()],
+    }));
+    setNewRequirement("");
+  };
 
   const handleSubmit = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!title) newErrors.title = 'Project title is required';
-    if (!description) newErrors.description = 'Description is required';
-    if (!clientName) newErrors.clientName = 'Client name is required';
-    if (!location) newErrors.location = 'Location is required';
+    if (!formData.clientName) newErrors.clientName = "Client name is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.phone) newErrors.phone = "Phone is required";
+    if (!formData.projectType) newErrors.projectType = "Project type is required";
+    if (!formData.location) newErrors.location = "Location is required";
+    if (!formData.description) newErrors.description = "Description is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    // Add project to context
     addProject({
-      title,
-      description,
-      clientId: user?.id || 'unknown',
-      clientName,
-      location,
-      address,
-      projectType,
-      status: 'pending',
-      phase: 'planning',
-      estimatedCost,
+      ...formData,
+      title: formData.projectType + " Project",
+      clientId: user?.id || "unknown",
+      status: "pending",
+      phase: "planning",
+      estimatedCost: Number(formData.budget) || 0,
       actualCost: 0,
-      adminId: user?.id || 'unknown',
+      adminId: user?.id || "unknown",
       workers: [],
       blueprints: [],
-      progressImages: [],
+      progressImages: formData.designImages,
       tasks: [],
       materials: [],
       payments: [],
+      address: formData.location, // if you want to store address separately
     });
 
-    navigate('/construction');
+    navigate("/construction");
   };
 
   return (
-    <main className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-muted/20">
+    <main className="min-h-screen pt-20 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 space-y-6">
           <h1 className="text-3xl font-bold text-center mb-4">Start New Construction Project</h1>
 
           <div className="space-y-4">
-            <div>
-              <Input placeholder="Project Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-            </div>
-
-            <div>
-              <Input placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-            </div>
-
-            <div>
-              <Input placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-              {errors.clientName && <p className="text-red-500 text-sm mt-1">{errors.clientName}</p>}
-            </div>
-
-            <div>
-              <Input placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
-              {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
-            </div>
-
-            <Input placeholder="Address (Optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Input
+              placeholder="Client Name"
+              value={formData.clientName}
+              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+            />
+            {errors.clientName && <p className="text-red-500 text-sm">{errors.clientName}</p>}
 
             <Input
-              type="number"
-              placeholder="Estimated Cost"
-              value={estimatedCost}
-              onChange={(e) => setEstimatedCost(Number(e.target.value))}
+              placeholder="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
+            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
 
-            <Select value={projectType} onValueChange={(value) => setProjectType(value as any)}>
+            <Input
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+            {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+
+            <Select
+              value={formData.projectType}
+              onValueChange={(value) => setFormData({ ...formData, projectType: value })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Project Type" />
               </SelectTrigger>
@@ -104,11 +136,80 @@ const AddConstruction = () => {
                 <SelectItem value="interior">Interior</SelectItem>
               </SelectContent>
             </Select>
+            {errors.projectType && <p className="text-red-500 text-sm">{errors.projectType}</p>}
+
+            <Input
+              placeholder="Location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            />
+            {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
+
+            <Input
+              placeholder="Area (sq ft)"
+              value={formData.area}
+              onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+            />
+
+            <Input
+              placeholder="Bedrooms"
+              value={formData.bedrooms}
+              onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+            />
+
+            <Input
+              placeholder="Bathrooms"
+              value={formData.bathrooms}
+              onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+            />
+
+            <Input
+              placeholder="Floors"
+              type="number"
+              value={formData.floors}
+              onChange={(e) => setFormData({ ...formData, floors: e.target.value })}
+            />
+
+            <Input
+              placeholder="Budget"
+              type="number"
+              value={formData.budget}
+              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+            />
+
+            <Input
+              placeholder="Timeline (e.g., 6 months)"
+              value={formData.timeline}
+              onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
+            />
+
+            <Input
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+
+            {/* Requirements Input */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add Requirement"
+                value={newRequirement}
+                onChange={(e) => setNewRequirement(e.target.value)}
+              />
+              <Button onClick={handleAddRequirement}>Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.requirements.map((req, idx) => (
+                <span key={idx} className="px-2 py-1 bg-gray-200 rounded-full text-sm">
+                  {req}
+                </span>
+              ))}
+            </div>
 
             <Button
               className="bg-black hover:bg-gray-800 w-full text-white font-semibold"
               onClick={handleSubmit}
-              disabled={!title || !description || !clientName || !location}
             >
               Create Project
             </Button>
