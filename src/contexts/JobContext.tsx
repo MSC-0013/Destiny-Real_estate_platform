@@ -267,3 +267,4 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     </JobContext.Provider>
   );
 };
+  

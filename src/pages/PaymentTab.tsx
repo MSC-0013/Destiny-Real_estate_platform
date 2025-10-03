@@ -1,144 +1,427 @@
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { IndianRupee } from "lucide-react";
 import { usePayments } from "@/contexts/PaymentContext";
-import { useState } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { IndianRupee, CircleDollarSign, Users, Layers, Percent } from "lucide-react";
 
 interface PaymentsTabProps {
   projectId: string;
 }
 
 export default function PaymentsTab({ projectId }: PaymentsTabProps) {
-  const { 
-    getPaymentsByProject, 
-    markAsPaid, 
-    payInstallment, 
-    allocatePayment, 
-    getPoolBalance 
-  } = usePayments();
-
-  const payments = getPaymentsByProject(projectId);
+  const { getPoolBalance } = usePayments();
   const pool = getPoolBalance(projectId);
 
-  const [recipient, setRecipient] = useState("");
-  const [allocAmount, setAllocAmount] = useState(0);
+  // Editable inputs
+  const [totalCost, setTotalCost] = useState<number>(
+    pool?.totalCost ?? 2000000
+  );
+  const [materialPercent, setMaterialPercent] = useState<number>(() =>
+    pool?.materialCost
+      ? Math.round((pool.materialCost / (pool?.totalCost || 2000000)) * 100)
+      : 40
+  );
+  const [desiredProfitPercent, setDesiredProfitPercent] = useState<number>(0);
+
+  const [workers, setWorkers] = useState<number>(10);
+  const [workerSalary, setWorkerSalary] = useState<number>(15000); // per month
+  const [designerSalary, setDesignerSalary] = useState<number>(30000);
+  const [contractorSalary, setContractorSalary] = useState<number>(80000);
+  const [months, setMonths] = useState<number>(12);
+
+  // Helpers
+  const fmt = (v: number) =>
+    "₹" + (isFinite(v) ? Math.round(v).toLocaleString() : "0");
+  const pct = (value: number, total: number) =>
+    total > 0 ? `${((value / total) * 100).toFixed(2)}%` : "0.00%";
+
+  // Core calculations
+  const metrics = useMemo(() => {
+    const T = Number(totalCost) || 0;
+    const matPct = Math.max(0, Math.min(100, Number(materialPercent) || 0));
+    const materialCost = (matPct / 100) * T;
+
+    const workerTotal =
+      Number(workers || 0) *
+      Number(workerSalary || 0) *
+      Number(months || 0);
+    const designerTotal = Number(designerSalary || 0);
+    const contractorTotal = Number(contractorSalary || 0) ;
+    const salariesTotal = workerTotal + designerTotal + contractorTotal;
+
+    let profitAmount: number; 
+    let profitPercentCalculated: number;
+
+    if (Number(desiredProfitPercent) > 0) {
+      profitAmount = (Number(desiredProfitPercent) / 100) * T;
+      profitPercentCalculated = Number(desiredProfitPercent);
+    } else {
+      profitAmount = T - (materialCost + salariesTotal);
+      profitPercentCalculated = T > 0 ? (profitAmount / T) * 100 : 0;
+    }
+
+    const allocated = materialCost + salariesTotal + Math.max(0, profitAmount);
+    const remainingPool =
+      T - (materialCost + salariesTotal + (desiredProfitPercent > 0 ? profitAmount : 0));
+    const deficit = allocated > T ? allocated - T : 0;
+
+    return {
+      total: T,
+      materialCost,
+      workerTotal,
+      designerTotal,
+      contractorTotal,
+      salariesTotal,
+      profitAmount,
+      profitPercentCalculated,
+      remainingPool,
+      deficit,
+      allocated,
+      spentBeforeProfit: materialCost + salariesTotal,
+    };
+  }, [
+    totalCost,
+    materialPercent,
+    desiredProfitPercent,
+    workers,
+    workerSalary,
+    designerSalary,
+    contractorSalary,
+    months,
+  ]);
+
+  // Chart data
+  const chartData = useMemo(() => {
+    const slices: { name: string; value: number }[] = [
+      { name: "Material", value: Math.max(0, metrics.materialCost) },
+      { name: "Workers", value: Math.max(0, metrics.workerTotal) },
+      { name: "Designer", value: Math.max(0, metrics.designerTotal) },
+      { name: "Contractor", value: Math.max(0, metrics.contractorTotal) },
+      { name: "Profit", value: Math.max(0, metrics.profitAmount) },
+    ];
+
+    if (metrics.remainingPool > 0) {
+      slices.push({ name: "Remaining/Admin", value: metrics.remainingPool });
+    }
+
+    if (metrics.deficit > 0) {
+      slices.push({ name: "Deficit", value: metrics.deficit });
+    }
+
+    return slices.filter((s) => s.value > 0 || s.name === "Profit");
+  }, [metrics]);
+
+  const COLORS = [
+    "#60a5fa", // material
+    "#4ade80", // workers
+    "#fbbf24", // designer
+    "#f87171", // contractor
+    "#a78bfa", // profit
+    "#f0abfc", // remaining
+    "#ef4444", // deficit
+  ];
+
+  const categories = [
+    { key: "Material", value: metrics.materialCost },
+    { key: "Workers", value: metrics.workerTotal },
+    { key: "Designer", value: metrics.designerTotal },
+    { key: "Contractor", value: metrics.contractorTotal },
+    { key: "Profit", value: metrics.profitAmount },
+    { key: "Remaining Pool", value: metrics.remainingPool },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Payments & Salaries</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Pool Section */}
-        <div className="mb-6 p-4 border rounded-lg">
-          <h3 className="font-semibold">Project Pool</h3>
-          <p>Total Project Cost: ₹{pool?.totalCost ?? 0}</p>
-          <p>Material Cost: ₹{pool?.materialCost ?? 0}</p>
-          <p>Salaries Paid: ₹{pool?.salariesCost ?? 0}</p>
-          <p>Remaining: ₹{pool?.remainingPool ?? 0}</p>
-
-          {/* Allocate salaries */}
-          <div className="flex gap-2 mt-4">
-            <input
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              className="border px-2 py-1 rounded"
-              placeholder="Recipient (Worker/Designer/Contractor)"
-            />
-            <input
-              type="number"
-              value={allocAmount}
-              onChange={(e) => setAllocAmount(Number(e.target.value))}
-              className="border px-2 py-1 rounded"
-              placeholder="Amount"
-            />
-            <button
-              onClick={() => {
-                allocatePayment(projectId, recipient, allocAmount, "salary");
-                setRecipient("");
-                setAllocAmount(0);
-              }}
-              className="px-3 py-1 bg-green-600 text-white rounded"
-            >
-              Allocate
-            </button>
-          </div>
-        </div>
-
-        {/* Existing Payments */}
-        {payments.length > 0 ? (
-          <div className="space-y-4">
-            {payments.map((payment) => (
-              <div key={payment.id} className="p-4 border rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="font-medium">{payment.description}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Due: {new Date(payment.dueDate).toLocaleDateString()}
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className={
-                        payment.status === "paid"
-                          ? "border-green-500 text-green-500"
-                          : payment.status === "overdue"
-                          ? "border-red-500 text-red-500"
-                          : "border-yellow-500 text-yellow-500"
-                      }
-                    >
-                      {payment.status}
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">₹{payment.amount.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">{payment.type}</p>
-                    {payment.status !== "paid" && (
-                      <button
-                        onClick={() => markAsPaid(payment.id)}
-                        className="mt-2 px-3 py-1 text-sm rounded bg-green-500 text-white"
-                      >
-                        Mark Paid
-                      </button>
-                    )}
-                  </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Left: KPIs + Chart */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Project Financial Snapshot</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="flex items-center gap-3">
+                <IndianRupee className="w-5 h-5 text-green-600" />                <div>
+                  <p className="text-xs text-slate-500">Total Cost</p>
+                  <p className="text-lg font-semibold">{fmt(metrics.total)}</p>
                 </div>
-
-                {/* Installments */}
-                {payment.installments && (
-                  <div className="mt-3 pl-4 border-l-2">
-                    <h5 className="text-sm font-medium">Installments</h5>
-                    {payment.installments.map((inst) => (
-                      <div key={inst.id} className="flex justify-between text-sm py-1">
-                        <span>
-                          {new Date(inst.dueDate).toLocaleDateString()} - ₹{inst.amount}
-                        </span>
-                        <span>
-                          {inst.status === "paid" ? (
-                            <Badge className="bg-green-500">Paid</Badge>
-                          ) : (
-                            <button
-                              onClick={() => payInstallment(payment.id, inst.id)}
-                              className="px-2 py-0.5 text-xs rounded bg-blue-500 text-white"
-                            >
-                              Pay Now
-                            </button>
-                          )}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-            ))}
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="flex items-center gap-3">
+                <Layers className="w-6 h-6 text-slate-600" />
+                <div>
+                  <p className="text-xs text-slate-500">Allocated (Mat + Salaries)</p>
+                  <p className="text-lg font-semibold">
+                    {fmt(metrics.spentBeforeProfit)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="flex items-center gap-3">
+                <Percent className="w-6 h-6 text-slate-600" />
+                <div>
+                  <p className="text-xs text-slate-500">Profit</p>
+                  <p className="text-lg font-semibold">
+                    {fmt(Math.max(0, metrics.profitAmount))}{" "}
+                    <span className="text-sm text-slate-500">
+                      ({metrics.profitPercentCalculated?.toFixed(2)}%)
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`p-3 rounded-lg ${metrics.deficit > 0 ? "bg-red-50" : "bg-slate-50"
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-6 h-6 text-slate-600" />
+                <div>
+                  <p className="text-xs text-slate-500">
+                    {metrics.deficit > 0 ? "Deficit" : "Remaining Pool"}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {fmt(
+                      metrics.deficit > 0
+                        ? -metrics.deficit
+                        : metrics.remainingPool
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <IndianRupee className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No payments scheduled yet</p>
+
+          {/* Chart */}
+          <div className="h-80">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={110}
+                  paddingAngle={4}
+                  label={({ name, value }) =>
+                    `${name} — ${value >= 1000
+                      ? Math.round(value).toLocaleString()
+                      : Math.round(value)
+                    }`
+                  }
+                >
+                  {chartData.map((entry, idx) => (
+                    <Cell
+                      key={`c-${idx}`}
+                      fill={COLORS[idx % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(val: number) => [`${fmt(val)}`, "Amount"]}
+                  contentStyle={{ fontSize: 13 }}
+                  itemSorter={(item) => -item.value}
+                />
+                <Legend verticalAlign="bottom" height={36} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Right: Inputs + Table */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Configure & Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Inputs */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm text-slate-600">
+                Total Project Cost (₹)
+              </label>
+              <input
+                type="number"
+                value={totalCost}
+                onChange={(e) => setTotalCost(Number(e.target.value || 0))}
+                className="w-full border p-2 rounded mt-1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600">Material %</label>
+              <input
+                type="number"
+                value={materialPercent}
+                onChange={(e) =>
+                  setMaterialPercent(Number(e.target.value || 0))
+                }
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+                max={100}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600">
+                Desired Profit % (0 = auto)
+              </label>
+              <input
+                type="number"
+                value={desiredProfitPercent}
+                onChange={(e) =>
+                  setDesiredProfitPercent(Number(e.target.value || 0))
+                }
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+                max={100}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600">
+                Contract Duration (months)
+              </label>
+              <input
+                type="number"
+                value={months}
+                onChange={(e) => setMonths(Number(e.target.value || 1))}
+                className="w-full border p-2 rounded mt-1"
+                min={1}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600"># Workers</label>
+              <input
+                type="number"
+                value={workers}
+                onChange={(e) => setWorkers(Number(e.target.value || 0))}
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600">
+                Worker salary (₹ / Month)
+              </label>
+              <input
+                type="number"
+                value={workerSalary}
+                onChange={(e) =>
+                  setWorkerSalary(Number(e.target.value || 0))
+                }
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600">
+                Designer salary (₹ / Total)
+              </label>
+              <input
+                type="number"
+                value={designerSalary}
+                onChange={(e) =>
+                  setDesignerSalary(Number(e.target.value || 0))
+                }
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600">
+                Contractor salary (₹ / Total)
+              </label>
+              <input
+                type="number"
+                value={contractorSalary}
+                onChange={(e) =>
+                  setContractorSalary(Number(e.target.value || 0))
+                }
+                className="w-full border p-2 rounded mt-1"
+                min={0}
+              />
+            </div>
+          </div>
+
+          {/* Breakdown Table */}
+          <div className="overflow-x-auto mt-4">
+            <table className="w-full text-sm border">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-2 border">Category</th>
+                  <th className="text-right p-2 border">Amount (₹)</th>
+                  <th className="text-right p-2 border">% of Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((c) => (
+                  <tr key={c.key} className="odd:bg-white even:bg-gray-50">
+                    <td className="p-2 border">{c.key}</td>
+                    <td className="p-2 text-right border">{fmt(c.value)}</td>
+                    <td className="p-2 text-right border">
+                      {pct(c.value, metrics.total)}
+                    </td>
+                  </tr>
+                ))}
+
+                <tr className="bg-slate-100 font-medium">
+                  <td className="p-2 border">
+                    Allocated (Material + Salaries)
+                  </td>
+                  <td className="p-2 text-right border">
+                    {fmt(metrics.spentBeforeProfit)}
+                  </td>
+                  <td className="p-2 text-right border">
+                    {pct(metrics.spentBeforeProfit, metrics.total)}
+                  </td>
+                </tr>
+
+                <tr
+                  className={
+                    metrics.deficit > 0
+                      ? "bg-red-50 text-red-700 font-semibold"
+                      : "bg-green-50 font-semibold"
+                  }
+                >
+                  <td className="p-2 border">
+                    {metrics.deficit > 0 ? "Deficit (over budget)" : "Remaining Pool"}
+                  </td>
+                  <td className="p-2 text-right border">
+                    {fmt(
+                      metrics.deficit > 0
+                        ? -metrics.deficit
+                        : metrics.remainingPool
+                    )}
+                  </td>
+                  <td className="p-2 text-right border">
+                    {metrics.deficit > 0
+                      ? pct(-metrics.deficit, metrics.total)
+                      : pct(metrics.remainingPool, metrics.total)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

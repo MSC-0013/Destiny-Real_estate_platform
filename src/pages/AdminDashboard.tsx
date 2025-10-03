@@ -23,12 +23,15 @@ import { generateRepairPDF } from "@/components/analytics/Reapairform";
 import { OrderPdf } from "@/components/analytics/downloadOrderPDF";
 import AnalyticsTab from "@/components/analytics/AdminAnalyics";
 import { useJob } from "@/contexts/JobContext";
-import WorkerCard from "@/components/Workercard";
+import JobDashboard, { JobCard } from "@/components/JobsDashboard";
 
 const AdminDashboard = () => {
   const { user, getAllUsers, updateProfile, logout } = useAuth();
   const { properties } = useProperty();
   const { orders } = useOrder();
+  const [filterRole, setFilterRole] = useState("all"); // "worker" | "contractor" | "designer" | "all"
+
+
   const {
     repairRequests,
     approveRepairRequest,
@@ -52,6 +55,7 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all"); // <-- add this
   const [searchTerm, setSearchTerm] = useState("");
 
+
   const [activeTab, setActiveTab] = useState<
     | "overview"
     | "employees"
@@ -68,6 +72,26 @@ const AdminDashboard = () => {
   const totalRevenue = orders
     .filter((order) => order.status === "completed")
     .reduce((sum, order) => sum + order.amount, 0);
+
+
+  const getFilteredList = () => {
+    let list: any[] = [];
+
+    if (employeeFilter === "worker") list = workerApplications;
+    else if (employeeFilter === "contractor") list = contractorApplications;
+    else if (employeeFilter === "designer") list = designerApplications;
+    else list = [...workerApplications, ...contractorApplications, ...designerApplications];
+
+    return list.filter(
+      (item) =>
+        (filterStatus === "all" || item.status === filterStatus) &&
+        // Use optional chaining and fallback to empty string
+        (item.applicantName?.toLowerCase() ?? "").includes(searchTerm.toLowerCase())
+    );
+  };
+
+
+
 
   const pendingOrders = orders.filter(
     (order) => order.status === "pending"
@@ -93,12 +117,12 @@ const AdminDashboard = () => {
           onValueChange={(val) =>
             setActiveTab(
               val as
-                | "overview"
-                | "constructionRequests"
-                | "repairRequests"
-                | "analytics"
-                | "users"
-                | "workers"
+              | "overview"
+              | "constructionRequests"
+              | "repairRequests"
+              | "analytics"
+              | "users"
+              | "workers"
             )
           }
           className="w-full"
@@ -313,7 +337,7 @@ const AdminDashboard = () => {
                             </a>
                           </p>
                         )}
-                        <Button className="mt-3" onClick={() => {}}>
+                        <Button className="mt-3" onClick={() => { }}>
                           Assign to Construction
                         </Button>
                       </div>
@@ -340,7 +364,16 @@ const AdminDashboard = () => {
 
           <TabsContent value="users">{/* Users content */}</TabsContent>
 
-          <TabsContent value="workers">{/* Workers content */}</TabsContent>
+          <TabsContent value="workers">
+            <JobDashboard
+              workerApplications={workerApplications}
+              contractorApplications={contractorApplications}
+              designerApplications={designerApplications}
+              approveJob={approveJob}
+              rejectJob={rejectJob}
+            />
+          </TabsContent>
+
         </Tabs>
 
         {/* Tab Content */}
@@ -433,19 +466,18 @@ const AdminDashboard = () => {
                     <p className="text-gray-600 text-sm">👤 {req.clientName}</p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      req.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : req.status === "approved"
+                    className={`px-3 py-1 rounded-full text-sm font-bold ${req.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : req.status === "approved"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {req.status === "pending"
                       ? "⏳ Pending"
                       : req.status === "approved"
-                      ? "✅ Approved"
-                      : "❌ Rejected"}
+                        ? "✅ Approved"
+                        : "❌ Rejected"}
                   </span>
                 </Card>
               ))}
@@ -645,11 +677,10 @@ const AdminDashboard = () => {
                           </>
                         ) : (
                           <span
-                            className={`font-bold px-4 py-2 rounded-full text-sm ${
-                              status === "approved"
-                                ? "bg-gray-200 text-black"
-                                : "bg-gray-300 text-black"
-                            }`}
+                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === "approved"
+                              ? "bg-gray-200 text-black"
+                              : "bg-gray-300 text-black"
+                              }`}
                           >
                             {status === "approved"
                               ? "✅ Approved"
@@ -699,19 +730,18 @@ const AdminDashboard = () => {
                     <p className="text-gray-600 text-sm">👤 {req.clientName}</p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      req.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : req.status === "approved"
+                    className={`px-3 py-1 rounded-full text-sm font-bold ${req.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : req.status === "approved"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {req.status === "pending"
                       ? "⏳ Pending"
                       : req.status === "approved"
-                      ? "✅ Approved"
-                      : "❌ Rejected"}
+                        ? "✅ Approved"
+                        : "❌ Rejected"}
                   </span>
                 </Card>
               ))}
@@ -868,11 +898,10 @@ const AdminDashboard = () => {
                           </>
                         ) : (
                           <span
-                            className={`font-bold px-4 py-2 rounded-full text-sm ${
-                              status === "approved"
-                                ? "bg-gray-200 text-black"
-                                : "bg-gray-300 text-black"
-                            }`}
+                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === "approved"
+                              ? "bg-gray-200 text-black"
+                              : "bg-gray-300 text-black"
+                              }`}
                           >
                             {status === "approved"
                               ? "✅ Approved"
@@ -969,85 +998,18 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === "workers" && (
-          <div className="p-6 space-y-6">
-            <h2 className="text-2xl font-bold mb-4">
-              Workers / Contractors / Designers
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Review worker applications and approve or reject them
-            </p>
-
-            {/* Status Counts */}
-            <div className="flex gap-6 mb-4">
-              <span className="text-yellow-600 font-semibold">
-                Pending:{" "}
-                {
-                  workerApplications.filter((w) => w.status === "pending")
-                    .length
-                }
-              </span>
-              <span className="text-green-600 font-semibold">
-                Approved:{" "}
-                {
-                  workerApplications.filter((w) => w.status === "approved")
-                    .length
-                }
-              </span>
-              <span className="text-red-600 font-semibold">
-                Rejected:{" "}
-                {
-                  workerApplications.filter((w) => w.status === "rejected")
-                    .length
-                }
-              </span>
-            </div>
-
-            {/* Filter + Search */}
-            <div className="flex gap-4 mb-6 items-center">
-              <select
-                className="border px-3 py-1 rounded"
-                onChange={(e) => setFilterStatus(e.target.value)}
-                value={filterStatus}
-              >
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 border px-3 py-1 rounded"
-              />
-            </div>
-
-            {/* Worker Cards */}
-            {workerApplications && workerApplications.length > 0 ? (
-              workerApplications
-                .filter(
-                  (worker) =>
-                    (filterStatus === "all" ||
-                      worker.status === filterStatus) &&
-                    worker.fullName
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                )
-                .map((worker) => (
-                  <WorkerCard
-                    key={worker.id}
-                    worker={worker}
-                    approveJob={approveJob}
-                    rejectJob={rejectJob}
-                  />
-                ))
-            ) : (
-              <p className="text-gray-500 italic">No worker applications</p>
-            )}
-          </div>
+          <JobDashboard
+            workerApplications={workerApplications}
+            contractorApplications={contractorApplications}
+            designerApplications={designerApplications}
+            approveJob={approveJob}
+            rejectJob={rejectJob}
+          />
         )}
+
+
+        
+
       </div>
     </main>
   );
