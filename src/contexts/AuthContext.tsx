@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as API from "@/utils/api";
 
 export interface User {
   id: string;
@@ -59,7 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return;
       }
-
       try {
         const { getSession } = await import('@/utils/indexedDB');
         const session = await getSession();
@@ -67,53 +67,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (err) {
         console.error('Failed to load session from IndexedDB:', err);
       }
-
       setIsLoading(false);
     };
     loadUser();
   }, []);
 
-  // Login function
+  // ✅ Login function (backend + local)
   const login = async (email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
+    try {
+      const { data } = await API.login(email, password);
+      setUser(data.user);
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
 
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
+      const { saveSession } = await import('@/utils/indexedDB');
+      await saveSession({ user: data.user });
+      return true;
+    } catch {
+      // fallback to local storage only
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const foundUser = users.find((u: any) => u.email === email && u.password === password);
+      if (foundUser) {
+        const { password: _, ...userWithoutPassword } = foundUser;
+        setUser(userWithoutPassword);
+        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+        return true;
+      }
+      return false;
+    }
+  };
+
+  // ✅ Signup function (backend + local)
+  const signup = async (userData: Omit<User, 'id'> & { password: string }): Promise<boolean> => {
+    try {
+      const { data } = await API.signup(userData);
+      setUser(data.user);
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
+
+      const { saveSession } = await import('@/utils/indexedDB');
+      await saveSession({ user: data.user });
+      return true;
+    } catch {
+      // fallback local
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find((u: any) => u.email === userData.email)) return false;
+      const newUser = { ...userData, id: Date.now().toString() };
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword);
       localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-
-      try {
-        const { saveSession } = await import('@/utils/indexedDB');
-        await saveSession({ user: userWithoutPassword });
-      } catch (err) {
-        console.error('Failed to save session to IndexedDB:', err);
-      }
-
       return true;
     }
-    return false;
   };
 
-  // Signup function
-  const signup = async (userData: Omit<User, 'id'> & { password: string }): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.find((u: any) => u.email === userData.email)) return false;
-
-    const newUser = { ...userData, id: Date.now().toString() };
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-    return true;
-  };
-
-  // Logout
+  // ✅ Logout
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
     try {
       const { clearSession } = await import('@/utils/indexedDB');
       await clearSession();
@@ -122,44 +134,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get all users
+  // ✅ Get all users (backend fallback to local)
   const getAllUsers = (): User[] => {
     return JSON.parse(localStorage.getItem('users') || '[]');
   };
 
-  // Get a user by ID
+  // ✅ Get user by ID
   const getUserById = (id: string): User | undefined => {
     const users = getAllUsers();
     return users.find(u => u.id === id);
   };
 
-  // Update current user profile
-  const updateProfile = (userData: Partial<User>) => {
-    if (!user) return;
-    const updatedUser = { ...user, ...userData };
+  // ✅ Update profile (backend + local)
+  const updateProfile = async (userData: Partial<User> | FormData) => {
+  if (!user) return;
+
+  try {
+    let data;
+    if (userData instanceof FormData) {
+      const res = await API.updateUser(user.id, userData, { headers: { "Content-Type": "multipart/form-data" } });
+      data = res.data;
+    } else {
+      const res = await API.updateUser(user.id, userData);
+      data = res.data;
+    }
+
+    setUser(data);
+    localStorage.setItem("currentUser", JSON.stringify(data));
+  } catch {
+    // fallback local
+    const updatedUser = { ...user, ...(userData instanceof FormData ? {} : userData) };
     setUser(updatedUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+  }
+};
 
-    const users = getAllUsers();
-    const updatedUsers = users.map(u => (u.id === user.id ? { ...u, ...userData } : u));
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-  };
-
-  // Update any user by ID (admin feature)
+  // ✅ Update any user (admin)
   const updateUser = (id: string, userData: Partial<User>) => {
+    try {
+      API.updateUser(id, userData);
+    } catch {}
     const users = getAllUsers();
     const updatedUsers = users.map(u => (u.id === id ? { ...u, ...userData } : u));
     localStorage.setItem('users', JSON.stringify(updatedUsers));
-
     if (user?.id === id) setUser({ ...user, ...userData });
   };
 
-  // Delete user by ID
+  // ✅ Delete user
   const deleteUser = (id: string) => {
+    try {
+      API.deleteUser(id);
+    } catch {}
     const users = getAllUsers();
     const filteredUsers = users.filter(u => u.id !== id);
     localStorage.setItem('users', JSON.stringify(filteredUsers));
-
     if (user?.id === id) setUser(null);
   };
 

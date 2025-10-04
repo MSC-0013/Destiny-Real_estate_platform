@@ -1,0 +1,21 @@
+[
+  {
+    "id": "1759599525489",
+    "name": "Tenant",
+    "email": "tenant@gmail.com",
+    "password": "$2b$10$imMeS9HTSSEmeqicffGFPuVbb5VB.RAVF2Q73fkKz8f0K1cUgspV6",
+    "role": "tenant",
+    "avatar": "",
+    "address": "",
+    "dateOfBirth": "",
+    "occupation": "",
+    "bio": "",
+    "profileImage": "",
+    "verified": false,
+    "documents": [],
+    "portfolio": [],
+    "earnings": 0,
+    "rating": 0,
+    "completedJobs": 0
+  }
+]
