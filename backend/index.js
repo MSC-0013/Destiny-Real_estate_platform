@@ -4,24 +4,45 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import userRoutes from "./routes/userRoutes.js";
-import constructionRoutes from "./routes/constructionRoutes.js"; // Add this
-import uploadRoutes from "./routes/uploadRoutes.js"; // If you have file uploads
+import constructionRoutes from "./routes/constructionRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// --------------------
+// CORS Middleware
+// --------------------
+app.use(cors({
+  origin: "http://localhost:8080", // frontend origin
+  credentials: true,               // allow cookies / JWT
+}));
+
+// --------------------
+// Body Parser
+// --------------------
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// --------------------
+// Test Route
+// --------------------
+app.get("/api/test", (req, res) => {
+  res.json({ message: "✅ Backend is working!" });
+});
+
+// --------------------
 // Routes
+// --------------------
 app.use("/api/users", userRoutes);
-app.use("/api/construction", constructionRoutes); // Fixed route prefix
-app.use("/api/upload", uploadRoutes); // Optional
+app.use("/api/construction", constructionRoutes);
+app.use("/api/upload", uploadRoutes);
 
-// Connect to MongoDB
+// --------------------
+// MongoDB Connection
+// --------------------
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
