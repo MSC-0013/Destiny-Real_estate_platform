@@ -6,7 +6,7 @@ import axios from "axios";
 
 // -------------------- API Config --------------------
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // change to deployed link later
+  baseURL: "http://localhost:5000/api", 
 });
 
 // -------------------- Interfaces --------------------
@@ -30,25 +30,24 @@ export interface ConstructionProject {
   startDate?: string;
   endDate?: string;
   estimatedCost: number;
-  actualCost: number;
+  actualCost?: number;
   contractorId?: string;
   contractorName?: string;
   designerId?: string;
   designerName?: string;
-  workers: string[];
-  blueprints: string[];
-  progressImages: string[];
+  workers?: string[];
+  blueprints?: string[];
+  progressImages?: string[];
   tasks: Task[];
   materials: Material[];
   payments: Payment[];
-  createdAt: string;
-  adminId: string;
-  requests?: ApprovalRequest[];
+  requests: ApprovalRequest[];
+  adminId?: string;
 }
 
 export interface Task {
   id: string;
-  projectId: string;
+  projectId?: string;
   title: string;
   description: string;
   assignedTo: string;
@@ -58,7 +57,6 @@ export interface Task {
   startDate?: string;
   endDate?: string;
   completedAt?: string;
-  images: string[];
 }
 
 export interface Material {
@@ -137,12 +135,10 @@ interface ConstructionContextType {
   ) => void;
   approveRequest: (projectId: string, requestId: string, approve: boolean) => void;
   repairRequests: RepairRequest[];
-  addRepairRequest: (
-    request: Omit<RepairRequest, "id" | "createdAt" | "status">
-  ) => void;
-  constructionRequests: ApprovalRequest[];
+  addRepairRequest: (request: Omit<RepairRequest, "id" | "createdAt" | "status">) => void;
   approveRepairRequest: (id: string) => void;
   rejectRepairRequest: (id: string) => void;
+  constructionRequests: ApprovalRequest[];
   approveConstructionRequest: (id: string) => void;
   rejectConstructionRequest: (id: string) => void;
   updateProjectMaterials: (projectId: string, materials: Material[]) => void;
@@ -152,8 +148,7 @@ interface ConstructionContextType {
 const ConstructionContext = createContext<ConstructionContextType | undefined>(undefined);
 export const useConstruction = () => {
   const context = useContext(ConstructionContext);
-  if (!context)
-    throw new Error("useConstruction must be used within a ConstructionProvider");
+  if (!context) throw new Error("useConstruction must be used within a ConstructionProvider");
   return context;
 };
 
@@ -170,22 +165,34 @@ const dbPromise = openDB<ConstructionDB>("construction-db", 1, {
 });
 
 // -------------------- Provider --------------------
-export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<ConstructionProject[]>([]);
   const [repairRequests, setRepairRequests] = useState<RepairRequest[]>([]);
   const [constructionRequests, setConstructionRequests] = useState<ApprovalRequest[]>([]);
 
-  // Load Data
+  // Load data from LocalStorage / IndexedDB
   useEffect(() => {
     const loadData = async () => {
-      const saved = localStorage.getItem("constructionProjects");
-      if (saved) setProjects(JSON.parse(saved));
-
       const db = await dbPromise;
-      const all = await db.getAll("projects");
-      if (all.length > 0) setProjects(all);
+
+      // Projects
+      const allProjects = await db.getAll("projects");
+      if (allProjects.length > 0) {
+        setProjects(allProjects);
+        localStorage.setItem("constructionProjects", JSON.stringify(allProjects));
+      } else {
+        const tx = db.transaction("projects", "readwrite");
+        for (const proj of []) tx.store.put(proj); // replace [] with sampleProjects if needed
+        await tx.done;
+      }
+
+      // Repair Requests
+      const savedRepairRequests = localStorage.getItem("repairRequests");
+      if (savedRepairRequests) setRepairRequests(JSON.parse(savedRepairRequests));
+
+      // Construction Requests
+      const savedConstructionRequests = localStorage.getItem("constructionRequests");
+      if (savedConstructionRequests) setConstructionRequests(JSON.parse(savedConstructionRequests));
     };
     loadData();
   }, []);
@@ -198,6 +205,16 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
     const tx = db.transaction("projects", "readwrite");
     for (const project of updated) await tx.store.put(project);
     await tx.done;
+  };
+
+  const saveRepairRequests = async (requests: RepairRequest[]) => {
+    setRepairRequests(requests);
+    localStorage.setItem("repairRequests", JSON.stringify(requests));
+  };
+
+  const saveConstructionRequests = (requests: ApprovalRequest[]) => {
+    setConstructionRequests(requests);
+    localStorage.setItem("constructionRequests", JSON.stringify(requests));
   };
 
   // -------------------- CRUD with Backend Sync --------------------
@@ -216,17 +233,11 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
     const newProject: ConstructionProject = {
       ...project,
       id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      actualCost: 0,
-      workers: [],
-      blueprints: [],
-      progressImages: [],
       tasks: [],
       materials: [],
       payments: [],
       requests: [],
     };
-
     const updated = [...projects, newProject];
     await saveProjects(updated);
 
@@ -239,10 +250,10 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateProject = async (id: string, updates: Partial<ConstructionProject>) => {
-    const updated = projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
-    await saveProjects(updated);
+    const updatedProjects = projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
+    await saveProjects(updatedProjects);
 
-    const project = updated.find((p) => p.id === id);
+    const project = updatedProjects.find((p) => p.id === id);
     if (project) {
       try {
         await API.put(`/construction/projects/${id}`, project);
@@ -263,26 +274,27 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // -------------------- Other CRUD --------------------
   const getProject = (id: string) => projects.find((p) => p.id === id);
 
-  const addTask = (projectId: string, task: Omit<Task, "id" | "projectId">) => {
+  // -------------------- Tasks --------------------
+  const addTask = async (projectId: string, task: Omit<Task, "id" | "projectId">) => {
     const newTask: Task = { ...task, id: Date.now().toString(), projectId };
     const updated = projects.map((p) =>
       p.id === projectId ? { ...p, tasks: [...p.tasks, newTask] } : p
     );
-    saveProjects(updated);
+    await saveProjects(updated);
   };
 
-  const updateTask = (taskId: string, updates: Partial<Task>) => {
+  const updateTask = async (taskId: string, updates: Partial<Task>) => {
     const updated = projects.map((p) => ({
       ...p,
       tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
     }));
-    saveProjects(updated);
+    await saveProjects(updated);
   };
 
-  const addMaterial = (projectId: string, material: Omit<Material, "id" | "totalCost">) => {
+  // -------------------- Materials --------------------
+  const addMaterial = async (projectId: string, material: Omit<Material, "id" | "totalCost">) => {
     const newMaterial: Material = {
       ...material,
       id: Date.now().toString(),
@@ -291,18 +303,19 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
     const updated = projects.map((p) =>
       p.id === projectId ? { ...p, materials: [...p.materials, newMaterial] } : p
     );
-    saveProjects(updated);
+    await saveProjects(updated);
   };
 
-  const addPayment = (projectId: string, payment: Omit<Payment, "id">) => {
+  // -------------------- Payments --------------------
+  const addPayment = async (projectId: string, payment: Omit<Payment, "id">) => {
     const newPayment: Payment = { ...payment, id: Date.now().toString() };
     const updated = projects.map((p) =>
       p.id === projectId ? { ...p, payments: [...p.payments, newPayment] } : p
     );
-    saveProjects(updated);
+    await saveProjects(updated);
   };
 
-  // -------------------- Role / Approval / Repair --------------------
+  // -------------------- Projects by Role --------------------
   const getProjectsByRole = (userId: string, role: string) => {
     if (role === "admin") return projects;
     return projects.filter(
@@ -310,10 +323,11 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
         p.clientId === userId ||
         p.contractorId === userId ||
         p.designerId === userId ||
-        p.workers.includes(userId)
+        p.workers?.includes(userId)
     );
   };
 
+  // -------------------- Approval Requests --------------------
   const requestApproval = (
     projectId: string,
     request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
@@ -325,9 +339,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: new Date().toISOString(),
     };
     const updated = projects.map((p) =>
-      p.id === projectId
-        ? { ...p, requests: [...(p.requests || []), newRequest] }
-        : p
+      p.id === projectId ? { ...p, requests: [...(p.requests || []), newRequest] } : p
     );
     saveProjects(updated);
   };
@@ -338,11 +350,12 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
       const updatedReq = p.requests?.map((r) =>
         r.id === requestId ? { ...r, status: approve ? "approved" : "rejected" } : r
       );
-      return { ...p, requests: updatedReq };
+      return { ...p, requests: updatedReq || [] };
     });
     saveProjects(updated);
   };
 
+  // -------------------- Repair Requests --------------------
   const addRepairRequest = (
     request: Omit<RepairRequest, "id" | "createdAt" | "status">
   ) => {
@@ -353,38 +366,36 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
       status: "pending",
     };
     const updated = [...repairRequests, newRequest];
-    setRepairRequests(updated);
-    localStorage.setItem("repairRequests", JSON.stringify(updated));
+    saveRepairRequests(updated);
   };
 
   const approveRepairRequest = (id: string) => {
     const updated = repairRequests.map((r) =>
       r.id === id ? { ...r, status: "approved" } : r
     );
-    setRepairRequests(updated);
-    localStorage.setItem("repairRequests", JSON.stringify(updated));
+    saveRepairRequests(updated);
   };
 
   const rejectRepairRequest = (id: string) => {
     const updated = repairRequests.map((r) =>
       r.id === id ? { ...r, status: "rejected" } : r
     );
-    setRepairRequests(updated);
-    localStorage.setItem("repairRequests", JSON.stringify(updated));
+    saveRepairRequests(updated);
   };
 
+  // -------------------- Construction Requests --------------------
   const approveConstructionRequest = (id: string) => {
     const updated = constructionRequests.map((r) =>
       r.id === id ? { ...r, status: "approved" } : r
     );
-    setConstructionRequests(updated);
+    saveConstructionRequests(updated);
   };
 
   const rejectConstructionRequest = (id: string) => {
     const updated = constructionRequests.map((r) =>
       r.id === id ? { ...r, status: "rejected" } : r
     );
-    setConstructionRequests(updated);
+    saveConstructionRequests(updated);
   };
 
   const updateProjectMaterials = (projectId: string, materials: Material[]) => {
@@ -411,9 +422,9 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({
         approveRequest,
         repairRequests,
         addRepairRequest,
-        constructionRequests,
         approveRepairRequest,
         rejectRepairRequest,
+        constructionRequests,
         approveConstructionRequest,
         rejectConstructionRequest,
         updateProjectMaterials,

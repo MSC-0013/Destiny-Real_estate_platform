@@ -1,159 +1,44 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import API from "@/utils/api"; // Axios instance
 
 // -------------------- Interfaces --------------------
-
-// Worker Details
 export interface WorkerApplicationDetails {
   fullName: string;
   dateOfBirth: string;
   gender: "Male" | "Female" | "Other";
   nationality: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
-  contact: {
-    phone: string;
-    alternatePhone?: string;
-    email: string;
-  };
-  employmentPreferences: {
-    position: string;
-    startDate: string;
-    desiredSalary: string;
-    preferredLocations: string;
-    overtime: boolean;
-    weekends: boolean;
-    employmentType: "Full-time" | "Part-time" | "Temporary/Contract";
-  };
-  skillsAndCertifications: {
-    skills: string[];
-    certifications?: string[];
-    safetyTraining: boolean;
-    forkliftCertification: boolean;
-    firstAidCertification: boolean;
-    otherCertifications?: string;
-    yearsExperience: number;
-  };
-  education: {
-    highestLevel: string;
-    institutionName?: string;
-    fieldOfStudy?: string;
-  };
-  employmentHistory: {
-    companyName: string;
-    positionHeld: string;
-    startDate: string;
-    endDate: string;
-    responsibilities: string;
-  }[];
-  references: {
-    name: string;
-    relationship: string;
-    contact: string;
-  }[];
-  healthAndSafety: {
-    medicalConditions?: string;
-    canLiftHeavy: boolean;
-    comfortableHeights: boolean;
-    allergies?: string;
-  };
-  legalAndBackground: {
-    legallyAllowed: boolean;
-    convictions?: string;
-  };
-  additionalInfo: {
-    motivation: string;
-    achievements?: string;
-    languages?: string[];
-    hobbies?: string[];
-  };
+  address: { street: string; city: string; state: string; zip: string; country: string; };
+  contact: { phone: string; alternatePhone?: string; email: string; };
+  employmentPreferences: { position: string; startDate: string; desiredSalary: string; preferredLocations: string; overtime: boolean; weekends: boolean; employmentType: "Full-time" | "Part-time" | "Temporary/Contract"; };
+  skillsAndCertifications: { skills: string[]; certifications?: string[]; safetyTraining: boolean; forkliftCertification: boolean; firstAidCertification: boolean; otherCertifications?: string; yearsExperience: number; };
+  education: { highestLevel: string; institutionName?: string; fieldOfStudy?: string; };
+  employmentHistory: { companyName: string; positionHeld: string; startDate: string; endDate: string; responsibilities: string; }[];
+  references: { name: string; relationship: string; contact: string; }[];
+  healthAndSafety: { medicalConditions?: string; canLiftHeavy: boolean; comfortableHeights: boolean; allergies?: string; };
+  legalAndBackground: { legallyAllowed: boolean; convictions?: string; };
+  additionalInfo: { motivation: string; achievements?: string; languages?: string[]; hobbies?: string[]; };
 }
 
-// Contractor Details
 export interface ContractorApplicationDetails {
-  fullName: string;
-  companyName: string;
-  dateOfBirth: string;
-  gender: "Male" | "Female" | "Other";
-  address: string;
-  phone: string;
-  email: string;
-  website?: string;
-  contractorType: "General" | "Subcontractor" | "Specialty";
-  licenseNumber: string;
-  licenseExpiry: string;
-  yearsExperience: number;
-  teamSize: number;
-  areasOfExpertise: string;
-  startDate: string;
-  preferredLocations: string;
-  willingToTravel: boolean;
-  skills: string[];
-  certifications: string[];
-  insurance: string[];
-  businessType: "Sole Proprietor" | "Partnership" | "LLC" | "Corp";
-  taxNumber: string;
-  notableProjects: {
-    projectName: string;
-    role: string;
-    startDate: string;
-    endDate: string;
-    value: string;
-  }[];
-  legalAndSafety: {
-    legallyAllowed: boolean;
-    previousDisputes?: string;
-    safetyPlanTraining: boolean;
-    healthLimitations?: string;
-  };
-  additionalInfo: {
-    motivation: string;
-    languagesSkillsEquipment?: string;
-  };
+  fullName: string; companyName: string; dateOfBirth: string; gender: "Male" | "Female" | "Other";
+  address: string; phone: string; email: string; website?: string; contractorType: "General" | "Subcontractor" | "Specialty";
+  licenseNumber: string; licenseExpiry: string; yearsExperience: number; teamSize: number; areasOfExpertise: string;
+  startDate: string; preferredLocations: string; willingToTravel: boolean; skills: string[]; certifications: string[]; insurance: string[];
+  businessType: "Sole Proprietor" | "Partnership" | "LLC" | "Corp"; taxNumber: string;
+  notableProjects: { projectName: string; role: string; startDate: string; endDate: string; value: string; }[];
+  legalAndSafety: { legallyAllowed: boolean; previousDisputes?: string; safetyPlanTraining: boolean; healthLimitations?: string; };
+  additionalInfo: { motivation: string; languagesSkillsEquipment?: string; };
 }
 
-// Designer Details
 export interface DesignerApplicationDetails {
-  fullName: string;
-  dateOfBirth: string;
-  gender: "Male" | "Female" | "Other";
-  address: string;
-  phone: string;
-  email: string;
-  portfolio?: string;
-  positionApplied: string;
-  startDate: string;
-  preferredWorkType: "Full-time" | "Part-time" | "Freelance/Contract";
-  expectedSalary?: string;
-  toolsProficiency: string[];
-  designSkills: string[];
-  certifications?: string[];
-  education: {
-    highestQualification: string;
-    fieldOfStudy?: string;
-    institutionName?: string;
-  };
-  employmentHistory: {
-    companyOrClient: string;
-    role: string;
-    startDate: string;
-    endDate: string;
-    achievements?: string;
-  }[];
-  portfolioSamples?: string[];
-  topProjects?: string[];
-  additionalInfo?: {
-    languages?: string[];
-    hobbies?: string[];
-    motivation?: string;
-  };
+  fullName: string; dateOfBirth: string; gender: "Male" | "Female" | "Other"; address: string; phone: string; email: string;
+  portfolio?: string; positionApplied: string; startDate: string; preferredWorkType: "Full-time" | "Part-time" | "Freelance/Contract";
+  expectedSalary?: string; toolsProficiency: string[]; designSkills: string[]; certifications?: string[];
+  education: { highestQualification: string; fieldOfStudy?: string; institutionName?: string; };
+  employmentHistory: { companyOrClient: string; role: string; startDate: string; endDate: string; achievements?: string; }[];
+  portfolioSamples?: string[]; topProjects?: string[]; additionalInfo?: { languages?: string[]; hobbies?: string[]; motivation?: string; };
 }
 
-// Common Job Application
 export interface JobApplication {
   id: string;
   role: "worker" | "contractor" | "designer";
@@ -206,8 +91,14 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem("jobs", JSON.stringify(updatedJobs));
   }, []);
 
-  const applyJob = useCallback(
-    (jobData: Omit<JobApplication, "id" | "createdAt" | "status">) => {
+  const applyJob = useCallback(async (jobData: Omit<JobApplication, "id" | "createdAt" | "status">) => {
+    try {
+      // Send to backend
+      const res = await API.post("/jobs", jobData);
+      const newJob: JobApplication = { ...res.data };
+      saveJobs([...jobs, newJob]);
+    } catch (err) {
+      // Fallback to localStorage
       const newJob: JobApplication = {
         ...jobData,
         id: Date.now().toString(),
@@ -215,56 +106,59 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date().toISOString(),
       };
       saveJobs([...jobs, newJob]);
-    },
-    [jobs, saveJobs]
-  );
+    }
+  }, [jobs, saveJobs]);
 
-  const approveJob = useCallback(
-    (jobId: string) => {
-      const updated = jobs.map((j) => (j.id === jobId ? { ...j, status: "approved" } : j));
+  const approveJob = useCallback(async (jobId: string) => {
+    try {
+      await API.put(`/jobs/${jobId}/approve`);
+      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "approved" } : j);
       saveJobs(updated);
-    },
-    [jobs, saveJobs]
-  );
-
-  const rejectJob = useCallback(
-    (jobId: string) => {
-      const updated = jobs.map((j) => (j.id === jobId ? { ...j, status: "rejected" } : j));
+    } catch {
+      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "approved" } : j);
       saveJobs(updated);
-    },
-    [jobs, saveJobs]
-  );
+    }
+  }, [jobs, saveJobs]);
 
-  const assignJob = useCallback(
-    (jobId: string, projectId: string) => {
-      const updated = jobs.map((j) =>
-        j.id === jobId ? { ...j, assignedProjectId: projectId } : j
-      );
+  const rejectJob = useCallback(async (jobId: string) => {
+    try {
+      await API.put(`/jobs/${jobId}/reject`);
+      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "rejected" } : j);
       saveJobs(updated);
-    },
-    [jobs, saveJobs]
-  );
+    } catch {
+      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "rejected" } : j);
+      saveJobs(updated);
+    }
+  }, [jobs, saveJobs]);
 
-  // Role-specific filtered arrays
-  const workerApplications = jobs.filter((j) => j.role === "worker");
-  const contractorApplications = jobs.filter((j) => j.role === "contractor");
-  const designerApplications = jobs.filter((j) => j.role === "designer");
+  const assignJob = useCallback(async (jobId: string, projectId: string) => {
+    try {
+      await API.put(`/jobs/${jobId}/assign`, { projectId });
+      const updated = jobs.map(j => j.id === jobId ? { ...j, assignedProjectId: projectId, status: "assigned" } : j);
+      saveJobs(updated);
+    } catch {
+      const updated = jobs.map(j => j.id === jobId ? { ...j, assignedProjectId: projectId, status: "assigned" } : j);
+      saveJobs(updated);
+    }
+  }, [jobs, saveJobs]);
+
+  // Role-specific arrays
+  const workerApplications = jobs.filter(j => j.role === "worker");
+  const contractorApplications = jobs.filter(j => j.role === "contractor");
+  const designerApplications = jobs.filter(j => j.role === "designer");
 
   return (
-    <JobContext.Provider
-      value={{
-        jobs,
-        workerApplications,
-        contractorApplications,
-        designerApplications,
-        applyJob,
-        approveJob,
-        rejectJob,
-        assignJob,
-      }}
-    >
+    <JobContext.Provider value={{
+      jobs,
+      workerApplications,
+      contractorApplications,
+      designerApplications,
+      applyJob,
+      approveJob,
+      rejectJob,
+      assignJob,
+    }}>
       {children}
     </JobContext.Provider>
   );
 };
-  
