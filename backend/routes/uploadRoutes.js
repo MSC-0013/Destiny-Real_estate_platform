@@ -1,23 +1,26 @@
-// backend/routes/uploadRoutes.js
 import express from "express";
-import upload from "../utils/multer.js"; // ✅ make sure this path points to your multer config file
+import User from "../models/User.js"; // your User model
+import upload from "../utils/multer.js"; // multer config
 
 const router = express.Router();
 
-// ✅ Cloudinary Upload Route
-router.post("/", upload.single("file"), async (req, res) => {
+// Update user profile (with optional file upload)
+router.put("/:id", upload.single("profileImage"), async (req, res) => {
   try {
-    if (!req.file || !req.file.path) {
-      return res.status(400).json({ message: "No file uploaded" });
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      // Multer already uploads to Cloudinary or local storage
+      // req.file.path contains the file URL or path
+      updateData.profileImage = req.file.path;
     }
 
-    res.status(200).json({
-      message: "File uploaded successfully",
-      fileUrl: req.file.path, // Cloudinary URL
-    });
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+    res.json(updatedUser);
   } catch (err) {
-    console.error("Upload error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Failed to update user:", err);
+    res.status(500).json({ error: "Failed to update user" });
   }
 });
 

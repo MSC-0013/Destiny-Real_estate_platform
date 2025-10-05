@@ -52,26 +52,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on start
+  // Load user from localStorage on mount
   useEffect(() => {
-    const loadUser = async () => {
-      const savedUser = localStorage.getItem('currentUser');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(false);
-    };
-    loadUser();
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) setUser(JSON.parse(savedUser));
+    setIsLoading(false);
   }, []);
 
-  // Login
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const persistUser = (newUser: User | null) => {
+    setUser(newUser);
+    if (newUser) localStorage.setItem('currentUser', JSON.stringify(newUser));
+    else localStorage.removeItem('currentUser');
+  };
+
+  const login = async (email: string, password: string) => {
     try {
       const { data } = await API.login(email, password);
-      setUser(data.user);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      persistUser(data.user);
       localStorage.setItem('token', data.token);
       return true;
     } catch (err) {
@@ -80,12 +77,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Signup
-  const signup = async (userData: Omit<User, '_id'> & { password: string }): Promise<boolean> => {
+  const signup = async (userData: Omit<User, '_id'> & { password: string }) => {
     try {
       const { data } = await API.signup(userData);
-      setUser(data.user);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      persistUser(data.user);
       return true;
     } catch (err) {
       console.error('Signup failed:', err);
@@ -93,62 +88,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('currentUser');
+    persistUser(null);
     localStorage.removeItem('token');
   };
 
-  // Get all users
   const getAllUsers = (): User[] => {
     return JSON.parse(localStorage.getItem('users') || '[]');
   };
 
-  // Get user by ID
   const getUserById = (id: string): User | undefined => {
-    const users = getAllUsers();
-    return users.find(u => u._id === id);
+    return getAllUsers().find(u => u._id === id);
   };
 
-  // Update own profile
   const updateProfile = async (userData: Partial<User> | FormData) => {
     if (!user) return;
     try {
-      let res;
-      if (userData instanceof FormData) {
-        res = await API.updateUser(user._id, userData, { headers: { "Content-Type": "multipart/form-data" } });
-      } else {
-        res = await API.updateUser(user._id, userData);
-      }
-      setUser(res.data);
-      localStorage.setItem('currentUser', JSON.stringify(res.data));
+      const res = await API.updateUser(
+        user._id,
+        userData,
+        userData instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : {}
+      );
+      persistUser(res.data);
     } catch (err) {
-      console.error('Profile update failed:', err);
+      console.error("Profile update failed:", err);
     }
   };
 
-  // Update any user (admin)
   const updateUser = async (id: string, userData: Partial<User>) => {
     try {
       const res = await API.updateUser(id, userData);
       const users = getAllUsers();
       const updatedUsers = users.map(u => u._id === id ? { ...u, ...res.data } : u);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
-      if (user?._id === id) setUser({ ...user, ...res.data });
+      if (user?._id === id) persistUser({ ...user, ...res.data });
     } catch (err) {
       console.error('Update user failed:', err);
     }
   };
 
-  // Delete user
   const deleteUser = async (id: string) => {
     try {
       await API.deleteUser(id);
       const users = getAllUsers();
       const filteredUsers = users.filter(u => u._id !== id);
       localStorage.setItem('users', JSON.stringify(filteredUsers));
-      if (user?._id === id) setUser(null);
+      if (user?._id === id) persistUser(null);
     } catch (err) {
       console.error('Delete user failed:', err);
     }
