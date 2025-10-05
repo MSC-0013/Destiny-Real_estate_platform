@@ -2,10 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as API from "@/utils/api";
 
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   role: 'tenant' | 'landlord' | 'admin' | 'contractor' | 'worker' | 'designer';
   avatar?: string;
   address?: string;
@@ -24,18 +24,19 @@ export interface User {
   earnings?: number;
   rating?: number;
   completedJobs?: number;
+  password?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (userData: Omit<User, 'id'> & { password: string }) => Promise<boolean>;
+  signup: (userData: Omit<User, '_id'> & { password: string }) => Promise<boolean>;
   logout: () => void;
-  updateProfile: (userData: Partial<User>) => void;
+  updateProfile: (userData: Partial<User> | FormData) => Promise<void>;
   getAllUsers: () => User[];
   getUserById: (id: string) => User | undefined;
-  updateUser: (id: string, userData: Partial<User>) => void;
-  deleteUser: (id: string) => void;
+  updateUser: (id: string, userData: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load current user from localStorage or IndexedDB
+  // Load user from localStorage on start
   useEffect(() => {
     const loadUser = async () => {
       const savedUser = localStorage.getItem('currentUser');
@@ -60,135 +61,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return;
       }
-      try {
-        const { getSession } = await import('@/utils/indexedDB');
-        const session = await getSession();
-        if (session && session.user) setUser(session.user);
-      } catch (err) {
-        console.error('Failed to load session from IndexedDB:', err);
-      }
       setIsLoading(false);
     };
     loadUser();
   }, []);
 
-  // ✅ Login function (backend + local)
+  // Login
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const { data } = await API.login(email, password);
       setUser(data.user);
-      localStorage.setItem("currentUser", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
-
-      const { saveSession } = await import('@/utils/indexedDB');
-      await saveSession({ user: data.user });
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
       return true;
-    } catch {
-      // fallback to local storage only
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const foundUser = users.find((u: any) => u.email === email && u.password === password);
-      if (foundUser) {
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-        return true;
-      }
+    } catch (err) {
+      console.error('Login failed:', err);
       return false;
     }
   };
 
-  // ✅ Signup function (backend + local)
-  const signup = async (userData: Omit<User, 'id'> & { password: string }): Promise<boolean> => {
+  // Signup
+  const signup = async (userData: Omit<User, '_id'> & { password: string }): Promise<boolean> => {
     try {
       const { data } = await API.signup(userData);
       setUser(data.user);
-      localStorage.setItem("currentUser", JSON.stringify(data.user));
-
-      const { saveSession } = await import('@/utils/indexedDB');
-      await saveSession({ user: data.user });
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
       return true;
-    } catch {
-      // fallback local
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      if (users.find((u: any) => u.email === userData.email)) return false;
-      const newUser = { ...userData, id: Date.now().toString() };
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      const { password: _, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-      return true;
+    } catch (err) {
+      console.error('Signup failed:', err);
+      return false;
     }
   };
 
-  // ✅ Logout
-  const logout = async () => {
+  // Logout
+  const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
-    try {
-      const { clearSession } = await import('@/utils/indexedDB');
-      await clearSession();
-    } catch (err) {
-      console.error('Failed to clear IndexedDB session:', err);
-    }
   };
 
-  // ✅ Get all users (backend fallback to local)
+  // Get all users
   const getAllUsers = (): User[] => {
     return JSON.parse(localStorage.getItem('users') || '[]');
   };
 
-  // ✅ Get user by ID
+  // Get user by ID
   const getUserById = (id: string): User | undefined => {
     const users = getAllUsers();
-    return users.find(u => u.id === id);
+    return users.find(u => u._id === id);
   };
 
-  // ✅ Update profile (backend + local)
+  // Update own profile
   const updateProfile = async (userData: Partial<User> | FormData) => {
-  if (!user) return;
-
-  try {
-    let data;
-    if (userData instanceof FormData) {
-      const res = await API.updateUser(user.id, userData, { headers: { "Content-Type": "multipart/form-data" } });
-      data = res.data;
-    } else {
-      const res = await API.updateUser(user.id, userData);
-      data = res.data;
-    }
-
-    setUser(data);
-    localStorage.setItem("currentUser", JSON.stringify(data));
-  } catch {
-    // fallback local
-    const updatedUser = { ...user, ...(userData instanceof FormData ? {} : userData) };
-    setUser(updatedUser);
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-  }
-};
-
-  // ✅ Update any user (admin)
-  const updateUser = (id: string, userData: Partial<User>) => {
+    if (!user) return;
     try {
-      API.updateUser(id, userData);
-    } catch {}
-    const users = getAllUsers();
-    const updatedUsers = users.map(u => (u.id === id ? { ...u, ...userData } : u));
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    if (user?.id === id) setUser({ ...user, ...userData });
+      let res;
+      if (userData instanceof FormData) {
+        res = await API.updateUser(user._id, userData, { headers: { "Content-Type": "multipart/form-data" } });
+      } else {
+        res = await API.updateUser(user._id, userData);
+      }
+      setUser(res.data);
+      localStorage.setItem('currentUser', JSON.stringify(res.data));
+    } catch (err) {
+      console.error('Profile update failed:', err);
+    }
   };
 
-  // ✅ Delete user
-  const deleteUser = (id: string) => {
+  // Update any user (admin)
+  const updateUser = async (id: string, userData: Partial<User>) => {
     try {
-      API.deleteUser(id);
-    } catch {}
-    const users = getAllUsers();
-    const filteredUsers = users.filter(u => u.id !== id);
-    localStorage.setItem('users', JSON.stringify(filteredUsers));
-    if (user?.id === id) setUser(null);
+      const res = await API.updateUser(id, userData);
+      const users = getAllUsers();
+      const updatedUsers = users.map(u => u._id === id ? { ...u, ...res.data } : u);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      if (user?._id === id) setUser({ ...user, ...res.data });
+    } catch (err) {
+      console.error('Update user failed:', err);
+    }
+  };
+
+  // Delete user
+  const deleteUser = async (id: string) => {
+    try {
+      await API.deleteUser(id);
+      const users = getAllUsers();
+      const filteredUsers = users.filter(u => u._id !== id);
+      localStorage.setItem('users', JSON.stringify(filteredUsers));
+      if (user?._id === id) setUser(null);
+    } catch (err) {
+      console.error('Delete user failed:', err);
+    }
   };
 
   return (

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-// ✅ Signup
+// Signup
 export const signup = async (req, res) => {
   try {
     const { email, password, ...rest } = req.body;
@@ -21,7 +21,7 @@ export const signup = async (req, res) => {
   }
 };
 
-// ✅ Login
+// Login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -38,7 +38,7 @@ export const login = async (req, res) => {
   }
 };
 
-// ✅ Get All Users
+// Get All Users
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -48,7 +48,7 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// ✅ Get User By ID
+// Get User By ID
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -59,25 +59,28 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// ✅ Update User
+// Update User
 export const updateUser = async (req, res) => {
   try {
     let updateData = { ...req.body };
-
-    // If file is uploaded, add Cloudinary URL to updateData
     if (req.file && req.file.path) {
       updateData.profileImage = req.file.path;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select("-password");
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
     res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-
-// ✅ Delete User
+// Delete User
 export const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
