@@ -1,10 +1,25 @@
 import axios from "axios";
 
 // ------------------------------------
+// 🌐 Dynamic Backend URL Configuration
+// ------------------------------------
+
+// Check if running locally or in production
+const isLocal = window.location.hostname === "localhost";
+
+// If running locally → use localhost backend
+// If deployed → use your Vercel/Render backend URL
+const API_BASE_URL = isLocal
+  ? "http://localhost:5000/api"
+  : "https://destiny-real-estate-platform-1.onrender.com/api";
+
+console.log("🌍 Using backend:", API_BASE_URL);
+
+// ------------------------------------
 // Axios Instance
 // ------------------------------------
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // Matches backend
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -14,8 +29,7 @@ const API = axios.create({
 export const login = (email: string, password: string) =>
   API.post("/users/login", { email, password });
 
-export const signup = (userData: any) =>
-  API.post("/users/signup", userData);
+export const signup = (userData: any) => API.post("/users/signup", userData);
 
 // ------------------------------------
 // User Routes
@@ -27,14 +41,17 @@ export const updateUser = (id: string, userData: any, config?: any) =>
 export const deleteUser = (id: string) => API.delete(`/users/${id}`);
 
 // ------------------------------------
-// Construction Project Routes (FIXED) 
-// Must match backend router `/projects`
+// Construction Project Routes
 // ------------------------------------
 export const getAllProjects = () => API.get("/construction/projects");
-export const getProjectById = (id: string) => API.get(`/construction/projects/${id}`);
-export const createProject = (projectData: any) => API.post("/construction/projects", projectData);
-export const updateProject = (id: string, updatedData: any) => API.put(`/construction/projects/${id}`, updatedData);
-export const deleteProject = (id: string) => API.delete(`/construction/projects/${id}`);
+export const getProjectById = (id: string) =>
+  API.get(`/construction/projects/${id}`);
+export const createProject = (projectData: any) =>
+  API.post("/construction/projects", projectData);
+export const updateProject = (id: string, updatedData: any) =>
+  API.put(`/construction/projects/${id}`, updatedData);
+export const deleteProject = (id: string) =>
+  API.delete(`/construction/projects/${id}`);
 
 // ------------------------------------
 // Project Submodules
@@ -59,12 +76,14 @@ export const updateMaterialInProject = (
   materialId: string,
   materialData: any
 ) =>
-  API.put(`/construction/projects/${projectId}/materials/${materialId}`, materialData);
+  API.put(
+    `/construction/projects/${projectId}/materials/${materialId}`,
+    materialData
+  );
 export const deleteMaterialFromProject = (
   projectId: string,
   materialId: string
-) =>
-  API.delete(`/construction/projects/${projectId}/materials/${materialId}`);
+) => API.delete(`/construction/projects/${projectId}/materials/${materialId}`);
 
 // ✅ Approvals
 export const requestProjectApproval = (projectId: string) =>

@@ -14,12 +14,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --------------------
-// CORS Middleware
+// CORS Middleware (Safe + Flexible)
 // --------------------
-app.use(cors({
-  origin: "http://localhost:8080", // frontend origin
-  credentials: true, // allow cookies / JWT
-}));
+const allowedOrigins = [
+  "http://localhost:8080",           // local dev
+  process.env.CLIENT_URL             // deployed frontend (from .env)
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked for origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // --------------------
 // Body Parser
@@ -47,10 +61,8 @@ app.use("/api/jobs", jobRoutes);
 // --------------------
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI); // modern connection
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB connected");
-
-    // Start server only after DB is connected
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
