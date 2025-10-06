@@ -40,7 +40,7 @@ export interface DesignerApplicationDetails {
 }
 
 export interface JobApplication {
-  id: string;
+  id: string; // frontend-friendly ID
   role: "worker" | "contractor" | "designer";
   type: "construction" | "repair";
   applicantId: string;
@@ -55,6 +55,8 @@ export interface JobApplication {
 
   title?: string;
   description?: string;
+
+  _id?: string; // raw MongoDB ID (optional)
 }
 
 // -------------------- Context --------------------
@@ -80,10 +82,24 @@ export const useJob = () => {
 export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [jobs, setJobs] = useState<JobApplication[]>([]);
 
-  // Load jobs from localStorage initially
+  // Load jobs from backend or localStorage
   useEffect(() => {
-    const savedJobs = localStorage.getItem("jobs");
-    if (savedJobs) setJobs(JSON.parse(savedJobs));
+    const fetchJobs = async () => {
+      try {
+        const res = await API.get("/jobs");
+        // Map MongoDB _id to id
+        const backendJobs: JobApplication[] = res.data.map((job: JobApplication) => ({
+          ...job,
+          id: job.id || job._id, // fallback to _id
+        }));
+        setJobs(backendJobs);
+        localStorage.setItem("jobs", JSON.stringify(backendJobs));
+      } catch {
+        const savedJobs = localStorage.getItem("jobs");
+        if (savedJobs) setJobs(JSON.parse(savedJobs));
+      }
+    };
+    fetchJobs();
   }, []);
 
   const saveJobs = useCallback((updatedJobs: JobApplication[]) => {
@@ -93,12 +109,10 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const applyJob = useCallback(async (jobData: Omit<JobApplication, "id" | "createdAt" | "status">) => {
     try {
-      // Send to backend
       const res = await API.post("/jobs", jobData);
-      const newJob: JobApplication = { ...res.data };
+      const newJob: JobApplication = { ...res.data, id: res.data.id || res.data._id };
       saveJobs([...jobs, newJob]);
-    } catch (err) {
-      // Fallback to localStorage
+    } catch {
       const newJob: JobApplication = {
         ...jobData,
         id: Date.now().toString(),
@@ -109,38 +123,41 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [jobs, saveJobs]);
 
+  const updateJobStatus = useCallback((jobId: string, status: "approved" | "rejected" | "assigned", projectId?: string) => {
+    const updated = jobs.map(j =>
+      (j.id === jobId || j._id === jobId)
+        ? { ...j, status, assignedProjectId: projectId || j.assignedProjectId }
+        : j
+    );
+    saveJobs(updated);
+  }, [jobs, saveJobs]);
+
   const approveJob = useCallback(async (jobId: string) => {
     try {
       await API.put(`/jobs/${jobId}/approve`);
-      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "approved" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "approved");
     } catch {
-      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "approved" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "approved");
     }
-  }, [jobs, saveJobs]);
+  }, [updateJobStatus]);
 
   const rejectJob = useCallback(async (jobId: string) => {
     try {
       await API.put(`/jobs/${jobId}/reject`);
-      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "rejected" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "rejected");
     } catch {
-      const updated = jobs.map(j => j.id === jobId ? { ...j, status: "rejected" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "rejected");
     }
-  }, [jobs, saveJobs]);
+  }, [updateJobStatus]);
 
   const assignJob = useCallback(async (jobId: string, projectId: string) => {
     try {
       await API.put(`/jobs/${jobId}/assign`, { projectId });
-      const updated = jobs.map(j => j.id === jobId ? { ...j, assignedProjectId: projectId, status: "assigned" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "assigned", projectId);
     } catch {
-      const updated = jobs.map(j => j.id === jobId ? { ...j, assignedProjectId: projectId, status: "assigned" } : j);
-      saveJobs(updated);
+      updateJobStatus(jobId, "assigned", projectId);
     }
-  }, [jobs, saveJobs]);
+  }, [updateJobStatus]);
 
   // Role-specific arrays
   const workerApplications = jobs.filter(j => j.role === "worker");

@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
+// Worker Subschema
 const WorkerDetailsSchema = new mongoose.Schema({
-  fullName: String,
+  fullName: { type: String, required: true },
   dateOfBirth: String,
-  gender: { type: String, enum: ["Male", "Female", "Other"] },
+  gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   nationality: String,
   address: {
     street: String,
@@ -40,18 +41,22 @@ const WorkerDetailsSchema = new mongoose.Schema({
     institutionName: String,
     fieldOfStudy: String,
   },
-  employmentHistory: [{
-    companyName: String,
-    positionHeld: String,
-    startDate: String,
-    endDate: String,
-    responsibilities: String,
-  }],
-  references: [{
-    name: String,
-    relationship: String,
-    contact: String,
-  }],
+  employmentHistory: [
+    {
+      companyName: String,
+      positionHeld: String,
+      startDate: String,
+      endDate: String,
+      responsibilities: String,
+    },
+  ],
+  references: [
+    {
+      name: String,
+      relationship: String,
+      contact: String,
+    },
+  ],
   healthAndSafety: {
     medicalConditions: String,
     canLiftHeavy: Boolean,
@@ -70,11 +75,12 @@ const WorkerDetailsSchema = new mongoose.Schema({
   },
 });
 
+// Contractor Subschema
 const ContractorDetailsSchema = new mongoose.Schema({
-  fullName: String,
+  fullName: { type: String, required: true },
   companyName: String,
   dateOfBirth: String,
-  gender: { type: String, enum: ["Male", "Female", "Other"] },
+  gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   address: String,
   phone: String,
   email: String,
@@ -93,13 +99,15 @@ const ContractorDetailsSchema = new mongoose.Schema({
   insurance: [String],
   businessType: { type: String, enum: ["Sole Proprietor", "Partnership", "LLC", "Corp"] },
   taxNumber: String,
-  notableProjects: [{
-    projectName: String,
-    role: String,
-    startDate: String,
-    endDate: String,
-    value: String,
-  }],
+  notableProjects: [
+    {
+      projectName: String,
+      role: String,
+      startDate: String,
+      endDate: String,
+      value: String,
+    },
+  ],
   legalAndSafety: {
     legallyAllowed: Boolean,
     previousDisputes: String,
@@ -112,10 +120,11 @@ const ContractorDetailsSchema = new mongoose.Schema({
   },
 });
 
+// Designer Subschema
 const DesignerDetailsSchema = new mongoose.Schema({
-  fullName: String,
+  fullName: { type: String, required: true },
   dateOfBirth: String,
-  gender: { type: String, enum: ["Male", "Female", "Other"] },
+  gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   address: String,
   phone: String,
   email: String,
@@ -132,13 +141,15 @@ const DesignerDetailsSchema = new mongoose.Schema({
     fieldOfStudy: String,
     institutionName: String,
   },
-  employmentHistory: [{
-    companyOrClient: String,
-    role: String,
-    startDate: String,
-    endDate: String,
-    achievements: String,
-  }],
+  employmentHistory: [
+    {
+      companyOrClient: String,
+      role: String,
+      startDate: String,
+      endDate: String,
+      achievements: String,
+    },
+  ],
   portfolioSamples: [String],
   topProjects: [String],
   additionalInfo: {
@@ -148,18 +159,22 @@ const DesignerDetailsSchema = new mongoose.Schema({
   },
 });
 
-const JobApplicationSchema = new mongoose.Schema({
-  role: { type: String, enum: ["worker", "contractor", "designer"], required: true },
-  type: { type: String, enum: ["construction", "repair"], required: true },
-  applicantId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  applicantName: String,
-  status: { type: String, enum: ["pending", "approved", "assigned", "rejected"], default: "pending" },
-  assignedProjectId: { type: mongoose.Schema.Types.ObjectId, ref: "ConstructionProject" },
-  workerDetails: WorkerDetailsSchema,
-  contractorDetails: ContractorDetailsSchema,
-  designerDetails: DesignerDetailsSchema,
-  title: String,
-  description: String,
-}, { timestamps: true });
+// Main Job Application Schema
+const JobApplicationSchema = new mongoose.Schema(
+  {
+    role: { type: String, enum: ["worker", "contractor", "designer"], required: true },
+    type: { type: String, enum: ["construction", "repair"], required: true },
+    applicantId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    applicantName: { type: String, required: true },
+    status: { type: String, enum: ["pending", "approved", "assigned", "rejected"], default: "pending" },
+    assignedProjectId: { type: mongoose.Schema.Types.ObjectId, ref: "ConstructionProject", default: null },
+    workerDetails: WorkerDetailsSchema,
+    contractorDetails: ContractorDetailsSchema,
+    designerDetails: DesignerDetailsSchema,
+    title: String,
+    description: String,
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("JobApplication", JobApplicationSchema);

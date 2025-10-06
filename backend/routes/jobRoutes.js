@@ -10,7 +10,6 @@ const {
   deleteJob
 } = require("../controllers/jobController");
 
-// CRUD
 router.get("/", getJobs);
 router.get("/:id", getJobById);
 router.post("/", applyJob);

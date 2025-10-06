@@ -2,56 +2,90 @@ const JobApplication = require("../models/JobApplication");
 
 // Get all jobs
 exports.getJobs = async (req, res) => {
-  const jobs = await JobApplication.find();
-  res.json(jobs);
+  try {
+    const jobs = await JobApplication.find().sort({ createdAt: -1 });
+    res.status(200).json(jobs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch jobs" });
+  }
 };
 
 // Get job by ID
 exports.getJobById = async (req, res) => {
-  const job = await JobApplication.findById(req.params.id);
-  res.json(job);
+  try {
+    const job = await JobApplication.findById(req.params.id);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.status(200).json(job);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch job" });
+  }
 };
 
-// Apply for a job
+// Apply job
 exports.applyJob = async (req, res) => {
-  const newJob = new JobApplication(req.body);
-  await newJob.save();
-  res.json(newJob);
+  try {
+    const jobData = req.body;
+    if (jobData.role === "worker" && !jobData.workerDetails) return res.status(400).json({ error: "Worker details required" });
+    if (jobData.role === "contractor" && !jobData.contractorDetails) return res.status(400).json({ error: "Contractor details required" });
+    if (jobData.role === "designer" && !jobData.designerDetails) return res.status(400).json({ error: "Designer details required" });
+
+    const newJob = new JobApplication(jobData);
+    const savedJob = await newJob.save();
+    res.status(201).json(savedJob);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to apply for job" });
+  }
 };
 
 // Approve job
 exports.approveJob = async (req, res) => {
-  const job = await JobApplication.findByIdAndUpdate(
-    req.params.id,
-    { status: "approved" },
-    { new: true }
-  );
-  res.json(job);
+  try {
+    const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.json(job);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to approve job" });
+  }
 };
 
 // Reject job
 exports.rejectJob = async (req, res) => {
-  const job = await JobApplication.findByIdAndUpdate(
-    req.params.id,
-    { status: "rejected" },
-    { new: true }
-  );
-  res.json(job);
+  try {
+    const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.json(job);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to reject job" });
+  }
 };
 
-// Assign job to a project
+// Assign job
 exports.assignJob = async (req, res) => {
-  const { projectId } = req.body;
-  const job = await JobApplication.findByIdAndUpdate(
-    req.params.id,
-    { assignedProjectId: projectId, status: "assigned" },
-    { new: true }
-  );
-  res.json(job);
+  try {
+    const { projectId } = req.body;
+    if (!projectId) return res.status(400).json({ error: "Project ID required" });
+    const job = await JobApplication.findByIdAndUpdate(req.params.id, { assignedProjectId: projectId, status: "assigned" }, { new: true });
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.json(job);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to assign job" });
+  }
 };
 
 // Delete job
 exports.deleteJob = async (req, res) => {
-  await JobApplication.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
+  try {
+    const job = await JobApplication.findByIdAndDelete(req.params.id);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.json({ success: true, message: "Job deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete job" });
+  }
 };
