@@ -209,12 +209,12 @@ const AdminDashboard = () => {
                           yrs
                         </p>
                         <p>
-                          🏠 Address: {emp.workerDetails?.address.street},{" "}
-                          {emp.workerDetails?.address.city}
+                          🏠 Address: {emp.workerDetails?.address?.street ?? "N/A"},{" "}
+                          {emp.workerDetails?.address?.city ?? "N/A"}
                         </p>
                         <p>
                           🛠 Skills:{" "}
-                          {emp.workerDetails?.skillsAndCertifications.skills.join(
+                          {emp.workerDetails?.skillsAndCertifications.skills?.join(
                             ", "
                           )}
                         </p>

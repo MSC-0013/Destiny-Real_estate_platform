@@ -1,9 +1,26 @@
 import mongoose from "mongoose";
 import JobApplication from "../models/JobApplication.js";
 
-// --------------------
-// Jobs
-// --------------------
+// -------------------- Helpers --------------------
+const convertDates = (obj) => {
+  if (!obj) return obj;
+  const newObj = { ...obj };
+  Object.keys(newObj).forEach((key) => {
+    const value = newObj[key];
+    if (value && typeof value === "string" && !isNaN(Date.parse(value))) {
+      newObj[key] = new Date(value);
+    } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      newObj[key] = convertDates(value);
+    } else if (Array.isArray(value)) {
+      newObj[key] = value.map((item) => (typeof item === "object" ? convertDates(item) : item));
+    }
+  });
+  return newObj;
+};
+
+// -------------------- CRUD Controllers --------------------
+
+// Get all jobs
 export const getJobs = async (req, res) => {
   try {
     const jobs = await JobApplication.find().sort({ createdAt: -1 });
@@ -14,6 +31,7 @@ export const getJobs = async (req, res) => {
   }
 };
 
+// Get job by ID
 export const getJobById = async (req, res) => {
   try {
     const job = await JobApplication.findById(req.params.id);
@@ -25,28 +43,38 @@ export const getJobById = async (req, res) => {
   }
 };
 
+// Apply for job
 export const applyJob = async (req, res) => {
   try {
-    const jobData = req.body;
-    if (!jobData.applicantId) return res.status(400).json({ error: "Applicant ID required" });
-    jobData.applicantId = mongoose.Types.ObjectId(jobData.applicantId);
+    const {
+      role,
+      type,
+      applicantId,
+      applicantName,
+      workerDetails,
+      contractorDetails,
+      designerDetails,
+      title,
+      description,
+      assignedProjectId,
+    } = req.body;
 
-    // Convert dates in workerDetails
-    if (jobData.workerDetails) {
-      if (jobData.workerDetails.dateOfBirth)
-        jobData.workerDetails.dateOfBirth = new Date(jobData.workerDetails.dateOfBirth);
-
-      if (jobData.workerDetails.employmentPreferences?.startDate)
-        jobData.workerDetails.employmentPreferences.startDate = new Date(jobData.workerDetails.employmentPreferences.startDate);
-
-      if (jobData.workerDetails.employmentHistory?.length) {
-        jobData.workerDetails.employmentHistory = jobData.workerDetails.employmentHistory.map(job => ({
-          ...job,
-          startDate: job.startDate ? new Date(job.startDate) : undefined,
-          endDate: job.endDate ? new Date(job.endDate) : undefined,
-        }));
-      }
+    if (!role || !type || !applicantId || !applicantName) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
+
+    const jobData = {
+      role,
+      type,
+      applicantId: new mongoose.Types.ObjectId(applicantId),
+      applicantName,
+      workerDetails: convertDates(workerDetails),
+      contractorDetails: convertDates(contractorDetails),
+      designerDetails: convertDates(designerDetails),
+      title,
+      description,
+      assignedProjectId: assignedProjectId ? new mongoose.Types.ObjectId(assignedProjectId) : null,
+    };
 
     const newJob = new JobApplication(jobData);
     const savedJob = await newJob.save();
@@ -57,9 +85,14 @@ export const applyJob = async (req, res) => {
   }
 };
 
+// Approve job
 export const approveJob = async (req, res) => {
   try {
-    const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
+    const job = await JobApplication.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true }
+    );
     if (!job) return res.status(404).json({ error: "Job not found" });
     res.json(job);
   } catch (err) {
@@ -68,9 +101,14 @@ export const approveJob = async (req, res) => {
   }
 };
 
+// Reject job
 export const rejectJob = async (req, res) => {
   try {
-    const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
+    const job = await JobApplication.findByIdAndUpdate(
+      req.params.id,
+      { status: "rejected" },
+      { new: true }
+    );
     if (!job) return res.status(404).json({ error: "Job not found" });
     res.json(job);
   } catch (err) {
@@ -79,11 +117,18 @@ export const rejectJob = async (req, res) => {
   }
 };
 
+// Assign job
 export const assignJob = async (req, res) => {
   try {
     const { projectId } = req.body;
     if (!projectId) return res.status(400).json({ error: "Project ID required" });
-    const job = await JobApplication.findByIdAndUpdate(req.params.id, { assignedProjectId: projectId, status: "assigned" }, { new: true });
+
+    const job = await JobApplication.findByIdAndUpdate(
+      req.params.id,
+      { assignedProjectId: new mongoose.Types.ObjectId(projectId), status: "assigned" },
+      { new: true }
+    );
+
     if (!job) return res.status(404).json({ error: "Job not found" });
     res.json(job);
   } catch (err) {
@@ -92,6 +137,7 @@ export const assignJob = async (req, res) => {
   }
 };
 
+// Delete job
 export const deleteJob = async (req, res) => {
   try {
     const job = await JobApplication.findByIdAndDelete(req.params.id);

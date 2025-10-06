@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 
-// --------------------
-// Worker Subschema
-// --------------------
+// -------------------- Worker Subschema --------------------
 const WorkerDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   dateOfBirth: { type: Date },
@@ -30,8 +28,8 @@ const WorkerDetailsSchema = new mongoose.Schema({
     employmentType: { type: String, enum: ["Full-time", "Part-time", "Temporary/Contract"] },
   },
   skillsAndCertifications: {
-    skills: [String],
-    certifications: [String],
+    skills: { type: [String], default: [] },
+    certifications: { type: [String], default: [] },
     safetyTraining: Boolean,
     forkliftCertification: Boolean,
     firstAidCertification: Boolean,
@@ -47,8 +45,8 @@ const WorkerDetailsSchema = new mongoose.Schema({
     {
       companyName: String,
       positionHeld: String,
-      startDate: { type: Date },
-      endDate: { type: Date },
+      startDate: Date,
+      endDate: Date,
       responsibilities: String,
     },
   ],
@@ -72,18 +70,16 @@ const WorkerDetailsSchema = new mongoose.Schema({
   additionalInfo: {
     motivation: String,
     achievements: String,
-    languages: [String],
-    hobbies: [String],
+    languages: { type: [String], default: [] },
+    hobbies: { type: [String], default: [] },
   },
 });
 
-// --------------------
-// Contractor Subschema
-// --------------------
+// -------------------- Contractor Subschema --------------------
 const ContractorDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   companyName: String,
-  dateOfBirth: { type: Date },
+  dateOfBirth: Date,
   gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   address: String,
   phone: String,
@@ -91,24 +87,24 @@ const ContractorDetailsSchema = new mongoose.Schema({
   website: String,
   contractorType: { type: String, enum: ["General", "Subcontractor", "Specialty"] },
   licenseNumber: String,
-  licenseExpiry: { type: Date },
+  licenseExpiry: Date,
   yearsExperience: Number,
   teamSize: Number,
-  areasOfExpertise: String,
-  startDate: { type: Date },
+  areasOfExpertise: { type: [String], default: [] },
+  startDate: Date,
   preferredLocations: String,
   willingToTravel: Boolean,
-  skills: [String],
-  certifications: [String],
-  insurance: [String],
+  skills: { type: [String], default: [] },
+  certifications: { type: [String], default: [] },
+  insurance: { type: [String], default: [] },
   businessType: { type: String, enum: ["Sole Proprietor", "Partnership", "LLC", "Corp"] },
   taxNumber: String,
   notableProjects: [
     {
       projectName: String,
       role: String,
-      startDate: { type: Date },
-      endDate: { type: Date },
+      startDate: Date,
+      endDate: Date,
       value: String,
     },
   ],
@@ -124,24 +120,22 @@ const ContractorDetailsSchema = new mongoose.Schema({
   },
 });
 
-// --------------------
-// Designer Subschema
-// --------------------
+// -------------------- Designer Subschema --------------------
 const DesignerDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
-  dateOfBirth: { type: Date },
+  dateOfBirth: Date,
   gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   address: String,
   phone: String,
   email: String,
   portfolio: String,
   positionApplied: String,
-  startDate: { type: Date },
+  startDate: Date,
   preferredWorkType: { type: String, enum: ["Full-time", "Part-time", "Freelance/Contract"] },
   expectedSalary: String,
-  toolsProficiency: [String],
-  designSkills: [String],
-  certifications: [String],
+  toolsProficiency: { type: [String], default: [] },
+  designSkills: { type: [String], default: [] },
+  certifications: { type: [String], default: [] },
   education: {
     highestQualification: String,
     fieldOfStudy: String,
@@ -151,23 +145,21 @@ const DesignerDetailsSchema = new mongoose.Schema({
     {
       companyOrClient: String,
       role: String,
-      startDate: { type: Date },
-      endDate: { type: Date },
+      startDate: Date,
+      endDate: Date,
       achievements: String,
     },
   ],
-  portfolioSamples: [String],
-  topProjects: [String],
+  portfolioSamples: { type: [String], default: [] },
+  topProjects: { type: [String], default: [] },
   additionalInfo: {
-    languages: [String],
-    hobbies: [String],
+    languages: { type: [String], default: [] },
+    hobbies: { type: [String], default: [] },
     motivation: String,
   },
 });
 
-// --------------------
-// Main Job Application Schema
-// --------------------
+// -------------------- Main JobApplication Schema --------------------
 const JobApplicationSchema = new mongoose.Schema(
   {
     role: { type: String, enum: ["worker", "contractor", "designer"], required: true },
