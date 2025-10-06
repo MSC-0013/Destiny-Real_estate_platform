@@ -1,436 +1,436 @@
-// -------------------- ConstructionContext.tsx --------------------
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { openDB, DBSchema } from "idb";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
+  // -------------------- ConstructionContext.tsx --------------------
+  import React, { createContext, useContext, useState, useEffect } from "react";
+  import { openDB, DBSchema } from "idb";
+  import { v4 as uuidv4 } from "uuid";
+  import axios from "axios";
 
-// -------------------- API Config --------------------
-const API = axios.create({
-  baseURL: "http://localhost:5000/api", 
-});
+  // -------------------- API Config --------------------
+  const API = axios.create({
+    baseURL: "http://localhost:5000/api", 
+  });
 
-// -------------------- Interfaces --------------------
-export interface ConstructionProject {
-  id: string;
-  title: string;
-  description: string;
-  clientId: string;
-  clientName: string;
-  location: string;
-  address: string;
-  projectType: "residential" | "commercial" | "renovation" | "interior";
-  status: "pending" | "approved" | "in-progress" | "completed" | "cancelled";
-  phase:
-    | "planning"
-    | "foundation"
-    | "structure"
-    | "interior"
-    | "finishing"
-    | "completed";
-  startDate?: string;
-  endDate?: string;
-  estimatedCost: number;
-  actualCost?: number;
-  contractorId?: string;
-  contractorName?: string;
-  designerId?: string;
-  designerName?: string;
-  workers?: string[];
-  blueprints?: string[];
-  progressImages?: string[];
-  tasks: Task[];
-  materials: Material[];
-  payments: Payment[];
-  requests: ApprovalRequest[];
-  adminId?: string;
-}
+  // -------------------- Interfaces --------------------
+  export interface ConstructionProject {
+    id: string;
+    title: string;
+    description: string;
+    clientId: string;
+    clientName: string;
+    location: string;
+    address: string;
+    projectType: "residential" | "commercial" | "renovation" | "interior";
+    status: "pending" | "approved" | "in-progress" | "completed" | "cancelled";
+    phase:
+      | "planning"
+      | "foundation"
+      | "structure"
+      | "interior"
+      | "finishing"
+      | "completed";
+    startDate?: string;
+    endDate?: string;
+    estimatedCost: number;
+    actualCost?: number;
+    contractorId?: string;
+    contractorName?: string;
+    designerId?: string;
+    designerName?: string;
+    workers?: string[];
+    blueprints?: string[];
+    progressImages?: string[];
+    tasks: Task[];
+    materials: Material[];
+    payments: Payment[];
+    requests: ApprovalRequest[];
+    adminId?: string;
+  }
 
-export interface Task {
-  id: string;
-  projectId?: string;
-  title: string;
-  description: string;
-  assignedTo: string;
-  assigneeName: string;
-  status: "pending" | "in-progress" | "completed";
-  priority: "low" | "medium" | "high";
-  startDate?: string;
-  endDate?: string;
-  completedAt?: string;
-}
+  export interface Task {
+    id: string;
+    projectId?: string;
+    title: string;
+    description: string;
+    assignedTo: string;
+    assigneeName: string;
+    status: "pending" | "in-progress" | "completed";
+    priority: "low" | "medium" | "high";
+    startDate?: string;
+    endDate?: string;
+    completedAt?: string;
+  }
 
-export interface Material {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  unitCost: number;
-  totalCost: number;
-  supplier: string;
-  purchasedAt?: string;
-}
+  export interface Material {
+    id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    unitCost: number;
+    totalCost: number;
+    supplier: string;
+    purchasedAt?: string;
+  }
 
-export interface Payment {
-  id: string;
-  amount: number;
-  type: "advance" | "milestone" | "final";
-  status: "pending" | "paid" | "overdue";
-  dueDate: string;
-  paidAt?: string;
-  description: string;
-}
+  export interface Payment {
+    id: string;
+    amount: number;
+    type: "advance" | "milestone" | "final";
+    status: "pending" | "paid" | "overdue";
+    dueDate: string;
+    paidAt?: string;
+    description: string;
+  }
 
-export interface ApprovalRequest {
-  id: string;
-  type: "project" | "task" | "material" | "payment";
-  targetId: string;
-  requestedBy: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
+  export interface ApprovalRequest {
+    id: string;
+    type: "project" | "task" | "material" | "payment";
+    targetId: string;
+    requestedBy: string;
+    status: "pending" | "approved" | "rejected";
+    createdAt: string;
+  }
 
-export interface RepairRequest {
-  id: string;
-  title: string;
-  description: string;
-  clientId: string;
-  clientName: string;
-  location: string;
-  address: string;
-  projectType: "residential" | "commercial" | "renovation" | "interior";
-  urgency: "low" | "medium" | "high";
-  attachments?: File[];
-  estimatedCost?: number;
-  status: "pending" | "approved" | "in-progress" | "completed" | "rejected";
-  createdAt: string;
-  adminId?: string;
-}
+  export interface RepairRequest {
+    id: string;
+    title: string;
+    description: string;
+    clientId: string;
+    clientName: string;
+    location: string;
+    address: string;
+    projectType: "residential" | "commercial" | "renovation" | "interior";
+    urgency: "low" | "medium" | "high";
+    attachments?: File[];
+    estimatedCost?: number;
+    status: "pending" | "approved" | "in-progress" | "completed" | "rejected";
+    createdAt: string;
+    adminId?: string;
+  }
 
-// -------------------- Context Type --------------------
-interface ConstructionContextType {
-  projects: ConstructionProject[];
-  addProject: (
-    project: Omit<
-      ConstructionProject,
-      | "id"
-      | "createdAt"
-      | "actualCost"
-      | "tasks"
-      | "materials"
-      | "payments"
-      | "requests"
-    >
-  ) => Promise<void>;
-  updateProject: (id: string, updates: Partial<ConstructionProject>) => Promise<void>;
-  deleteProject: (id: string) => Promise<void>;
-  getProject: (id: string) => ConstructionProject | undefined;
-  addTask: (projectId: string, task: Omit<Task, "id" | "projectId">) => void;
-  updateTask: (taskId: string, updates: Partial<Task>) => void;
-  addMaterial: (projectId: string, material: Omit<Material, "id" | "totalCost">) => void;
-  addPayment: (projectId: string, payment: Omit<Payment, "id">) => void;
-  getProjectsByRole: (userId: string, role: string) => ConstructionProject[];
-  requestApproval: (
-    projectId: string,
-    request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
-  ) => void;
-  approveRequest: (projectId: string, requestId: string, approve: boolean) => void;
-  repairRequests: RepairRequest[];
-  addRepairRequest: (request: Omit<RepairRequest, "id" | "createdAt" | "status">) => void;
-  approveRepairRequest: (id: string) => void;
-  rejectRepairRequest: (id: string) => void;
-  constructionRequests: ApprovalRequest[];
-  approveConstructionRequest: (id: string) => void;
-  rejectConstructionRequest: (id: string) => void;
-  updateProjectMaterials: (projectId: string, materials: Material[]) => void;
-}
+  // -------------------- Context Type --------------------
+  interface ConstructionContextType {
+    projects: ConstructionProject[];
+    addProject: (
+      project: Omit<
+        ConstructionProject,
+        | "id"
+        | "createdAt"
+        | "actualCost"
+        | "tasks"
+        | "materials"
+        | "payments"
+        | "requests"
+      >
+    ) => Promise<void>;
+    updateProject: (id: string, updates: Partial<ConstructionProject>) => Promise<void>;
+    deleteProject: (id: string) => Promise<void>;
+    getProject: (id: string) => ConstructionProject | undefined;
+    addTask: (projectId: string, task: Omit<Task, "id" | "projectId">) => void;
+    updateTask: (taskId: string, updates: Partial<Task>) => void;
+    addMaterial: (projectId: string, material: Omit<Material, "id" | "totalCost">) => void;
+    addPayment: (projectId: string, payment: Omit<Payment, "id">) => void;
+    getProjectsByRole: (userId: string, role: string) => ConstructionProject[];
+    requestApproval: (
+      projectId: string,
+      request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
+    ) => void;
+    approveRequest: (projectId: string, requestId: string, approve: boolean) => void;
+    repairRequests: RepairRequest[];
+    addRepairRequest: (request: Omit<RepairRequest, "id" | "createdAt" | "status">) => void;
+    approveRepairRequest: (id: string) => void;
+    rejectRepairRequest: (id: string) => void;
+    constructionRequests: ApprovalRequest[];
+    approveConstructionRequest: (id: string) => void;
+    rejectConstructionRequest: (id: string) => void;
+    updateProjectMaterials: (projectId: string, materials: Material[]) => void;
+  }
 
-// -------------------- Context --------------------
-const ConstructionContext = createContext<ConstructionContextType | undefined>(undefined);
-export const useConstruction = () => {
-  const context = useContext(ConstructionContext);
-  if (!context) throw new Error("useConstruction must be used within a ConstructionProvider");
-  return context;
-};
+  // -------------------- Context --------------------
+  const ConstructionContext = createContext<ConstructionContextType | undefined>(undefined);
+  export const useConstruction = () => {
+    const context = useContext(ConstructionContext);
+    if (!context) throw new Error("useConstruction must be used within a ConstructionProvider");
+    return context;
+  };
 
-// -------------------- IndexedDB Setup --------------------
-interface ConstructionDB extends DBSchema {
-  projects: { key: string; value: ConstructionProject };
-}
-const dbPromise = openDB<ConstructionDB>("construction-db", 1, {
-  upgrade(db) {
-    if (!db.objectStoreNames.contains("projects")) {
-      db.createObjectStore("projects", { keyPath: "id" });
-    }
-  },
-});
+  // -------------------- IndexedDB Setup --------------------
+  interface ConstructionDB extends DBSchema {
+    projects: { key: string; value: ConstructionProject };
+  }
+  const dbPromise = openDB<ConstructionDB>("construction-db", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("projects")) {
+        db.createObjectStore("projects", { keyPath: "id" });
+      }
+    },
+  });
 
-// -------------------- Provider --------------------
-export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [projects, setProjects] = useState<ConstructionProject[]>([]);
-  const [repairRequests, setRepairRequests] = useState<RepairRequest[]>([]);
-  const [constructionRequests, setConstructionRequests] = useState<ApprovalRequest[]>([]);
+  // -------------------- Provider --------------------
+  export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [projects, setProjects] = useState<ConstructionProject[]>([]);
+    const [repairRequests, setRepairRequests] = useState<RepairRequest[]>([]);
+    const [constructionRequests, setConstructionRequests] = useState<ApprovalRequest[]>([]);
 
-  // Load data from LocalStorage / IndexedDB
-  useEffect(() => {
-    const loadData = async () => {
+    // Load data from LocalStorage / IndexedDB
+    useEffect(() => {
+      const loadData = async () => {
+        const db = await dbPromise;
+
+        // Projects
+        const allProjects = await db.getAll("projects");
+        if (allProjects.length > 0) {
+          setProjects(allProjects);
+          localStorage.setItem("constructionProjects", JSON.stringify(allProjects));
+        } else {
+          const tx = db.transaction("projects", "readwrite");
+          for (const proj of []) tx.store.put(proj); // replace [] with sampleProjects if needed
+          await tx.done;
+        }
+
+        // Repair Requests
+        const savedRepairRequests = localStorage.getItem("repairRequests");
+        if (savedRepairRequests) setRepairRequests(JSON.parse(savedRepairRequests));
+
+        // Construction Requests
+        const savedConstructionRequests = localStorage.getItem("constructionRequests");
+        if (savedConstructionRequests) setConstructionRequests(JSON.parse(savedConstructionRequests));
+      };
+      loadData();
+    }, []);
+
+    // -------------------- Save Helpers --------------------
+    const saveProjects = async (updated: ConstructionProject[]) => {
+      setProjects(updated);
+      localStorage.setItem("constructionProjects", JSON.stringify(updated));
       const db = await dbPromise;
-
-      // Projects
-      const allProjects = await db.getAll("projects");
-      if (allProjects.length > 0) {
-        setProjects(allProjects);
-        localStorage.setItem("constructionProjects", JSON.stringify(allProjects));
-      } else {
-        const tx = db.transaction("projects", "readwrite");
-        for (const proj of []) tx.store.put(proj); // replace [] with sampleProjects if needed
-        await tx.done;
-      }
-
-      // Repair Requests
-      const savedRepairRequests = localStorage.getItem("repairRequests");
-      if (savedRepairRequests) setRepairRequests(JSON.parse(savedRepairRequests));
-
-      // Construction Requests
-      const savedConstructionRequests = localStorage.getItem("constructionRequests");
-      if (savedConstructionRequests) setConstructionRequests(JSON.parse(savedConstructionRequests));
+      const tx = db.transaction("projects", "readwrite");
+      for (const project of updated) await tx.store.put(project);
+      await tx.done;
     };
-    loadData();
-  }, []);
 
-  // -------------------- Save Helpers --------------------
-  const saveProjects = async (updated: ConstructionProject[]) => {
-    setProjects(updated);
-    localStorage.setItem("constructionProjects", JSON.stringify(updated));
-    const db = await dbPromise;
-    const tx = db.transaction("projects", "readwrite");
-    for (const project of updated) await tx.store.put(project);
-    await tx.done;
-  };
-
-  const saveRepairRequests = async (requests: RepairRequest[]) => {
-    setRepairRequests(requests);
-    localStorage.setItem("repairRequests", JSON.stringify(requests));
-  };
-
-  const saveConstructionRequests = (requests: ApprovalRequest[]) => {
-    setConstructionRequests(requests);
-    localStorage.setItem("constructionRequests", JSON.stringify(requests));
-  };
-
-  // -------------------- CRUD with Backend Sync --------------------
-  const addProject = async (
-    project: Omit<
-      ConstructionProject,
-      | "id"
-      | "createdAt"
-      | "actualCost"
-      | "tasks"
-      | "materials"
-      | "payments"
-      | "requests"
-    >
-  ) => {
-    const newProject: ConstructionProject = {
-      ...project,
-      id: uuidv4(),
-      tasks: [],
-      materials: [],
-      payments: [],
-      requests: [],
+    const saveRepairRequests = async (requests: RepairRequest[]) => {
+      setRepairRequests(requests);
+      localStorage.setItem("repairRequests", JSON.stringify(requests));
     };
-    const updated = [...projects, newProject];
-    await saveProjects(updated);
 
-    // backend sync
-    try {
-      await API.post("/construction/projects", newProject);
-    } catch (error) {
-      console.error("Backend addProject error:", error);
-    }
-  };
+    const saveConstructionRequests = (requests: ApprovalRequest[]) => {
+      setConstructionRequests(requests);
+      localStorage.setItem("constructionRequests", JSON.stringify(requests));
+    };
 
-  const updateProject = async (id: string, updates: Partial<ConstructionProject>) => {
-    const updatedProjects = projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
-    await saveProjects(updatedProjects);
+    // -------------------- CRUD with Backend Sync --------------------
+    const addProject = async (
+      project: Omit<
+        ConstructionProject,
+        | "id"
+        | "createdAt"
+        | "actualCost"
+        | "tasks"
+        | "materials"
+        | "payments"
+        | "requests"
+      >
+    ) => {
+      const newProject: ConstructionProject = {
+        ...project,
+        id: uuidv4(),
+        tasks: [],
+        materials: [],
+        payments: [],
+        requests: [],
+      };
+      const updated = [...projects, newProject];
+      await saveProjects(updated);
 
-    const project = updatedProjects.find((p) => p.id === id);
-    if (project) {
+      // backend sync
       try {
-        await API.put(`/construction/projects/${id}`, project);
+        await API.post("/construction/projects", newProject);
       } catch (error) {
-        console.error("Backend updateProject error:", error);
+        console.error("Backend addProject error:", error);
       }
-    }
-  };
-
-  const deleteProject = async (id: string) => {
-    const updated = projects.filter((p) => p.id !== id);
-    await saveProjects(updated);
-
-    try {
-      await API.delete(`/construction/projects/${id}`);
-    } catch (error) {
-      console.error("Backend deleteProject error:", error);
-    }
-  };
-
-  const getProject = (id: string) => projects.find((p) => p.id === id);
-
-  // -------------------- Tasks --------------------
-  const addTask = async (projectId: string, task: Omit<Task, "id" | "projectId">) => {
-    const newTask: Task = { ...task, id: Date.now().toString(), projectId };
-    const updated = projects.map((p) =>
-      p.id === projectId ? { ...p, tasks: [...p.tasks, newTask] } : p
-    );
-    await saveProjects(updated);
-  };
-
-  const updateTask = async (taskId: string, updates: Partial<Task>) => {
-    const updated = projects.map((p) => ({
-      ...p,
-      tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
-    }));
-    await saveProjects(updated);
-  };
-
-  // -------------------- Materials --------------------
-  const addMaterial = async (projectId: string, material: Omit<Material, "id" | "totalCost">) => {
-    const newMaterial: Material = {
-      ...material,
-      id: Date.now().toString(),
-      totalCost: material.quantity * material.unitCost,
     };
-    const updated = projects.map((p) =>
-      p.id === projectId ? { ...p, materials: [...p.materials, newMaterial] } : p
-    );
-    await saveProjects(updated);
-  };
 
-  // -------------------- Payments --------------------
-  const addPayment = async (projectId: string, payment: Omit<Payment, "id">) => {
-    const newPayment: Payment = { ...payment, id: Date.now().toString() };
-    const updated = projects.map((p) =>
-      p.id === projectId ? { ...p, payments: [...p.payments, newPayment] } : p
-    );
-    await saveProjects(updated);
-  };
+    const updateProject = async (id: string, updates: Partial<ConstructionProject>) => {
+      const updatedProjects = projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
+      await saveProjects(updatedProjects);
 
-  // -------------------- Projects by Role --------------------
-  const getProjectsByRole = (userId: string, role: string) => {
-    if (role === "admin") return projects;
-    return projects.filter(
-      (p) =>
-        p.clientId === userId ||
-        p.contractorId === userId ||
-        p.designerId === userId ||
-        p.workers?.includes(userId)
-    );
-  };
-
-  // -------------------- Approval Requests --------------------
-  const requestApproval = (
-    projectId: string,
-    request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
-  ) => {
-    const newRequest: ApprovalRequest = {
-      ...request,
-      id: Date.now().toString(),
-      status: "pending",
-      createdAt: new Date().toISOString(),
+      const project = updatedProjects.find((p) => p.id === id);
+      if (project) {
+        try {
+          await API.put(`/construction/projects/${id}`, project);
+        } catch (error) {
+          console.error("Backend updateProject error:", error);
+        }
+      }
     };
-    const updated = projects.map((p) =>
-      p.id === projectId ? { ...p, requests: [...(p.requests || []), newRequest] } : p
-    );
-    saveProjects(updated);
-  };
 
-  const approveRequest = (projectId: string, requestId: string, approve: boolean) => {
-    const updated = projects.map((p) => {
-      if (p.id !== projectId) return p;
-      const updatedReq = p.requests?.map((r) =>
-        r.id === requestId ? { ...r, status: approve ? "approved" : "rejected" } : r
+    const deleteProject = async (id: string) => {
+      const updated = projects.filter((p) => p.id !== id);
+      await saveProjects(updated);
+
+      try {
+        await API.delete(`/construction/projects/${id}`);
+      } catch (error) {
+        console.error("Backend deleteProject error:", error);
+      }
+    };
+
+    const getProject = (id: string) => projects.find((p) => p.id === id);
+
+    // -------------------- Tasks --------------------
+    const addTask = async (projectId: string, task: Omit<Task, "id" | "projectId">) => {
+      const newTask: Task = { ...task, id: Date.now().toString(), projectId };
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, tasks: [...p.tasks, newTask] } : p
       );
-      return { ...p, requests: updatedReq || [] };
-    });
-    saveProjects(updated);
-  };
-
-  // -------------------- Repair Requests --------------------
-  const addRepairRequest = (
-    request: Omit<RepairRequest, "id" | "createdAt" | "status">
-  ) => {
-    const newRequest: RepairRequest = {
-      ...request,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      status: "pending",
+      await saveProjects(updated);
     };
-    const updated = [...repairRequests, newRequest];
-    saveRepairRequests(updated);
-  };
 
-  const approveRepairRequest = (id: string) => {
-    const updated = repairRequests.map((r) =>
-      r.id === id ? { ...r, status: "approved" } : r
+    const updateTask = async (taskId: string, updates: Partial<Task>) => {
+      const updated = projects.map((p) => ({
+        ...p,
+        tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+      }));
+      await saveProjects(updated);
+    };
+
+    // -------------------- Materials --------------------
+    const addMaterial = async (projectId: string, material: Omit<Material, "id" | "totalCost">) => {
+      const newMaterial: Material = {
+        ...material,
+        id: Date.now().toString(),
+        totalCost: material.quantity * material.unitCost,
+      };
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, materials: [...p.materials, newMaterial] } : p
+      );
+      await saveProjects(updated);
+    };
+
+    // -------------------- Payments --------------------
+    const addPayment = async (projectId: string, payment: Omit<Payment, "id">) => {
+      const newPayment: Payment = { ...payment, id: Date.now().toString() };
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, payments: [...p.payments, newPayment] } : p
+      );
+      await saveProjects(updated);
+    };
+
+    // -------------------- Projects by Role --------------------
+    const getProjectsByRole = (userId: string, role: string) => {
+      if (role === "admin") return projects;
+      return projects.filter(
+        (p) =>
+          p.clientId === userId ||
+          p.contractorId === userId ||
+          p.designerId === userId ||
+          p.workers?.includes(userId)
+      );
+    };
+
+    // -------------------- Approval Requests --------------------
+    const requestApproval = (
+      projectId: string,
+      request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
+    ) => {
+      const newRequest: ApprovalRequest = {
+        ...request,
+        id: Date.now().toString(),
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, requests: [...(p.requests || []), newRequest] } : p
+      );
+      saveProjects(updated);
+    };
+
+    const approveRequest = (projectId: string, requestId: string, approve: boolean) => {
+      const updated = projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const updatedReq = p.requests?.map((r) =>
+          r.id === requestId ? { ...r, status: approve ? "approved" : "rejected" } : r
+        );
+        return { ...p, requests: updatedReq || [] };
+      });
+      saveProjects(updated);
+    };
+
+    // -------------------- Repair Requests --------------------
+    const addRepairRequest = (
+      request: Omit<RepairRequest, "id" | "createdAt" | "status">
+    ) => {
+      const newRequest: RepairRequest = {
+        ...request,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+        status: "pending",
+      };
+      const updated = [...repairRequests, newRequest];
+      saveRepairRequests(updated);
+    };
+
+    const approveRepairRequest = (id: string) => {
+      const updated = repairRequests.map((r) =>
+        r.id === id ? { ...r, status: "approved" } : r
+      );
+      saveRepairRequests(updated);
+    };
+
+    const rejectRepairRequest = (id: string) => {
+      const updated = repairRequests.map((r) =>
+        r.id === id ? { ...r, status: "rejected" } : r
+      );
+      saveRepairRequests(updated);
+    };
+
+    // -------------------- Construction Requests --------------------
+    const approveConstructionRequest = (id: string) => {
+      const updated = constructionRequests.map((r) =>
+        r.id === id ? { ...r, status: "approved" } : r
+      );
+      saveConstructionRequests(updated);
+    };
+
+    const rejectConstructionRequest = (id: string) => {
+      const updated = constructionRequests.map((r) =>
+        r.id === id ? { ...r, status: "rejected" } : r
+      );
+      saveConstructionRequests(updated);
+    };
+
+    const updateProjectMaterials = (projectId: string, materials: Material[]) => {
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, materials } : p
+      );
+      saveProjects(updated);
+    };
+
+    return (
+      <ConstructionContext.Provider
+        value={{
+          projects,
+          addProject,
+          updateProject,
+          deleteProject,
+          getProject,
+          addTask,
+          updateTask,
+          addMaterial,
+          addPayment,
+          getProjectsByRole,
+          requestApproval,
+          approveRequest,
+          repairRequests,
+          addRepairRequest,
+          approveRepairRequest,
+          rejectRepairRequest,
+          constructionRequests,
+          approveConstructionRequest,
+          rejectConstructionRequest,
+          updateProjectMaterials,
+        }}
+      >
+        {children}
+      </ConstructionContext.Provider>
     );
-    saveRepairRequests(updated);
   };
-
-  const rejectRepairRequest = (id: string) => {
-    const updated = repairRequests.map((r) =>
-      r.id === id ? { ...r, status: "rejected" } : r
-    );
-    saveRepairRequests(updated);
-  };
-
-  // -------------------- Construction Requests --------------------
-  const approveConstructionRequest = (id: string) => {
-    const updated = constructionRequests.map((r) =>
-      r.id === id ? { ...r, status: "approved" } : r
-    );
-    saveConstructionRequests(updated);
-  };
-
-  const rejectConstructionRequest = (id: string) => {
-    const updated = constructionRequests.map((r) =>
-      r.id === id ? { ...r, status: "rejected" } : r
-    );
-    saveConstructionRequests(updated);
-  };
-
-  const updateProjectMaterials = (projectId: string, materials: Material[]) => {
-    const updated = projects.map((p) =>
-      p.id === projectId ? { ...p, materials } : p
-    );
-    saveProjects(updated);
-  };
-
-  return (
-    <ConstructionContext.Provider
-      value={{
-        projects,
-        addProject,
-        updateProject,
-        deleteProject,
-        getProject,
-        addTask,
-        updateTask,
-        addMaterial,
-        addPayment,
-        getProjectsByRole,
-        requestApproval,
-        approveRequest,
-        repairRequests,
-        addRepairRequest,
-        approveRepairRequest,
-        rejectRepairRequest,
-        constructionRequests,
-        approveConstructionRequest,
-        rejectConstructionRequest,
-        updateProjectMaterials,
-      }}
-    >
-      {children}
-    </ConstructionContext.Provider>
-  );
-};

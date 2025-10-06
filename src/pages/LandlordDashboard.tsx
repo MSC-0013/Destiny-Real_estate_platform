@@ -28,8 +28,8 @@ const LandlordDashboard = () => {
     return <Navigate to="/" replace />;
   }
 
-  const landlordProperties = properties.filter(property => property.sellerId === user.id);
-  const landlordOrders = getSellerOrders(user.id);
+  const landlordProperties = properties.filter(property => property.sellerId === user._id);
+  const landlordOrders = getSellerOrders(user._id);
   const totalRevenue = landlordOrders
     .filter(order => order.status === 'completed')
     .reduce((sum, order) => sum + order.amount, 0);

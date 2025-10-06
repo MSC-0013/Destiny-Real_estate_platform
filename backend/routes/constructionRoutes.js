@@ -1,19 +1,27 @@
 import express from "express";
-import * as controller from "../controllers/constructionController.js";
+import {
+  getProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+  getRepairRequests,
+  addRepairRequest,
+  approveRepairRequest,
+  rejectRepairRequest
+} from "../controllers/constructionController.js";
 
 const router = express.Router();
 
-// Construction Projects
-router.get("/projects", controller.getProjects);
-router.get("/projects/:id", controller.getProjectById);
-router.post("/projects", controller.addProject);
-router.put("/projects/:id", controller.updateProject);
-router.delete("/projects/:id", controller.deleteProject);
+// Construction routes
+router.get("/projects", getProjects);
+router.post("/projects", addProject);
+router.put("/projects/:id", updateProject);
+router.delete("/projects/:id", deleteProject);
 
-// Repair Requests
-router.get("/repairs", controller.getRepairRequests);
-router.post("/repairs", controller.addRepairRequest);
-router.put("/repairs/:id", controller.updateRepairRequest);
-router.delete("/repairs/:id", controller.deleteRepairRequest);
+// Repair routes
+router.get("/repairs", getRepairRequests);
+router.post("/repairs", addRepairRequest);
+router.put("/repairs/approve/:id", approveRepairRequest);
+router.put("/repairs/reject/:id", rejectRepairRequest);
 
 export default router;

@@ -12,10 +12,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  IndianRupee, 
-  FileText, 
-  Shield, 
+import {
+  IndianRupee,
+  FileText,
+  Shield,
   Calendar,
   MapPin,
   User,
@@ -103,7 +103,7 @@ const Contract = () => {
     if (formData.duration === 'custom' && formData.customDuration) {
       return parseInt(formData.customDuration);
     }
-    
+
     switch (formData.duration) {
       case '1month': return 1;
       case '6months': return 6;
@@ -117,7 +117,7 @@ const Contract = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.termsAccepted || !formData.kycAccepted) {
       toast({
         title: "Please accept all terms",
@@ -132,7 +132,7 @@ const Contract = () => {
     try {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Update property as unavailable
       updateProperty(id, { available: false });
 
@@ -140,7 +140,7 @@ const Contract = () => {
       const orderData = {
         propertyId: id,
         property: property,
-        buyerId: user.id,
+        buyerId: user._id,
         sellerId: property.sellerId || 'seller-1',
         type: type === 'buy' ? 'purchase' as const : 'rental' as const,
         amount: calculateTotal().total,
@@ -150,19 +150,19 @@ const Contract = () => {
         duration: type === 'rent' ? `${getDurationInMonths()} months` : undefined,
       };
 
-      createOrder(orderData);
+      await createOrder(orderData);
 
       // Store contract in localStorage (for demo purposes)
       const contractData = {
         propertyId: id,
-        userId: user.id,
+        userId: user._id,
         type,
         duration: type === 'rent' ? getDurationInMonths() : undefined,
         amount: calculateTotal().total,
         signedAt: new Date().toISOString(),
         ...formData
       };
-      
+
       const contracts = JSON.parse(localStorage.getItem('contracts') || '[]');
       contracts.push({ id: Date.now().toString(), ...contractData });
       localStorage.setItem('contracts', JSON.stringify(contracts));
@@ -202,15 +202,13 @@ const Contract = () => {
           <div className="flex items-center space-x-4">
             {[1, 2, 3].map((stepNum) => (
               <div key={stepNum} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= stepNum ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= stepNum ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
                   {step > stepNum ? <Check className="w-4 h-4" /> : stepNum}
                 </div>
                 {stepNum < 3 && (
-                  <div className={`w-16 h-px mx-2 ${
-                    step > stepNum ? 'bg-primary' : 'bg-muted'
-                  }`} />
+                  <div className={`w-16 h-px mx-2 ${step > stepNum ? 'bg-primary' : 'bg-muted'
+                    }`} />
                 )}
               </div>
             ))}
@@ -321,7 +319,7 @@ const Contract = () => {
                             <SelectItem value="custom">Custom Duration</SelectItem>
                           </SelectContent>
                         </Select>
-                        
+
                         {formData.duration === 'custom' && (
                           <Input
                             className="mt-2"
@@ -445,16 +443,16 @@ const Contract = () => {
                       <h4 className="font-semibold mb-2">
                         {type === 'buy' ? 'PROPERTY PURCHASE AGREEMENT' : 'PROPERTY RENTAL AGREEMENT'}
                       </h4>
-                      
+
                       <div className="text-sm space-y-2 text-muted-foreground">
                         <p><strong>Property:</strong> {property.title}</p>
                         <p><strong>Address:</strong> {property.address}</p>
                         <p><strong>Buyer/Tenant:</strong> {formData.fullName}</p>
                         <p><strong>Seller/Landlord:</strong> {property.sellerName}</p>
                         {type === 'rent' && <p><strong>Duration:</strong> {getDurationInMonths()} months</p>}
-                        
+
                         <Separator className="my-4" />
-                        
+
                         <p className="font-medium">Terms and Conditions:</p>
                         <ul className="list-disc list-inside space-y-1">
                           <li>This agreement is legally binding upon signature by both parties.</li>
@@ -517,8 +515,8 @@ const Contract = () => {
                       <Button type="button" variant="outline" onClick={() => setStep(2)}>
                         Back
                       </Button>
-                      <Button 
-                        type="submit" 
+                      <Button
+                        type="submit"
                         className="flex-1"
                         disabled={loading || !formData.termsAccepted || !formData.kycAccepted}
                       >
@@ -558,26 +556,26 @@ const Contract = () => {
 
                 <div className="space-y-2">
                   <h4 className="font-semibold">Cost Breakdown</h4>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>{type === 'buy' ? 'Property Price' : `Rent (${getDurationInMonths()} months)`}</span>
                     <span>₹{costs.baseAmount.toLocaleString()}</span>
                   </div>
-                  
+
                   {type === 'rent' && (
                     <div className="flex justify-between text-sm">
                       <span>Security Deposit</span>
                       <span>₹{costs.securityDeposit.toLocaleString()}</span>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Processing Fee</span>
                     <span>₹{costs.processingFee.toLocaleString()}</span>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between font-semibold">
                     <span>Total Amount</span>
                     <span className="flex items-center">

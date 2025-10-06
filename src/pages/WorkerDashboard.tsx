@@ -27,11 +27,11 @@ const WorkerDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
 
-  const myProjects = getProjectsByRole(user?.id || '', 'worker');
+  const myProjects = getProjectsByRole(user?._id || '', 'worker');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress');
 
   // Get all tasks assigned to this worker
-  const allTasks = myProjects.flatMap(p => p.tasks.filter(t => t.assignedTo === user?.id));
+  const allTasks = myProjects.flatMap(p => p.tasks.filter(t => t.assignedTo === user?._id));
   const pendingTasks = allTasks.filter(t => t.status === 'pending');
   const inProgressTasks = allTasks.filter(t => t.status === 'in-progress');
   const completedTasks = allTasks.filter(t => t.status === 'completed');
@@ -236,7 +236,7 @@ const WorkerDashboard = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">My Tasks</span>
                           <span className="text-sm font-medium">
-                            {project.tasks.filter(t => t.assignedTo === user?.id).length} assigned
+                            {project.tasks.filter(t => t.assignedTo === user?._id).length} assigned
                           </span>
                         </div>
 

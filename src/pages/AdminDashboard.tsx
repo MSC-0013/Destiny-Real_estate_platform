@@ -954,7 +954,7 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody className="bg-white">
                   {getAllUsers().map((u) => (
-                    <tr key={u.id} className="hover:bg-gray-50">
+                    <tr key={u._id} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{u.name}</td>
                       <td className="border px-4 py-2">{u.email}</td>
                       <td className="border px-4 py-2 capitalize">{u.role}</td>
@@ -968,7 +968,7 @@ const AdminDashboard = () => {
                           variant="outline"
                           onClick={() => {
                             const newName = prompt("Enter new name", u.name);
-                            if (newName) updateUser(u.id, { name: newName });
+                            if (newName) updateUser(u._id, { name: newName });
                           }}
                         >
                           Edit
@@ -982,7 +982,7 @@ const AdminDashboard = () => {
                                 `Are you sure you want to delete ${u.name}?`
                               )
                             ) {
-                              deleteUser(u.id);
+                              deleteUser(u._id);
                             }
                           }}
                         >

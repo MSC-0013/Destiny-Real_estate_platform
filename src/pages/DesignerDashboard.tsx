@@ -28,7 +28,7 @@ const DesignerDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
 
-  const myProjects = getProjectsByRole(user?.id || '', 'designer');
+  const myProjects = getProjectsByRole(user?._id || '', 'designer');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress' || p.status === 'approved');
   const completedProjects = myProjects.filter(p => p.status === 'completed');
   const pendingApproval = myProjects.filter(p => p.status === 'pending');

@@ -25,7 +25,7 @@ const ContractorDashboard = () => {
   const { user } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
 
-  const myProjects = getProjectsByRole(user?.id || '', 'contractor');
+  const myProjects = getProjectsByRole(user?._id || '', 'contractor');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress');
   const completedProjects = myProjects.filter(p => p.status === 'completed');
   const pendingProjects = myProjects.filter(p => p.status === 'approved');

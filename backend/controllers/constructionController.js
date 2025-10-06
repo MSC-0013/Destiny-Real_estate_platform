@@ -1,55 +1,78 @@
 import ConstructionProject from "../models/ConstructionProject.js";
 import RepairRequest from "../models/RepairRequest.js";
 
-// --------------------
-// Projects
-// --------------------
+// -------------------- Construction --------------------
 export const getProjects = async (req, res) => {
-  const projects = await ConstructionProject.find();
-  res.json(projects);
-};
-
-export const getProjectById = async (req, res) => {
-  const project = await ConstructionProject.findById(req.params.id);
-  res.json(project);
+  try {
+    const projects = await ConstructionProject.find().sort({ createdAt: -1 });
+    res.status(200).json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const addProject = async (req, res) => {
-  const newProject = new ConstructionProject(req.body);
-  await newProject.save();
-  res.json(newProject);
+  try {
+    const project = new ConstructionProject(req.body);
+    await project.save();
+    res.status(201).json(project);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const updateProject = async (req, res) => {
-  const project = await ConstructionProject.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(project);
+  try {
+    const project = await ConstructionProject.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json(project);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const deleteProject = async (req, res) => {
-  await ConstructionProject.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
+  try {
+    await ConstructionProject.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// --------------------
-// Repair Requests
-// --------------------
+// -------------------- Repair Requests --------------------
 export const getRepairRequests = async (req, res) => {
-  const requests = await RepairRequest.find();
-  res.json(requests);
+  try {
+    const requests = await RepairRequest.find().sort({ createdAt: -1 });
+    res.status(200).json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const addRepairRequest = async (req, res) => {
-  const newRequest = new RepairRequest(req.body);
-  await newRequest.save();
-  res.json(newRequest);
+  try {
+    const request = new RepairRequest(req.body);
+    await request.save();
+    res.status(201).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-export const updateRepairRequest = async (req, res) => {
-  const request = await RepairRequest.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(request);
+export const approveRepairRequest = async (req, res) => {
+  try {
+    const request = await RepairRequest.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
+    res.status(200).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-export const deleteRepairRequest = async (req, res) => {
-  await RepairRequest.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
+export const rejectRepairRequest = async (req, res) => {
+  try {
+    const request = await RepairRequest.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
+    res.status(200).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
