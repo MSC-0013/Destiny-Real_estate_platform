@@ -349,7 +349,7 @@ const WorkerDashboard = () => {
                     {allTasks.slice(0, 6).map((task, index) => (
                       <div key={task.id} className="flex items-center space-x-3">
                         <div className={`w-2 h-2 rounded-full ${task.status === 'completed' ? 'bg-green-500' :
-                            task.status === 'in-progress' ? 'bg-blue-500' : 'bg-orange-500'
+                          task.status === 'in-progress' ? 'bg-blue-500' : 'bg-orange-500'
                           }`}></div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{task.title}</p>
@@ -370,8 +370,10 @@ const WorkerDashboard = () => {
                 <CardTitle>Apply for a Job</CardTitle>
               </CardHeader>
               <CardContent>
-                <JobApplicationForm />
-              </CardContent>
+                <JobApplicationForm
+                  applicantId={user._id}          // automatically linked to logged-in user
+                  applicantName={user.name}   // shows who applied
+                />              </CardContent>
             </Card>
           </TabsContent>
 

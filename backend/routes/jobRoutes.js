@@ -1,22 +1,27 @@
 import express from "express";
 import {
+  applyJob,
   getJobs,
   getJobById,
-  applyJob,
+  updateJob,
+  deleteJob,
   approveJob,
   rejectJob,
   assignJob,
-  deleteJob
 } from "../controllers/jobController.js";
 
 const router = express.Router();
 
-router.get("/", getJobs);
-router.get("/:id", getJobById);
-router.post("/", applyJob);
-router.put("/:id/approve", approveJob);
-router.put("/:id/reject", rejectJob);
-router.put("/:id/assign", assignJob);
-router.delete("/:id", deleteJob);
+// CRUD routes
+router.post("/", applyJob);               // Apply job
+router.get("/", getJobs);                 // Get all jobs
+router.get("/:id", getJobById);           // Get single job
+router.put("/:id", updateJob);            // Update job
+router.delete("/:id", deleteJob);         // Delete job
+
+// Status operations
+router.put("/:id/approve", approveJob);   // Approve job
+router.put("/:id/reject", rejectJob);     // Reject job
+router.put("/:id/assign", assignJob);     // Assign job
 
 export default router;

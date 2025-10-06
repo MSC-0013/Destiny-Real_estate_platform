@@ -341,7 +341,10 @@ const ContractorDashboard = () => {
                 <CardTitle>Apply for a Job</CardTitle>
               </CardHeader>
               <CardContent>
-                <JobApplicationForm />
+                <JobApplicationForm
+                      applicantId={user._id}          // automatically linked to logged-in user
+                      applicantName={user.name}   // shows who applied
+                    />
               </CardContent>
             </Card>
           </TabsContent>
