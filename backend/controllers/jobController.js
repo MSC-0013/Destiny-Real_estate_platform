@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const JobApplication = require("../models/JobApplication");
 
 // Get all jobs
@@ -27,16 +28,35 @@ exports.getJobById = async (req, res) => {
 exports.applyJob = async (req, res) => {
   try {
     const jobData = req.body;
-    if (jobData.role === "worker" && !jobData.workerDetails) return res.status(400).json({ error: "Worker details required" });
-    if (jobData.role === "contractor" && !jobData.contractorDetails) return res.status(400).json({ error: "Contractor details required" });
-    if (jobData.role === "designer" && !jobData.designerDetails) return res.status(400).json({ error: "Designer details required" });
+
+    if (!jobData.applicantId) return res.status(400).json({ error: "Applicant ID required" });
+    jobData.applicantId = mongoose.Types.ObjectId(jobData.applicantId);
+
+    // Convert all dates in workerDetails
+    if (jobData.workerDetails) {
+      if (jobData.workerDetails.dateOfBirth)
+        jobData.workerDetails.dateOfBirth = new Date(jobData.workerDetails.dateOfBirth);
+
+      if (jobData.workerDetails.employmentPreferences?.startDate)
+        jobData.workerDetails.employmentPreferences.startDate = new Date(jobData.workerDetails.employmentPreferences.startDate);
+
+      if (jobData.workerDetails.employmentHistory?.length) {
+        jobData.workerDetails.employmentHistory = jobData.workerDetails.employmentHistory.map(job => ({
+          ...job,
+          startDate: job.startDate ? new Date(job.startDate) : undefined,
+          endDate: job.endDate ? new Date(job.endDate) : undefined,
+        }));
+      }
+    }
+
+    // Add similar conversion for contractorDetails and designerDetails if needed
 
     const newJob = new JobApplication(jobData);
     const savedJob = await newJob.save();
     res.status(201).json(savedJob);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to apply for job" });
+    console.error("Error applying job:", err);
+    res.status(500).json({ error: "Failed to apply for job", details: err.message });
   }
 };
 
