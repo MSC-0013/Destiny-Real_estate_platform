@@ -1,5 +1,8 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
+// --------------------
+// Sub-schemas
+// --------------------
 const taskSchema = new mongoose.Schema({
   title: String,
   description: String,
@@ -40,6 +43,9 @@ const approvalRequestSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// --------------------
+// Main Construction Project Schema
+// --------------------
 const constructionProjectSchema = new mongoose.Schema({
   title: String,
   description: String,
@@ -68,4 +74,7 @@ const constructionProjectSchema = new mongoose.Schema({
   requests: [approvalRequestSchema]
 }, { timestamps: true });
 
-module.exports = mongoose.model("ConstructionProject", constructionProjectSchema);
+// --------------------
+// Export
+// --------------------
+export default mongoose.model("ConstructionProject", constructionProjectSchema);

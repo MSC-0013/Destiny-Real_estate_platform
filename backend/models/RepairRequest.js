@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const repairRequestSchema = new mongoose.Schema({
   title: String,
@@ -15,4 +15,4 @@ const repairRequestSchema = new mongoose.Schema({
   adminId: String
 }, { timestamps: true });
 
-module.exports = mongoose.model("RepairRequest", repairRequestSchema);
+export default mongoose.model("RepairRequest", repairRequestSchema);

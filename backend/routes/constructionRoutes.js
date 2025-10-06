@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import * as controller from "../controllers/constructionController.js";
+
 const router = express.Router();
-const controller = require("../controllers/constructionController");
 
 // Construction Projects
 router.get("/projects", controller.getProjects);
@@ -15,4 +16,4 @@ router.post("/repairs", controller.addRepairRequest);
 router.put("/repairs/:id", controller.updateRepairRequest);
 router.delete("/repairs/:id", controller.deleteRepairRequest);
 
-module.exports = router;
+export default router;

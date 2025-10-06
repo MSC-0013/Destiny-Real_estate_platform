@@ -1,8 +1,10 @@
-const mongoose = require("mongoose");
-const JobApplication = require("../models/JobApplication");
+import mongoose from "mongoose";
+import JobApplication from "../models/JobApplication.js";
 
-// Get all jobs
-exports.getJobs = async (req, res) => {
+// --------------------
+// Jobs
+// --------------------
+export const getJobs = async (req, res) => {
   try {
     const jobs = await JobApplication.find().sort({ createdAt: -1 });
     res.status(200).json(jobs);
@@ -12,8 +14,7 @@ exports.getJobs = async (req, res) => {
   }
 };
 
-// Get job by ID
-exports.getJobById = async (req, res) => {
+export const getJobById = async (req, res) => {
   try {
     const job = await JobApplication.findById(req.params.id);
     if (!job) return res.status(404).json({ error: "Job not found" });
@@ -24,15 +25,13 @@ exports.getJobById = async (req, res) => {
   }
 };
 
-// Apply job
-exports.applyJob = async (req, res) => {
+export const applyJob = async (req, res) => {
   try {
     const jobData = req.body;
-
     if (!jobData.applicantId) return res.status(400).json({ error: "Applicant ID required" });
     jobData.applicantId = mongoose.Types.ObjectId(jobData.applicantId);
 
-    // Convert all dates in workerDetails
+    // Convert dates in workerDetails
     if (jobData.workerDetails) {
       if (jobData.workerDetails.dateOfBirth)
         jobData.workerDetails.dateOfBirth = new Date(jobData.workerDetails.dateOfBirth);
@@ -49,8 +48,6 @@ exports.applyJob = async (req, res) => {
       }
     }
 
-    // Add similar conversion for contractorDetails and designerDetails if needed
-
     const newJob = new JobApplication(jobData);
     const savedJob = await newJob.save();
     res.status(201).json(savedJob);
@@ -60,8 +57,7 @@ exports.applyJob = async (req, res) => {
   }
 };
 
-// Approve job
-exports.approveJob = async (req, res) => {
+export const approveJob = async (req, res) => {
   try {
     const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
     if (!job) return res.status(404).json({ error: "Job not found" });
@@ -72,8 +68,7 @@ exports.approveJob = async (req, res) => {
   }
 };
 
-// Reject job
-exports.rejectJob = async (req, res) => {
+export const rejectJob = async (req, res) => {
   try {
     const job = await JobApplication.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
     if (!job) return res.status(404).json({ error: "Job not found" });
@@ -84,8 +79,7 @@ exports.rejectJob = async (req, res) => {
   }
 };
 
-// Assign job
-exports.assignJob = async (req, res) => {
+export const assignJob = async (req, res) => {
   try {
     const { projectId } = req.body;
     if (!projectId) return res.status(400).json({ error: "Project ID required" });
@@ -98,8 +92,7 @@ exports.assignJob = async (req, res) => {
   }
 };
 
-// Delete job
-exports.deleteJob = async (req, res) => {
+export const deleteJob = async (req, res) => {
   try {
     const job = await JobApplication.findByIdAndDelete(req.params.id);
     if (!job) return res.status(404).json({ error: "Job not found" });

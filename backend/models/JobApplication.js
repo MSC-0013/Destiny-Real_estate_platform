@@ -1,6 +1,8 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
+// --------------------
 // Worker Subschema
+// --------------------
 const WorkerDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   dateOfBirth: { type: Date },
@@ -75,7 +77,9 @@ const WorkerDetailsSchema = new mongoose.Schema({
   },
 });
 
+// --------------------
 // Contractor Subschema
+// --------------------
 const ContractorDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   companyName: String,
@@ -120,7 +124,9 @@ const ContractorDetailsSchema = new mongoose.Schema({
   },
 });
 
+// --------------------
 // Designer Subschema
+// --------------------
 const DesignerDetailsSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   dateOfBirth: { type: Date },
@@ -159,7 +165,9 @@ const DesignerDetailsSchema = new mongoose.Schema({
   },
 });
 
+// --------------------
 // Main Job Application Schema
+// --------------------
 const JobApplicationSchema = new mongoose.Schema(
   {
     role: { type: String, enum: ["worker", "contractor", "designer"], required: true },
@@ -177,4 +185,4 @@ const JobApplicationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("JobApplication", JobApplicationSchema);
+export default mongoose.model("JobApplication", JobApplicationSchema);

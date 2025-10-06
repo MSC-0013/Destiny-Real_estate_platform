@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+// models/User.js
+import mongoose from "mongoose";
 
 const PortfolioSchema = new mongoose.Schema({
   title: { type: String, default: "" },
@@ -27,4 +28,4 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true, default: "" },
 }, { timestamps: true });
 
-module.exports = mongoose.model("User", UserSchema);
+export default mongoose.model("User", UserSchema); // ✅ ESM default export
