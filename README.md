@@ -48,77 +48,157 @@ It handles everything from property listings to construction, repairs, analytics
 
 ---
 
-## 🧩 Folder Structure
+## 🏠 Destiny Real Estate Platform - Folder Structure
 
-Destiny-Real-Estate-Platform/
+📂 **Destiny-Real-Estate-Platform/**
+├─ 📂 **backend/**
+│  ├─ 📂 **controllers/**
+│  │  ├─ 📝 constructionController.js
+│  │  ├─ 📝 jobController.js
+│  │  ├─ 📝 orderController.js
+│  │  └─ 📝 userController.js
+│  ├─ 📂 **models/**
+│  │  ├─ 📝 ConstructionProject.js
+│  │  ├─ 📝 JobApplication.js
+│  │  ├─ 📝 Order.js
+│  │  ├─ 📝 RepairRequest.js
+│  │  └─ 📝 User.js
+│  ├─ 📂 **routes/**
+│  │  ├─ 📝 constructionRoutes.js
+│  │  ├─ 📝 jobRoutes.js
+│  │  ├─ 📝 orderRoutes.js
+│  │  ├─ 📝 uploadRoutes.js
+│  │  └─ 📝 userRoutes.js
+│  ├─ 📂 **utils/**
+│  │  ├─ ⚙️ cloudinary.js
+│  │  └─ ⚙️ multer.js
+│  ├─ 📝 index.js
+│  └─ 🔑 .env
 │
-├── backend/
-│ ├── controllers/
-│ │ ├── constructionController.js
-│ │ ├── jobController.js
-│ │ ├── orderController.js
-│ │ └── userController.js
-│ ├── models/
-│ │ ├── ConstructionProject.js
-│ │ ├── JobApplication.js
-│ │ ├── Order.js
-│ │ ├── RepairRequest.js
-│ │ └── User.js
-│ ├── routes/
-│ │ ├── constructionRoutes.js
-│ │ ├── jobRoutes.js
-│ │ ├── orderRoutes.js
-│ │ ├── uploadRoutes.js
-│ │ └── userRoutes.js
-│ ├── utils/
-│ │ ├── cloudinary.js
-│ │ └── multer.js
-│ ├── index.js
-│ └── .env
+├─ 📂 **src/**
+│  ├─ 📂 **components/**
+│  │  ├─ 📂 analytics/
+│  │  │  ├─ 📝 AdminAnalyics.tsx
+│  │  │  ├─ 📝 Constructionpdf.tsx
+│  │  │  ├─ 📝 downloadOrderPDF.tsx
+│  │  │  ├─ 📝 IncomeExpenseChart.tsx
+│  │  │  ├─ 📝 Reapairform.tsx
+│  │  │  └─ 📝 RevenueChart.tsx
+│  │  ├─ 📂 ui/
+│  │  │  ├─ 📝 accordion.tsx
+│  │  │  ├─ 📝 alert-dialog.tsx
+│  │  │  ├─ 📝 alert.tsx
+│  │  │  ├─ 📝 aspect-ratio.tsx
+│  │  │  ├─ 📝 avatar.tsx
+│  │  │  ├─ 📝 badge.tsx
+│  │  │  ├─ 📝 breadcrumb.tsx
+│  │  │  ├─ 📝 button.tsx
+│  │  │  ├─ 📝 calendar.tsx
+│  │  │  ├─ 📝 card.tsx
+│  │  │  ├─ 📝 carousel.tsx
+│  │  │  ├─ 📝 chart.tsx
+│  │  │  ├─ 📝 checkbox.tsx
+│  │  │  ├─ 📝 collapsible.tsx
+│  │  │  ├─ 📝 command.tsx
+│  │  │  ├─ 📝 context-menu.tsx
+│  │  │  ├─ 📝 dialog.tsx
+│  │  │  ├─ 📝 drawer.tsx
+│  │  │  ├─ 📝 dropdown-menu.tsx
+│  │  │  ├─ 📝 form.tsx
+│  │  │  ├─ 📝 hover-card.tsx
+│  │  │  ├─ 📝 input-otp.tsx
+│  │  │  ├─ 📝 input.tsx
+│  │  │  ├─ 📝 label.tsx
+│  │  │  ├─ 📝 menubar.tsx
+│  │  │  ├─ 📝 navigation-menu.tsx
+│  │  │  ├─ 📝 pagination.tsx
+│  │  │  ├─ 📝 popover.tsx
+│  │  │  ├─ 📝 progress.tsx
+│  │  │  ├─ 📝 radio-group.tsx
+│  │  │  ├─ 📝 resizable.tsx
+│  │  │  ├─ 📝 scroll-area.tsx
+│  │  │  ├─ 📝 select.tsx
+│  │  │  ├─ 📝 separator.tsx
+│  │  │  ├─ 📝 sheet.tsx
+│  │  │  ├─ 📝 sidebar.tsx
+│  │  │  ├─ 📝 skeleton.tsx
+│  │  │  ├─ 📝 slider.tsx
+│  │  │  ├─ 📝 sonner.tsx
+│  │  │  ├─ 📝 switch.tsx
+│  │  │  ├─ 📝 table.tsx
+│  │  │  ├─ 📝 tabs.tsx
+│  │  │  ├─ 📝 textarea.tsx
+│  │  │  ├─ 📝 toast.tsx
+│  │  │  ├─ 📝 toaster.tsx
+│  │  │  ├─ 📝 toggle-group.tsx
+│  │  │  ├─ 📝 toggle.tsx
+│  │  │  └─ 📝 tooltip.tsx
+│  │  ├─ 📝 Chatbot.tsx
+│  │  ├─ 📝 ConstructionRequestForm.tsx
+│  │  ├─ 📝 DocumentUpload.tsx
+│  │  ├─ 📝 ImageUpload.tsx
+│  │  ├─ 📝 JobApplicationForm.tsx
+│  │  ├─ 📝 JobsDashboard.tsx
+│  │  ├─ 📝 MaterialsTab.tsx
+│  │  ├─ 📝 Navbar.tsx
+│  │  ├─ 📝 ProfileImageUpload.tsx
+│  │  └─ 📝 PropertyCard.tsx
 │
-├── src/
-│ ├── components/
-│ │ ├── analytics/
-│ │ ├── ui/
-│ │ ├── Chatbot.tsx
-│ │ ├── ConstructionRequestForm.tsx
-│ │ ├── JobApplicationForm.tsx
-│ │ ├── Navbar.tsx
-│ │ └── PropertyCard.tsx
-│ ├── contexts/
-│ │ ├── AuthContext.tsx
-│ │ ├── ConstructionContext.tsx
-│ │ ├── JobContext.tsx
-│ │ ├── OrderContext.tsx
-│ │ ├── PaymentContext.tsx
-│ │ ├── PropertyContext.tsx
-│ │ └── WishlistContext.tsx
-│ ├── pages/
-│ │ ├── AdminDashboard.tsx
-│ │ ├── AddProperty.tsx
-│ │ ├── Login.tsx
-│ │ ├── Signup.tsx
-│ │ ├── Profile.tsx
-│ │ ├── Wishlist.tsx
-│ │ ├── Orders.tsx
-│ │ ├── Properties.tsx
-│ │ └── Home.tsx
-│ ├── utils/
-│ │ ├── api.ts
-│ │ ├── indexedDB.ts
-│ │ ├── localStorageHelpers.ts
-│ │ └── pdfGenerator.ts
-│ ├── App.tsx
-│ ├── main.tsx
-│ ├── vite-env.d.ts
-│ └── tailwind.config.ts
+│  ├─ 📂 **contexts/**
+│  │  ├─ 📝 AuthContext.tsx
+│  │  ├─ 📝 ConstructionContext.tsx
+│  │  ├─ 📝 JobContext.tsx
+│  │  ├─ 📝 OrderContext.tsx
+│  │  ├─ 📝 PaymentContext.tsx
+│  │  ├─ 📝 PropertyContext.tsx
+│  │  └─ 📝 WishlistContext.tsx
 │
-├── eslint.config.js
-├── postcss.config.js
-├── vite.config.ts
-└── README.md
+│  ├─ 📂 **hooks/**
+│  │  └─ 📝 use-mobile.tsx
+│
+│  ├─ 📂 **pages/**
+│  │  ├─ 📝 AddConstruction.tsx
+│  │  ├─ 📝 AddProperty.tsx
+│  │  ├─ 📝 AdminDashboard.tsx
+│  │  ├─ 📝 Construction.tsx
+│  │  ├─ 📝 ConstructionChart.tsx
+│  │  ├─ 📝 ConstructionDetails.tsx
+│  │  ├─ 📝 ConstructionPage.tsx
+│  │  ├─ 📝 ConstructionRentals.tsx
+│  │  ├─ 📝 ConstructionSales.tsx
+│  │  ├─ 📝 Contract.tsx
+│  │  ├─ 📝 ContractorDashboard.tsx
+│  │  ├─ 📝 DesignerDashboard.tsx
+│  │  ├─ 📝 EditProperty.tsx
+│  │  ├─ 📝 Help.tsx
+│  │  ├─ 📝 Home.tsx
+│  │  ├─ 📝 LandlordDashboard.tsx
+│  │  ├─ 📝 Login.tsx
+│  │  ├─ 📝 NotFound.tsx
+│  │  ├─ 📝 Orders.tsx
+│  │  ├─ 📝 PaymentTab.tsx
+│  │  ├─ 📝 Profile.tsx
+│  │  ├─ 📝 Properties.tsx
+│  │  ├─ 📝 PropertyDetails.tsx
+│  │  ├─ 📝 SellerDashboard.tsx
+│  │  ├─ 📝 Signup.tsx
+│  │  ├─ 📝 TenantDashboard.tsx
+│  │  ├─ 📝 Wishlist.tsx
+│  │  └─ 📝 WorkerDashboard.tsx
+│
+│  ├─ 📂 **utils/**
+│  │  ├─ ⚙️ api.ts
+│  │  ├─ ⚙️ indexedDB.ts
+│  │  ├─ ⚙️ localStorageHelpers.ts
+│  │  └─ ⚙️ pdfGenerator.ts
+│
+│  ├─ 📝 App.tsx
+│  ├─ 📝 main.tsx
+│
+├─ ⚙️ eslint.config.js
+├─ ⚙️ postcss.config.js
+└─ ⚙️ vite.config.ts
 
----
 
 ## 🧰 Installation & Setup
 
