@@ -14,7 +14,7 @@ const EditPropertyPage = () => {
 
   // Only allow owner to edit
   useEffect(() => {
-    if (!property || property.sellerId !== user?.id) {
+    if (!property || property.sellerId !== user?._id) {
       navigate('/dashboard'); // redirect if not owner
     }
   }, [property, user, navigate]);

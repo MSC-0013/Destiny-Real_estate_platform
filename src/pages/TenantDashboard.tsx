@@ -54,7 +54,7 @@ const TenantDashboard = () => {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'tenant') return <Navigate to="/" replace />;
 
-  const userOrders = getUserOrders(user.id);
+  const userOrders = getUserOrders(user._id);
   const totalSpent = userOrders.reduce((sum, order) => sum + order.amount, 0);
   const activeRentals = userOrders.filter(order => order.type === 'rental' && order.status === 'confirmed').length;
 

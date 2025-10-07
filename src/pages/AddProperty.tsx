@@ -66,7 +66,7 @@ const AddProperty = () => {
       area: parseFloat(formData.area),
       images: formData.images.length > 0 ? formData.images : ['/placeholder.svg'],
       amenities: formData.amenities,
-      sellerId: user.id,
+      sellerId: user._id,
       sellerName: user.name,
       sellerPhone: user.phone,
       featured: formData.featured,

@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import API from '@/utils/api';
 
 export interface Property {
-  id: string;
+  id: string;            // local/frontend ID
+  _id?: string;          // MongoDB ID
   title: string;
   description: string;
   price: number;
@@ -108,17 +109,38 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const loadProperties = async () => {
       try {
         const res = await API.get('/properties');
-        setProperties(res.data);
+
+        // Normalize each property to always have an 'id' (fallback to _id)
+        const normalized = res.data.map((prop: any) => ({
+          ...prop,
+          id: prop._id || prop.id,
+        }));
+
+        // Normalize each property: ensure numeric price & boolean available
+        const cleaned = normalized.map(p => ({
+          ...p,
+          price: Number(p.price) || 0,
+          available: Boolean(p.available),
+        }));
+
+        setProperties(cleaned); // update state
+        localStorage.setItem('properties', JSON.stringify(cleaned)); // update localStorage
+
       } catch (err) {
-        console.warn('Failed to fetch from backend, using localStorage/sample:', err);
+        console.warn('⚠️ Failed to fetch from backend, using localStorage/sample:', err);
+
         const saved = localStorage.getItem('properties');
-        if (saved) setProperties(JSON.parse(saved));
-        else {
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const normalized = parsed.map((p: any) => ({ ...p, id: p.id || p._id }));
+          setProperties(normalized);
+        } else {
           setProperties(sampleProperties);
           localStorage.setItem('properties', JSON.stringify(sampleProperties));
         }
       }
     };
+
     loadProperties();
   }, []);
 
@@ -133,14 +155,20 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('properties', JSON.stringify([...properties, newProperty]));
 
     try {
-      await API.post('/properties', newProperty);
+      const res = await API.post('/properties', newProperty);
+      // Assign MongoDB _id after saving
+      setProperties(prev =>
+        prev.map(p => (p.id === newProperty.id ? { ...p, _id: res.data._id } : p))
+      );
     } catch (err) {
       console.error('Error syncing property to backend:', err);
     }
   };
 
   const updateProperty = async (id: string, updates: Partial<Property>) => {
-    const updatedProperties = properties.map(prop => (prop.id === id ? { ...prop, ...updates } : prop));
+    const updatedProperties = properties.map(prop =>
+      prop.id === id || prop._id === id ? { ...prop, ...updates } : prop
+    );
     setProperties(updatedProperties);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
 
@@ -152,7 +180,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteProperty = async (id: string) => {
-    const updatedProperties = properties.filter(prop => prop.id !== id);
+    const updatedProperties = properties.filter(prop => prop.id !== id && prop._id !== id);
     setProperties(updatedProperties);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
 
@@ -163,13 +191,14 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const getProperty = (id: string) => properties.find(prop => prop.id === id);
+  const getProperty = (id: string) =>
+    properties.find(prop => prop.id === id || prop._id === id);
 
   const searchProperties = (filters: PropertyFilters) => {
     return properties.filter(prop => {
       if (!prop.available) return false;
       if (filters.search && !prop.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !prop.location.toLowerCase().includes(filters.search.toLowerCase())) return false;
+        !prop.location.toLowerCase().includes(filters.search.toLowerCase())) return false;
       if (filters.location && prop.location !== filters.location) return false;
       if (filters.type && prop.type !== filters.type) return false;
       if (filters.category && prop.category !== filters.category) return false;
