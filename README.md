@@ -50,33 +50,41 @@ It handles everything from property listings to construction, repairs, analytics
 
 ## 🏠 Destiny Real Estate Platform - Folder Structure
 ```bash
-📂 **Destiny-Real-Estate-Platform/**
-├─ 📂 **backend/**
-│  ├─ 📂 **controllers/**
+📂 Destiny-Real-Estate-Platform/
+├─ 📂 backend/
+│  ├─ 📂 controllers/
 │  │  ├─ 📝 constructionController.js
 │  │  ├─ 📝 jobController.js
 │  │  ├─ 📝 orderController.js
-│  │  └─ 📝 userController.js
-│  ├─ 📂 **models/**
+│  │  ├─ 📝 paymentController.js
+│  │  ├─ 📝 propertyController.js
+│  │  ├─ 📝 userController.js
+│  │  └─ 📝 wishlistController.js
+│  ├─ 📂 models/
 │  │  ├─ 📝 ConstructionProject.js
 │  │  ├─ 📝 JobApplication.js
 │  │  ├─ 📝 Order.js
+│  │  ├─ 📝 Payment.js
+│  │  ├─ 📝 Property.js
 │  │  ├─ 📝 RepairRequest.js
-│  │  └─ 📝 User.js
-│  ├─ 📂 **routes/**
+│  │  ├─ 📝 User.js
+│  │  └─ 📝 Wishlist.js
+│  ├─ 📂 routes/
 │  │  ├─ 📝 constructionRoutes.js
 │  │  ├─ 📝 jobRoutes.js
 │  │  ├─ 📝 orderRoutes.js
+│  │  ├─ 📝 paymentRoutes.js
+│  │  ├─ 📝 propertyRoutes.js
 │  │  ├─ 📝 uploadRoutes.js
-│  │  └─ 📝 userRoutes.js
-│  ├─ 📂 **utils/**
+│  │  ├─ 📝 userRoutes.js
+│  │  └─ 📝 wishlistRoutes.js
+│  ├─ 📂 utils/
 │  │  ├─ ⚙️ cloudinary.js
 │  │  └─ ⚙️ multer.js
 │  ├─ 📝 index.js
 │  └─ 🔑 .env
-│
-├─ 📂 **src/**
-│  ├─ 📂 **components/**
+├─ 📂 src/
+│  ├─ 📂 components/
 │  │  ├─ 📂 analytics/
 │  │  │  ├─ 📝 AdminAnalyics.tsx
 │  │  │  ├─ 📝 Constructionpdf.tsx
@@ -143,8 +151,7 @@ It handles everything from property listings to construction, repairs, analytics
 │  │  ├─ 📝 Navbar.tsx
 │  │  ├─ 📝 ProfileImageUpload.tsx
 │  │  └─ 📝 PropertyCard.tsx
-│
-│  ├─ 📂 **contexts/**
+│  ├─ 📂 contexts/
 │  │  ├─ 📝 AuthContext.tsx
 │  │  ├─ 📝 ConstructionContext.tsx
 │  │  ├─ 📝 JobContext.tsx
@@ -152,11 +159,9 @@ It handles everything from property listings to construction, repairs, analytics
 │  │  ├─ 📝 PaymentContext.tsx
 │  │  ├─ 📝 PropertyContext.tsx
 │  │  └─ 📝 WishlistContext.tsx
-│
-│  ├─ 📂 **hooks/**
+│  ├─ 📂 hooks/
 │  │  └─ 📝 use-mobile.tsx
-│
-│  ├─ 📂 **pages/**
+│  ├─ 📂 pages/
 │  │  ├─ 📝 AddConstruction.tsx
 │  │  ├─ 📝 AddProperty.tsx
 │  │  ├─ 📝 AdminDashboard.tsx
@@ -185,19 +190,18 @@ It handles everything from property listings to construction, repairs, analytics
 │  │  ├─ 📝 TenantDashboard.tsx
 │  │  ├─ 📝 Wishlist.tsx
 │  │  └─ 📝 WorkerDashboard.tsx
-│
-│  ├─ 📂 **utils/**
+│  ├─ 📂 utils/
 │  │  ├─ ⚙️ api.ts
 │  │  ├─ ⚙️ indexedDB.ts
 │  │  ├─ ⚙️ localStorageHelpers.ts
 │  │  └─ ⚙️ pdfGenerator.ts
-│
 │  ├─ 📝 App.tsx
 │  ├─ 📝 main.tsx
-│
+│  
 ├─ ⚙️ eslint.config.js
 ├─ ⚙️ postcss.config.js
 └─ ⚙️ vite.config.ts
+└─ 📝 index.html
 
 ```
 
