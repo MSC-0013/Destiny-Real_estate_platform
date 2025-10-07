@@ -41,7 +41,7 @@ It handles everything from property listings to construction, repairs, analytics
 ### ⚙️ **Backend**
 ![Node.js](https://img.shields.io/badge/Node.js-20-green?logo=node.js)
 ![Express](https://img.shields.io/badge/Express-5-black?logo=express)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)
+![MongoDB](https://img.shields.io/bad   ge/MongoDB-Atlas-green?logo=mongodb)
 ![Cloudinary](https://img.shields.io/badge/Cloudinary-Image-blue?logo=cloudinary)
 ![Multer](https://img.shields.io/badge/Multer-FileUpload-orange)
 ![JWT](https://img.shields.io/badge/JWT-Authentication-blue)
@@ -49,7 +49,7 @@ It handles everything from property listings to construction, repairs, analytics
 ---
 
 ## 🏠 Destiny Real Estate Platform - Folder Structure
-
+```bash
 📂 **Destiny-Real-Estate-Platform/**
 ├─ 📂 **backend/**
 │  ├─ 📂 **controllers/**
@@ -199,6 +199,7 @@ It handles everything from property listings to construction, repairs, analytics
 ├─ ⚙️ postcss.config.js
 └─ ⚙️ vite.config.ts
 
+```
 
 ## 🧰 Installation & Setup
 
@@ -206,44 +207,46 @@ It handles everything from property listings to construction, repairs, analytics
 ```bash
 git clone https://github.com/yourusername/destiny-real-estate-platform.git
 cd destiny-real-estate-platform
-
+```
 2️⃣ Install Dependencies
 
 Backend 
-
+```bash
 cd backend
 npm install
- 
+```
 
 Frontend
-
+```bash
 cd ../
 npm install
-
+```
 3️⃣ Environment Variables (.env)
 
 Create .env file inside the backend folder:
 
-
+```bash
 MONGO_URI=your_mongodb_connection_string
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_secret
 JWT_SECRET=your_jwt_secret
-
+```
 
 4️⃣ Run the App
 
 Backend
-
+```bash
 cd backend
 npm run dev
-
+```
 
 Frontend
 
+```bash
 cd ../
 npm run dev
+```
 
 Now visit 👉 http://localhost:5173 or http://localhost:8080
 
@@ -284,8 +287,9 @@ Deployed on Vercel
 
 Deploy on Render or Railway.app:
 
+```bash
 git push origin main
-
+```
 
 Add environment variables on the hosting platform (MongoDB, Cloudinary, JWT).
 
