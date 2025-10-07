@@ -21,6 +21,7 @@ import {
 import { Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -82,18 +83,25 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
-      <Card className="w-full max-w-md bg-white shadow-xl rounded-xl">
-        <CardHeader className="text-center pb-6">
-          <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-black text-white">
-            <UserPlus className="w-8 h-8" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background px-4 py-8">
+      <Card className="w-full max-w-md shadow-2xl border-border backdrop-blur-sm bg-card/95">
+        <CardHeader className="text-center pb-6 space-y-4">
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mx-auto flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg"
+          >
+            <UserPlus className="w-10 h-10" />
+          </motion.div>
+          <div>
+            <CardTitle className="text-3xl font-bold text-foreground mb-2">
+              Create Account
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-base">
+              Join <span className="font-bold text-primary">EstateHub</span> today
+            </CardDescription>
           </div>
-          <CardTitle className="text-2xl font-bold text-black">
-            Create Account
-          </CardTitle>
-          <CardDescription className="text-black text-sm">
-            Join <span className="font-semibold">Destiny</span> today
-          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -106,24 +114,24 @@ const Signup = () => {
 
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-black">
+              <Label htmlFor="name" className="text-foreground font-medium">
                 Full Name
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Full Name"
+                placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"
+                className="h-11 bg-background border-border focus:border-primary transition-colors"
                 required
               />
             </div>
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-black">
-                Email
+              <Label htmlFor="email" className="text-foreground font-medium">
+                Email Address
               </Label>
               <Input
                 id="email"
@@ -131,69 +139,69 @@ const Signup = () => {
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"
+                className="h-11 bg-background border-border focus:border-primary transition-colors"
                 required
               />
             </div>
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-black">
-                Phone
+              <Label htmlFor="phone" className="text-foreground font-medium">
+                Phone Number
               </Label>
               <Input
                 id="phone"
                 type="tel"
-                placeholder="123-456-7890"
+                placeholder="+91 98765 43210"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"
+                className="h-11 bg-background border-border focus:border-primary transition-colors"
                 required
               />
             </div>
 
             {/* Role */}
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-black">
+              <Label htmlFor="role" className="text-foreground font-medium">
                 Account Type
               </Label>
               <Select
                 value={formData.role}
                 onValueChange={(value: any) => handleInputChange("role", value)}
               >
-                <SelectTrigger className="rounded-lg bg-white border border-black text-black focus:ring-2 focus:ring-yellow-400">
-                  <SelectValue placeholder="Select role" />
+                <SelectTrigger className="h-11 bg-background border-border focus:border-primary">
+                  <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
-                <SelectContent className="bg-white text-black border border-black">
-                  <SelectItem value="tenant">Tenant</SelectItem>
-                  <SelectItem value="landlord">Landlord</SelectItem>
-                  <SelectItem value="contractor">Contractor</SelectItem>
-                  <SelectItem value="worker">Worker</SelectItem>
-                  <SelectItem value="designer">Designer</SelectItem>
+                <SelectContent>
+                  <SelectItem value="tenant">🏠 Tenant - Looking for Properties</SelectItem>
+                  <SelectItem value="landlord">🏘️ Landlord - Property Owner</SelectItem>
+                  <SelectItem value="contractor">👷 Contractor - Construction Expert</SelectItem>
+                  <SelectItem value="worker">🔨 Worker - Skilled Labor</SelectItem>
+                  <SelectItem value="designer">🎨 Designer - Interior Design</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-black">
+              <Label htmlFor="password" className="text-foreground font-medium">
                 Password
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className="rounded-lg bg-white border border-black text-black placeholder-black pr-10 focus:ring-2 focus:ring-yellow-400 transition"
+                  className="h-11 bg-background border-border focus:border-primary transition-colors pr-12"
                   required
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 text-black"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 hover:bg-muted"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -203,16 +211,16 @@ const Signup = () => {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-black">
+              <Label htmlFor="confirmPassword" className="text-foreground font-medium">
                 Confirm Password
               </Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm password"
+                placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"
+                className="h-11 bg-background border-border focus:border-primary transition-colors"
                 required
               />
             </div>
@@ -220,20 +228,20 @@ const Signup = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-600 transition-colors"
+              className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl"
               disabled={isLoading}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+              Create My Account
             </Button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-sm text-black">
-            <p>
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="font-semibold underline text-black">
-                Sign in
+              <Link to="/login" className="font-semibold text-primary hover:underline transition-all">
+                Sign In
               </Link>
             </p>
           </div>

@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -46,18 +47,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
-      <Card className="w-full max-w-md bg-white shadow-xl rounded-xl">
-        <CardHeader className="text-center pb-6">
-          <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-black text-white">
-            <Eye className="w-8 h-8" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background px-4 py-8">
+      <Card className="w-full max-w-md shadow-2xl border-border backdrop-blur-sm bg-card/95">
+        <CardHeader className="text-center pb-6 space-y-4">
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mx-auto flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg"
+          >
+            <Eye className="w-10 h-10" />
+          </motion.div>
+          <div>
+            <CardTitle className="text-3xl font-bold text-foreground mb-2">
+              Welcome Back
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-base">
+              Sign in to continue to <span className="font-bold text-primary">EstateHub</span>
+            </CardDescription>
           </div>
-          <CardTitle className="text-2xl font-bold text-black">
-            Welcome Back
-          </CardTitle>
-          <CardDescription className="text-black text-sm">
-            Sign in to your <span className="font-semibold">EstateHub</span> account
-          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -70,40 +78,40 @@ const Login = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-black">
-                Email
+              <Label htmlFor="email" className="text-foreground font-medium">
+                Email Address
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded-lg bg-white border border-black text-black placeholder-black focus:ring-2 focus:ring-yellow-400 transition"
+                className="h-12 bg-background border-border focus:border-primary transition-colors"
                 required
               />
             </div>
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-black">
+              <Label htmlFor="password" className="text-foreground font-medium">
                 Password
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-lg bg-white border border-black text-black placeholder-black pr-10 focus:ring-2 focus:ring-yellow-400 transition"
+                  className="h-12 bg-background border-border focus:border-primary transition-colors pr-12"
                   required
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 text-black"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 hover:bg-muted"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -114,20 +122,20 @@ const Login = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-600 transition-colors"
+              className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl"
               disabled={isLoading}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+              Sign In to Account
             </Button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-sm text-black">
-            <p>
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="font-semibold underline text-black">
-                Sign up
+              <Link to="/signup" className="font-semibold text-primary hover:underline transition-all">
+                Create Account
               </Link>
             </p>
           </div>
