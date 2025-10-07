@@ -194,12 +194,12 @@ const TenantDashboard = () => {
                   <div className="space-y-4">
                     {userOrders.slice(0, 5).map(order => (
                       <div
-                        key={order.id}
+                        key={order._id}
                         className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg shadow hover:shadow-lg transition-shadow duration-300 bg-gradient-to-r from-gray-50 to-gray-100 group relative"
                       >
                         {/* Order Info */}
                         <div>
-                          <p className="font-semibold text-lg">{order.property.title} 🏡</p>
+                          <p className="font-semibold text-lg">{order.property?.title || 'Property Not Available'} 🏡</p>
                           <p className="text-sm text-gray-500 capitalize">{order.type}</p>
                           <p className={`mt-1 text-sm font-medium ${order.status === 'confirmed' ? 'text-green-600' :
                             order.status === 'pending' ? 'text-yellow-600' :
@@ -345,18 +345,25 @@ const TenantDashboard = () => {
                 ) : (
                   <div className="space-y-3">
                     {userOrders.map(order => (
-                      <div key={order.id} className="flex justify-between items-center p-3 border rounded hover:shadow-md transition">
+                      <div
+                        key={order._id}
+                        className="flex justify-between items-center p-3 border rounded hover:shadow-md transition"
+                      >
                         <div>
-                          <p className="font-medium">{order.property.title}</p>
+                          {/* Safe access to property title */}
+                          <p className="font-medium">{order.property?.title || 'Property Not Available'}</p>
                           <p className="text-sm text-muted-foreground">{order.type}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-green-700">₹{order.amount.toLocaleString()}</p>
+                          <p className="font-semibold text-green-700">
+                            ₹{order.amount.toLocaleString()}
+                          </p>
                           <p className="text-sm text-muted-foreground capitalize">{order.status}</p>
                         </div>
                       </div>
                     ))}
                   </div>
+
                 )}
               </CardContent>
             </Card>

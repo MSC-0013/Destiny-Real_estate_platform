@@ -35,7 +35,7 @@ const Orders = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const userOrders = getUserOrders(user.id);
+  const userOrders = getUserOrders(user._id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -93,7 +93,7 @@ const Orders = () => {
 DESTINY REAL ESTATE - INVOICE
 ==============================
 
-Invoice #: INV-${order.id}
+Invoice #: INV-${order._id}
 Date: ${format(new Date(order.createdAt), 'MMM dd, yyyy')}
 
 BILL TO:
@@ -102,8 +102,9 @@ Email: ${user.email}
 Phone: ${user.phone}
 
 PROPERTY DETAILS:
-${order.property.title}
-${order.property.location}
+${order.property?.title || 'N/A'}
+${order.property?.location || 'N/A'}
+
 Type: ${order.type === 'rental' ? 'Rental' : 'Purchase'}
 
 PAYMENT DETAILS:
@@ -126,7 +127,7 @@ Contact: support@destiny.com | +91 1800-123-4567
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Invoice-${order.id}.txt`;
+    a.download = `Invoice-${order._id}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -223,7 +224,7 @@ Contact: support@destiny.com | +91 1800-123-4567
               const StatusIcon = statusInfo.icon;
 
               return (
-                <Card key={order.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <Card key={order._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                   {/* Property Image Header */}
                   <div className="relative h-48 bg-gradient-to-br from-gray-900 to-gray-700">
                     <div className="absolute inset-0 bg-black/20"></div>
@@ -234,10 +235,11 @@ Contact: support@destiny.com | +91 1800-123-4567
                       </Badge>
                     </div>
                     <div className="absolute bottom-6 left-6 text-white">
-                      <h2 className="text-2xl font-bold mb-2">{order.property.title}</h2>
-                      <div className="flex items-center text-gray-200">
+                      <h2 className="text-2xl font-bold mb-2">
+                        {order.property?.title || 'Property Not Available'}
+                      </h2>                      <div className="flex items-center text-gray-200">
                         <MapPin className="mr-2 h-4 w-4" />
-                        {order.property.location}
+                        <p>{order.property?.location || 'Location N/A'}</p>
                       </div>
                     </div>
                     <div className="absolute top-6 right-6 flex flex-col sm:flex-row gap-2">
@@ -321,7 +323,7 @@ Contact: support@destiny.com | +91 1800-123-4567
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Order ID</p>
-                          <p className="font-semibold text-black">#{order.id}</p>
+                          <p className="font-semibold text-black">#{order._id}</p>
                         </div>
                       </div>
                     </div>
@@ -367,19 +369,19 @@ Contact: support@destiny.com | +91 1800-123-4567
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Property Type:</span>
-                          <span className="ml-2 font-medium">{order.property.type}</span>
+                          <span className="ml-2 font-medium">{order.property?.type || 'N/A'}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Area:</span>
-                          <span className="ml-2 font-medium">{order.property.area} sq ft</span>
+                          <span className="ml-2 font-medium">{order.property?.area || 0} sq ft</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Bedrooms:</span>
-                          <span className="ml-2 font-medium">{order.property.bedrooms}</span>
+                          <span className="ml-2 font-medium">{order.property?.bedrooms || 0}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Bathrooms:</span>
-                          <span className="ml-2 font-medium">{order.property.bathrooms}</span>
+                          <span className="ml-2 font-medium">{order.property?.bathrooms || 0}</span>
                         </div>
                       </div>
                     </div>
