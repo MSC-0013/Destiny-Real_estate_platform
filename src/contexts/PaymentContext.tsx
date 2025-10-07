@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import API from "@/utils/api";
 
 interface Installment {
   id: string;
@@ -21,17 +22,17 @@ interface Payment {
 
 interface ProjectPool {
   projectId: string;
-  totalCost: number;        // total project cost (user funds)
-  remainingPool: number;    // funds left for distribution
-  materialCost: number;     // total material cost allocated
-  salariesCost: number;     // total salaries allocated
+  totalCost: number;        
+  remainingPool: number;    
+  materialCost: number;     
+  salariesCost: number;
 }
 
 interface PaymentContextType {
   payments: Payment[];
   pools: ProjectPool[];
   getPaymentsByProject: (projectId: string) => Payment[];
-  addPayment: (payment: Payment) => void;
+  addPayment: (payment: Payment, sync?: boolean) => void;
   markAsPaid: (id: string) => void;
   payInstallment: (paymentId: string, installmentId: string) => void;
   initializeProjectPool: (projectId: string, totalCost: number, materialCost: number) => void;
@@ -42,23 +43,57 @@ interface PaymentContextType {
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
 
 export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [pools, setPools] = useState<ProjectPool[]>([]);
+  const [payments, setPayments] = useState<Payment[]>(() => {
+    const saved = localStorage.getItem("payments");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [pools, setPools] = useState<ProjectPool[]>(() => {
+    const saved = localStorage.getItem("pools");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save to localStorage whenever payments or pools change
+  useEffect(() => {
+    localStorage.setItem("payments", JSON.stringify(payments));
+  }, [payments]);
+
+  useEffect(() => {
+    localStorage.setItem("pools", JSON.stringify(pools));
+  }, [pools]);
+
+  // ---------------------------------------
+  // CRUD Functions (Local + Backend)
+  // ---------------------------------------
 
   const getPaymentsByProject = (projectId: string) =>
     payments.filter((p) => p.projectId === projectId);
 
-  const addPayment = (payment: Payment) => {
+  const addPayment = async (payment: Payment, sync: boolean = true) => {
     setPayments((prev) => [...prev, payment]);
+
+    if (sync) {
+      try {
+        await API.post("/payments", payment);
+      } catch (err) {
+        console.error("Error syncing payment:", err);
+      }
+    }
   };
 
-  const markAsPaid = (id: string) => {
+  const markAsPaid = async (id: string) => {
     setPayments((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: "paid" } : p))
     );
+
+    try {
+      await API.patch(`/payments/paid/${id}`);
+    } catch (err) {
+      console.error("Error marking payment as paid:", err);
+    }
   };
 
-  const payInstallment = (paymentId: string, installmentId: string) => {
+  const payInstallment = async (paymentId: string, installmentId: string) => {
     setPayments((prev) =>
       prev.map((p) =>
         p.id === paymentId
@@ -71,22 +106,39 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           : p
       )
     );
+
+    try {
+      await API.patch(`/payments/installment/${paymentId}/${installmentId}`);
+    } catch (err) {
+      console.error("Error paying installment:", err);
+    }
   };
 
-  // Initialize project pool (from total project cost)
-  const initializeProjectPool = (projectId: string, totalCost: number, materialCost: number) => {
+  const initializeProjectPool = async (
+    projectId: string,
+    totalCost: number,
+    materialCost: number
+  ) => {
+    const newPool: ProjectPool = {
+      projectId,
+      totalCost,
+      remainingPool: totalCost - materialCost,
+      materialCost,
+      salariesCost: 0,
+    };
+
     setPools((prev) => [
       ...prev.filter((p) => p.projectId !== projectId),
-      {
-        projectId,
-        totalCost,
-        remainingPool: totalCost - materialCost,
-        materialCost,
-        salariesCost: 0,
-      },
+      newPool,
     ]);
 
-    // Add material payment automatically
+    // Sync pool and add material payment to backend
+    try {
+      await API.post("/payments/pool/init", { projectId, totalCost, materialCost });
+    } catch (err) {
+      console.error("Error initializing pool:", err);
+    }
+
     if (materialCost > 0) {
       addPayment({
         id: Date.now().toString(),
@@ -96,12 +148,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         amount: materialCost,
         dueDate: new Date().toISOString(),
         status: "paid",
-      });
+      }, true);
     }
   };
 
-  // Allocate salaries or other payments from remaining pool
-  const allocatePayment = (
+  const allocatePayment = async (
     projectId: string,
     recipient: string,
     amount: number,
@@ -127,7 +178,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       )
     );
 
-    addPayment({
+    const payment: Payment = {
       id: Date.now().toString(),
       projectId,
       description: `Payment to ${recipient}`,
@@ -136,11 +187,18 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       dueDate: new Date().toISOString(),
       status: "paid",
       recipient,
-    });
+    };
+
+    addPayment(payment, true);
+
+    try {
+      await API.post("/payments/pool/allocate", { projectId, recipient, amount, type });
+    } catch (err) {
+      console.error("Error allocating payment:", err);
+    }
   };
 
-  const getPoolBalance = (projectId: string) =>
-    pools.find((p) => p.projectId === projectId);
+  const getPoolBalance = (projectId: string) => pools.find((p) => p.projectId === projectId);
 
   return (
     <PaymentContext.Provider

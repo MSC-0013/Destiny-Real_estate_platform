@@ -8,6 +8,11 @@ import constructionRoutes from "./routes/constructionRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import orderRoutes from './routes/orderRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import propertyRoutes from "./routes/propertyRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
+
+
 
 
 dotenv.config();
@@ -58,6 +63,11 @@ app.use("/api/construction", constructionRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments',paymentRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+
+
 
 
 // --------------------

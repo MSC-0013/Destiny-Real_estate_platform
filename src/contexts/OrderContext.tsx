@@ -51,7 +51,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | '_id'>) => {
     try {
       const backendData = {
-        propertyId: typeof orderData.propertyId === 'string' ? orderData.propertyId : orderData.propertyId._id,
+        propertyId: typeof orderData.propertyId === 'string' ? orderData.propertyId : orderData.propertyId.id,
         buyerId: orderData.buyerId,
         sellerId: orderData.sellerId,
         type: orderData.type,

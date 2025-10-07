@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import API from '@/utils/api';
 
 export interface Property {
   id: string;
@@ -24,15 +25,6 @@ export interface Property {
   createdAt: string;
 }
 
-interface PropertyContextType {
-  properties: Property[];
-  addProperty: (property: Omit<Property, 'id' | 'createdAt'>) => void;
-  updateProperty: (id: string, updates: Partial<Property>) => void;
-  deleteProperty: (id: string) => void;
-  getProperty: (id: string) => Property | undefined;
-  searchProperties: (filters: PropertyFilters) => Property[];
-}
-
 export interface PropertyFilters {
   search?: string;
   location?: string;
@@ -44,19 +36,24 @@ export interface PropertyFilters {
   amenities?: string[];
 }
 
+interface PropertyContextType {
+  properties: Property[];
+  addProperty: (property: Omit<Property, 'id' | 'createdAt'>) => void;
+  updateProperty: (id: string, updates: Partial<Property>) => void;
+  deleteProperty: (id: string) => void;
+  getProperty: (id: string) => Property | undefined;
+  searchProperties: (filters: PropertyFilters) => Property[];
+}
+
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
 export const useProperty = () => {
   const context = useContext(PropertyContext);
-  if (!context) {
-    throw new Error('useProperty must be used within a PropertyProvider');
-  }
+  if (!context) throw new Error('useProperty must be used within PropertyProvider');
   return context;
 };
 
-import heroVilla from '@/assets/hero-villa.jpg';
-
-// Sample data
+// Sample properties for initial load
 const sampleProperties: Property[] = [
   {
     id: '1',
@@ -70,7 +67,7 @@ const sampleProperties: Property[] = [
     bedrooms: 4,
     bathrooms: 3,
     area: 3200,
-    images: [heroVilla],
+    images: [],
     amenities: ['Swimming Pool', 'Garden', 'Garage', 'Security System'],
     sellerId: 'seller-1',
     sellerName: 'John Smith',
@@ -108,75 +105,77 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [properties, setProperties] = useState<Property[]>([]);
 
   useEffect(() => {
-    const savedProperties = localStorage.getItem('properties');
-    if (savedProperties) {
-      setProperties(JSON.parse(savedProperties));
-    } else {
-      setProperties(sampleProperties);
-      localStorage.setItem('properties', JSON.stringify(sampleProperties));
-    }
+    const loadProperties = async () => {
+      try {
+        const res = await API.get('/properties');
+        setProperties(res.data);
+      } catch (err) {
+        console.warn('Failed to fetch from backend, using localStorage/sample:', err);
+        const saved = localStorage.getItem('properties');
+        if (saved) setProperties(JSON.parse(saved));
+        else {
+          setProperties(sampleProperties);
+          localStorage.setItem('properties', JSON.stringify(sampleProperties));
+        }
+      }
+    };
+    loadProperties();
   }, []);
 
-  const addProperty = (propertyData: Omit<Property, 'id' | 'createdAt'>) => {
+  const addProperty = async (propertyData: Omit<Property, 'id' | 'createdAt'>) => {
     const newProperty: Property = {
       ...propertyData,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
 
-    const updatedProperties = [...properties, newProperty];
+    setProperties(prev => [...prev, newProperty]);
+    localStorage.setItem('properties', JSON.stringify([...properties, newProperty]));
+
+    try {
+      await API.post('/properties', newProperty);
+    } catch (err) {
+      console.error('Error syncing property to backend:', err);
+    }
+  };
+
+  const updateProperty = async (id: string, updates: Partial<Property>) => {
+    const updatedProperties = properties.map(prop => (prop.id === id ? { ...prop, ...updates } : prop));
     setProperties(updatedProperties);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
+
+    try {
+      await API.put(`/properties/${id}`, updates);
+    } catch (err) {
+      console.error('Error updating property in backend:', err);
+    }
   };
 
-  // Update an existing property
-  const updateProperty = (id: string, updates: Partial<Property>) => {
-    const updatedProperties = properties.map(property =>
-      property.id === id ? { ...property, ...updates } : property
-    );
+  const deleteProperty = async (id: string) => {
+    const updatedProperties = properties.filter(prop => prop.id !== id);
     setProperties(updatedProperties);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
+
+    try {
+      await API.delete(`/properties/${id}`);
+    } catch (err) {
+      console.error('Error deleting property in backend:', err);
+    }
   };
 
-
-  const deleteProperty = (id: string) => {
-    const updatedProperties = properties.filter(property => property.id !== id);
-    setProperties(updatedProperties);
-    localStorage.setItem('properties', JSON.stringify(updatedProperties));
-  };
-
-  const getProperty = (id: string) => {
-    return properties.find(property => property.id === id);
-  };
+  const getProperty = (id: string) => properties.find(prop => prop.id === id);
 
   const searchProperties = (filters: PropertyFilters) => {
-    return properties.filter(property => {
-      // Only show available properties
-      if (!property.available) {
-        return false;
-      }
-      if (filters.search && !property.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !property.location.toLowerCase().includes(filters.search.toLowerCase())) {
-        return false;
-      }
-      if (filters.location && property.location !== filters.location) {
-        return false;
-      }
-      if (filters.type && property.type !== filters.type) {
-        return false;
-      }
-      if (filters.category && property.category !== filters.category) {
-        return false;
-      }
-      if (filters.minPrice && property.price < filters.minPrice) {
-        return false;
-      }
-      if (filters.maxPrice && property.price > filters.maxPrice) {
-        return false;
-      }
-      if (filters.bedrooms && property.bedrooms !== filters.bedrooms) {
-        return false;
-      }
+    return properties.filter(prop => {
+      if (!prop.available) return false;
+      if (filters.search && !prop.title.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !prop.location.toLowerCase().includes(filters.search.toLowerCase())) return false;
+      if (filters.location && prop.location !== filters.location) return false;
+      if (filters.type && prop.type !== filters.type) return false;
+      if (filters.category && prop.category !== filters.category) return false;
+      if (filters.minPrice && prop.price < filters.minPrice) return false;
+      if (filters.maxPrice && prop.price > filters.maxPrice) return false;
+      if (filters.bedrooms && prop.bedrooms !== filters.bedrooms) return false;
       return true;
     });
   };
