@@ -113,7 +113,7 @@ const ConstructionRequestForm = () => {
         id: Date.now().toString(),
         status: 'pending',
         createdAt: new Date().toISOString(),
-        userId: user?.id
+        userId: user?._id
       };
 
       // Save to localStorage for demo purposes

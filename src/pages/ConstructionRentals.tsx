@@ -61,7 +61,7 @@ const ConstructionRentals = () => {
     // In a real app, this would create a request in the admin system
     const requestData = {
       id: Date.now().toString(),
-      userId: user?.id,
+      userId: user?._id,
       userName: user?.name,
       type: 'rental_construction',
       ...requestForm,

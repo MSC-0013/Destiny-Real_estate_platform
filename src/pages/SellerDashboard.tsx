@@ -19,8 +19,8 @@ const SellerDashboard = () => {
     return <Navigate to="/" replace />;
   }
 
-  const sellerProperties = properties.filter(property => property.sellerId === user.id);
-  const sellerOrders = getSellerOrders(user.id);
+  const sellerProperties = properties.filter(property => property.sellerId === user._id);
+  const sellerOrders = getSellerOrders(user._id);
   const totalRevenue = sellerOrders
     .filter(order => order.status === 'completed')
     .reduce((sum, order) => sum + order.amount, 0);

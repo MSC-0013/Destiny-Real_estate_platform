@@ -53,7 +53,8 @@ const RepairRequestForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      addRepairRequest({
+      await addRepairRequest({
+        clientId: user?._id || '',
         clientName: formData.clientName,
         email: formData.email,
         phone: formData.phone,
@@ -62,8 +63,9 @@ const RepairRequestForm: React.FC = () => {
         location: formData.location,
         address: formData.address,
         estimatedCost: formData.estimatedCost,
-        status: 'pending',
-        adminId: undefined,
+        projectType: formData.projectType,
+        urgency: formData.urgency,
+        attachments: formData.attachments,
       });
 
       toast({

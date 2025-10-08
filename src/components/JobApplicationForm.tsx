@@ -95,7 +95,11 @@
     console.log("Submit clicked", formData); 
 
     if (!formData.fullName || !formData.email) {
-      return toast.error("Please fill required fields (Full Name & Email)");
+      return toast({
+        title: "Error",
+        description: "Please fill required fields (Full Name & Email)",
+        variant: "destructive",
+      });
     }
 
     applyJob({ ...formData, applicantId, applicantName, role });

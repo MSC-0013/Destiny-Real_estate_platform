@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProperty } from '@/contexts/PropertyContext';
+import MapView from "@/components/MapView";
 import PropertyCard from '@/components/PropertyCard';
 import SearchBar from '@/components/SearchBar';
 import { PropertyFilters } from '@/contexts/PropertyContext';
@@ -58,6 +59,11 @@ const Properties = () => {
             </p>
           </motion.div>
         </div>
+      </div>
+
+      {/* Map View */}
+      <div className="mb-8">
+        <MapView />
       </div>
 
       <div className="container mx-auto px-4 -mt-8">

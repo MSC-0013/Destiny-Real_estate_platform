@@ -47,8 +47,17 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ projectId, materials }) => 
   // Handle input changes
   const handleChange = (index: number, key: keyof Material, value: string | number) => {
     const updated = [...localMaterials];
-    updated[index][key] = value as any;
-    updated[index].totalCost = updated[index].quantity * updated[index].unitCost;
+    const material = updated[index];
+    
+    if (key === 'name' || key === 'unit' || key === 'supplier') {
+      material[key] = value as string;
+    } else if (key === 'quantity' || key === 'unitCost' || key === 'totalCost') {
+      material[key] = value as number;
+    } else if (key === 'id' || key === 'purchasedAt') {
+      material[key] = value as string;
+    }
+    
+    material.totalCost = material.quantity * material.unitCost;
     setLocalMaterials(updated);
   };
 

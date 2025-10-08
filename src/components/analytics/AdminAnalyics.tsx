@@ -22,18 +22,18 @@ const AnalyticsTab = () => {
 
   const users = getAllUsers();
 
-  // Helper function: get orders by user role
+  // Helper function: get orders by user role  
   const ordersByUserRole = (role: string) =>
     orders.filter(order => {
-      const user = users.find(u => u.id === order.userId);
+      const user = users.find(u => u._id === order.buyerId || u._id === order.sellerId);
       return user?.role === role;
     });
 
   // Revenue per month (only completed orders)
   const revenueData = orders
-    .filter(o => o.status === 'completed' && o.date)
+    .filter(o => o.status === 'completed' && o.createdAt)
     .map(o => ({
-      month: new Date(o.date).toLocaleString('default', { month: 'short' }),
+      month: new Date(o.createdAt).toLocaleString('default', { month: 'short' }),
       revenue: o.amount || 0,
     }));
 

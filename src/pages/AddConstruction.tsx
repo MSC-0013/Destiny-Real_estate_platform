@@ -57,7 +57,7 @@ const AddConstruction = () => {
     setNewRequirement("");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.clientName) newErrors.clientName = "Client name is required";
     if (!formData.email) newErrors.email = "Email is required";
@@ -72,22 +72,19 @@ const AddConstruction = () => {
     }
 
     // Add project to context
-    addProject({
+    await addProject({
       ...formData,
       title: formData.projectType + " Project",
-      clientId: user?.id || "unknown",
+      clientId: user?._id || "unknown",
+      clientName: user?.name || "Unknown",
+      projectType: formData.projectType as "residential" | "commercial" | "renovation" | "interior",
       status: "pending",
       phase: "planning",
       estimatedCost: Number(formData.budget) || 0,
-      actualCost: 0,
-      adminId: user?.id || "unknown",
       workers: [],
       blueprints: [],
       progressImages: formData.designImages,
-      tasks: [],
-      materials: [],
-      payments: [],
-      address: formData.location, // if you want to store address separately
+      address: formData.location,
     });
 
     navigate("/construction");

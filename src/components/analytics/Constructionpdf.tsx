@@ -14,7 +14,7 @@ const ConstructionPdf = (req, type = "Construction") => {
 
   // Section Header
   const drawSection = (title, color = [52, 152, 219]) => {
-    doc.setFillColor(...color);
+    doc.setFillColor(color[0], color[1], color[2]);
     doc.rect(left, y, pageWidth - 2 * left, 28, "F");
     doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);

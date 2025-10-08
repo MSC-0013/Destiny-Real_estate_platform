@@ -23,10 +23,10 @@ import { generateRepairPDF } from "@/components/analytics/Reapairform";
 import { OrderPdf } from "@/components/analytics/downloadOrderPDF";
 import AnalyticsTab from "@/components/analytics/AdminAnalyics";
 import { useJob } from "@/contexts/JobContext";
-import JobDashboard, { JobCard } from "@/components/JobsDashboard";
+import JobDashboard from "@/components/JobsDashboard";
 
 const AdminDashboard = () => {
-  const { user, getAllUsers, updateProfile, logout } = useAuth();
+  const { user, getAllUsers, updateProfile, logout, updateUser, deleteUser } = useAuth();
   const { properties } = useProperty();
   const { orders } = useOrder();
   const [filterRole, setFilterRole] = useState("all"); // "worker" | "contractor" | "designer" | "all"
@@ -365,13 +365,7 @@ const AdminDashboard = () => {
           <TabsContent value="users">{/* Users content */}</TabsContent>
 
           <TabsContent value="workers">
-            <JobDashboard
-              workerApplications={workerApplications}
-              contractorApplications={contractorApplications}
-              designerApplications={designerApplications}
-              approveJob={approveJob}
-              rejectJob={rejectJob}
-            />
+            <JobDashboard />
           </TabsContent>
 
         </Tabs>
@@ -462,8 +456,8 @@ const AdminDashboard = () => {
                   className="border border-gray-300 rounded-xl shadow-sm bg-white p-4 flex items-center justify-between"
                 >
                   <div>
-                    <p className="font-semibold text-gray-800">🏷 {req.title}</p>
-                    <p className="text-gray-600 text-sm">👤 {req.clientName}</p>
+                    <p className="font-semibold text-gray-800">🏷 {req.type || 'Construction Request'}</p>
+                    <p className="text-gray-600 text-sm">👤 {req.requestedBy}</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-bold ${req.status === "pending"
@@ -484,24 +478,24 @@ const AdminDashboard = () => {
             </div>
 
             {constructionRequests.length > 0 ? (
-              constructionRequests.map((req) => {
+              constructionRequests.map((req: any) => {
                 const {
                   id,
-                  title,
-                  clientName,
-                  email,
-                  phone,
-                  projectType,
-                  location,
-                  area,
-                  bedrooms,
-                  bathrooms,
-                  floors,
-                  budget,
-                  timeline,
-                  specialRequirements,
-                  description,
-                  documents,
+                  title = req.projectType,
+                  clientName = req.clientName,
+                  email = req.email,
+                  phone = req.phone,
+                  projectType = req.projectType,
+                  location = req.location,
+                  area = req.area,
+                  bedrooms = req.bedrooms,
+                  bathrooms = req.bathrooms,
+                  floors = req.floors,
+                  budget = req.budget,
+                  timeline = req.timeline,
+                  specialRequirements = req.requirements,
+                  description = req.description,
+                  documents = req.designImages,
                   status,
                 } = req;
 
@@ -645,13 +639,6 @@ const AdminDashboard = () => {
                             <Button
                               onClick={() => {
                                 approveConstructionRequest(id);
-                                setConstructionRequests((prev) =>
-                                  prev.map((req) =>
-                                    req.id === id
-                                      ? { ...req, status: "approved" }
-                                      : req
-                                  )
-                                );
                               }}
                               variant="outline"
                               className="text-black border-black"
@@ -661,13 +648,6 @@ const AdminDashboard = () => {
                             <Button
                               onClick={() => {
                                 rejectConstructionRequest(id);
-                                setConstructionRequests((prev) =>
-                                  prev.map((req) =>
-                                    req.id === id
-                                      ? { ...req, status: "rejected" }
-                                      : req
-                                  )
-                                );
                               }}
                               variant="outline"
                               className="text-black border-black"
@@ -755,14 +735,13 @@ const AdminDashboard = () => {
                   clientName,
                   email,
                   phone,
-                  city,
-                  repairTitle,
+                  location,
                   description,
                   address,
                   estimatedCost,
                   projectType,
                   urgency,
-                  documents,
+                  attachments,
                   status,
                 } = req;
 
@@ -796,16 +775,12 @@ const AdminDashboard = () => {
                             <td className="px-4 py-2">{phone}</td>
                           </tr>
                           <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🏙 City/State
-                            </td>
-                            <td className="px-4 py-2">{city}</td>
+                            <td className="px-4 py-2 font-semibold">📍 Location</td>
+                            <td className="px-4 py-2">{location}</td>
                           </tr>
                           <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🔧 Repair Title
-                            </td>
-                            <td className="px-4 py-2">{repairTitle}</td>
+                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
+                            <td className="px-4 py-2">{title}</td>
                           </tr>
                           <tr>
                             <td className="px-4 py-2 font-semibold">
@@ -866,13 +841,6 @@ const AdminDashboard = () => {
                             <Button
                               onClick={() => {
                                 approveRepairRequest(id);
-                                setRepairRequests((prev) =>
-                                  prev.map((r) =>
-                                    r.id === id
-                                      ? { ...r, status: "approved" }
-                                      : r
-                                  )
-                                );
                               }}
                               variant="outline"
                               className="text-black border-black"
@@ -882,13 +850,6 @@ const AdminDashboard = () => {
                             <Button
                               onClick={() => {
                                 rejectRepairRequest(id);
-                                setRepairRequests((prev) =>
-                                  prev.map((r) =>
-                                    r.id === id
-                                      ? { ...r, status: "rejected" }
-                                      : r
-                                  )
-                                );
                               }}
                               variant="outline"
                               className="text-black border-black"
@@ -998,13 +959,7 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === "workers" && (
-          <JobDashboard
-            workerApplications={workerApplications}
-            contractorApplications={contractorApplications}
-            designerApplications={designerApplications}
-            approveJob={approveJob}
-            rejectJob={rejectJob}
-          />
+          <JobDashboard />
         )}
 
 

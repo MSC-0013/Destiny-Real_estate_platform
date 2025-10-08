@@ -95,6 +95,8 @@
     description: string;
     clientId: string;
     clientName: string;
+    email: string;
+    phone: string;
     location: string;
     address: string;
     projectType: "residential" | "commercial" | "renovation" | "interior";
@@ -188,11 +190,17 @@
 
         // Repair Requests
         const savedRepairRequests = localStorage.getItem("repairRequests");
-        if (savedRepairRequests) setRepairRequests(JSON.parse(savedRepairRequests));
+        if (savedRepairRequests) {
+          const parsed = JSON.parse(savedRepairRequests) as RepairRequest[];
+          setRepairRequests(parsed);
+        }
 
         // Construction Requests
         const savedConstructionRequests = localStorage.getItem("constructionRequests");
-        if (savedConstructionRequests) setConstructionRequests(JSON.parse(savedConstructionRequests));
+        if (savedConstructionRequests) {
+          const parsed = JSON.parse(savedConstructionRequests) as ApprovalRequest[];
+          setConstructionRequests(parsed);
+        }
       };
       loadData();
     }, []);
@@ -344,58 +352,92 @@
       saveProjects(updated);
     };
 
-    const approveRequest = (projectId: string, requestId: string, approve: boolean) => {
+    const approveRequest = async (projectId: string, requestId: string, approve: boolean) => {
+      const status = approve ? "approved" : "rejected";
       const updated = projects.map((p) => {
         if (p.id !== projectId) return p;
         const updatedReq = p.requests?.map((r) =>
-          r.id === requestId ? { ...r, status: approve ? "approved" : "rejected" } : r
+          r.id === requestId ? { ...r, status: status as "approved" | "rejected" | "pending" } : r
         );
         return { ...p, requests: updatedReq || [] };
       });
-      saveProjects(updated);
+      await saveProjects(updated);
     };
 
     // -------------------- Repair Requests --------------------
-    const addRepairRequest = (
+    const addRepairRequest = async (
       request: Omit<RepairRequest, "id" | "createdAt" | "status">
     ) => {
-      const newRequest: RepairRequest = {
-        ...request,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        status: "pending",
-      };
-      const updated = [...repairRequests, newRequest];
-      saveRepairRequests(updated);
+      try {
+        const newRequest: RepairRequest = {
+          ...request,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          status: "pending",
+        };
+        
+        // Send to backend
+        await API.post("/construction/repair-requests", newRequest);
+        
+        // Update local state after backend confirms
+        const updated = [...repairRequests, newRequest];
+        saveRepairRequests(updated);
+      } catch (error) {
+        console.error("Failed to add repair request:", error);
+        throw error;
+      }
     };
 
-    const approveRepairRequest = (id: string) => {
-      const updated = repairRequests.map((r) =>
-        r.id === id ? { ...r, status: "approved" } : r
-      );
-      saveRepairRequests(updated);
+    const approveRepairRequest = async (id: string) => {
+      try {
+        await API.put(`/construction/repair-requests/${id}/approve`);
+        const updated: RepairRequest[] = repairRequests.map((r) =>
+          r.id === id ? { ...r, status: "approved" } : r
+        );
+        saveRepairRequests(updated);
+      } catch (error) {
+        console.error("Failed to approve repair request:", error);
+        throw error;
+      }
     };
 
-    const rejectRepairRequest = (id: string) => {
-      const updated = repairRequests.map((r) =>
-        r.id === id ? { ...r, status: "rejected" } : r
-      );
-      saveRepairRequests(updated);
+    const rejectRepairRequest = async (id: string) => {
+      try {
+        await API.put(`/construction/repair-requests/${id}/reject`);
+        const updated: RepairRequest[] = repairRequests.map((r) =>
+          r.id === id ? { ...r, status: "rejected" } : r
+        );
+        saveRepairRequests(updated);
+      } catch (error) {
+        console.error("Failed to reject repair request:", error);
+        throw error;
+      }
     };
 
-    // -------------------- Construction Requests --------------------
-    const approveConstructionRequest = (id: string) => {
-      const updated = constructionRequests.map((r) =>
-        r.id === id ? { ...r, status: "approved" } : r
-      );
-      saveConstructionRequests(updated);
+    const approveConstructionRequest = async (id: string) => {
+      try {
+        await API.put(`/construction/construction-requests/${id}/approve`);
+        const updated: ApprovalRequest[] = constructionRequests.map((r) =>
+          r.id === id ? { ...r, status: "approved" } : r
+        );
+        saveConstructionRequests(updated);
+      } catch (error) {
+        console.error("Failed to approve construction request:", error);
+        throw error;
+      }
     };
 
-    const rejectConstructionRequest = (id: string) => {
-      const updated = constructionRequests.map((r) =>
-        r.id === id ? { ...r, status: "rejected" } : r
-      );
-      saveConstructionRequests(updated);
+    const rejectConstructionRequest = async (id: string) => {
+      try {
+        await API.put(`/construction/construction-requests/${id}/reject`);
+        const updated: ApprovalRequest[] = constructionRequests.map((r) =>
+          r.id === id ? { ...r, status: "rejected" } : r
+        );
+        saveConstructionRequests(updated);
+      } catch (error) {
+        console.error("Failed to reject construction request:", error);
+        throw error;
+      }
     };
 
     const updateProjectMaterials = (projectId: string, materials: Material[]) => {
