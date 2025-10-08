@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useProperty } from '@/contexts/PropertyContext';
+import { useProperty, Property, PropertyFilters } from '@/contexts/PropertyContext';
 import MapView from "@/components/MapView";
 import PropertyCard from '@/components/PropertyCard';
 import SearchBar from '@/components/SearchBar';
-import { PropertyFilters } from '@/contexts/PropertyContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, Grid3x3, List, SlidersHorizontal, TrendingUp, MapPin } from 'lucide-react';
@@ -13,21 +12,23 @@ import { motion } from 'framer-motion';
 const Properties = () => {
   const [searchParams] = useSearchParams();
   const { properties, searchProperties } = useProperty();
-  const [filteredProperties, setFilteredProperties] = useState(properties);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<PropertyFilters>({});
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
+    // Wait until properties are loaded
+    if (properties.length === 0) return;
+
     const category = searchParams.get('category') as 'sale' | 'rent' | null;
     const initialFilters: PropertyFilters = {};
-    
-    if (category) {
-      initialFilters.category = category;
-    }
-    
+    if (category) initialFilters.category = category;
+
     setFilters(initialFilters);
     const results = searchProperties(initialFilters);
     setFilteredProperties(results);
+    setIsLoading(false);
   }, [searchParams, properties, searchProperties]);
 
   const handleSearch = (newFilters: PropertyFilters) => {
@@ -119,10 +120,12 @@ const Properties = () => {
         </div>
 
         {/* Properties Grid */}
-        {filteredProperties.length > 0 ? (
-          <motion.div 
-            className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" 
+        {isLoading ? (
+          <div className="text-center py-20">Loading properties...</div>
+        ) : filteredProperties.length > 0 ? (
+          <motion.div
+            className={viewMode === 'grid'
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               : "flex flex-col gap-6"
             }
             initial="hidden"
@@ -135,7 +138,7 @@ const Properties = () => {
               }
             }}
           >
-            {filteredProperties.map((property, index) => (
+            {filteredProperties.map((property) => (
               <motion.div
                 key={property.id}
                 variants={{

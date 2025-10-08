@@ -3,12 +3,7 @@ import axios from "axios";
 // ------------------------------------
 // 🌐 Dynamic Backend URL Configuration
 // ------------------------------------
-
-// Check if running locally or in production
 const isLocal = window.location.hostname === "localhost";
-
-// If running locally → use localhost backend
-// If deployed → use your Vercel/Render backend URL
 const API_BASE_URL = isLocal
   ? "http://localhost:5000/api"
   : "https://destiny-real-estate-platform-1.onrender.com/api";
@@ -29,16 +24,28 @@ const API = axios.create({
 export const login = (email: string, password: string) =>
   API.post("/users/login", { email, password });
 
-export const signup = (userData: any) => API.post("/users/signup", userData);
+export const signup = (userData: any) =>
+  API.post("/users/signup", userData);
 
 // ------------------------------------
 // User Routes
 // ------------------------------------
 export const getAllUsers = () => API.get("/users");
 export const getUserById = (id: string) => API.get(`/users/${id}`);
-export const updateUser = (id: string, userData: any, config?: any) =>
-  API.put(`/users/${id}`, userData, config);
 export const deleteUser = (id: string) => API.delete(`/users/${id}`);
+
+// Updated function to handle both JSON & FormData
+export const updateUser = (id: string, userData: any, config?: any) => {
+  // If userData is FormData, force multipart/form-data
+  const isFormData = userData instanceof FormData;
+  return API.put(
+    isFormData ? `/users/${id}/image` : `/users/${id}`,
+    userData,
+    isFormData
+      ? { headers: { "Content-Type": "multipart/form-data" }, ...config }
+      : { headers: { "Content-Type": "application/json" }, ...config }
+  );
+};
 
 // ------------------------------------
 // Construction Project Routes

@@ -9,14 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Camera, 
-  Edit3, 
-  Save, 
-  X, 
+import {
+  User,
+  Mail,
+  Phone,
+  Camera,
+  Edit3,
+  Save,
+  X,
   Upload,
   Shield,
   Calendar,
@@ -28,7 +28,7 @@ const Profile = () => {
   const { user, updateProfile } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | File | null>(null);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -47,21 +47,30 @@ const Profile = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      setProfileImage(file); // store the File object
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({ ...formData, profileImage });
+
+    const form = new FormData();
+
+    // Append all fields
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) form.append(key, value as string);
+    });
+
+    // Append profile image if exists
+    if (profileImage) form.append("profileImage", profileImage);
+
+    await updateProfile(form); // call AuthContext function
     setIsEditing(false);
-    toast({ 
-      title: 'Success', 
-      description: 'Profile updated successfully!',
+
+    toast({
+      title: "Success",
+      description: "Profile updated successfully!",
     });
   };
 
@@ -119,18 +128,23 @@ const Profile = () => {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden">
                     {profileImage || user.profileImage ? (
-                      <img 
-                        src={profileImage || user.profileImage} 
+                      <img
+                        src={
+                          profileImage instanceof File
+                            ? URL.createObjectURL(profileImage)
+                            : profileImage || user.profileImage
+                        }
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
+
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                         <User className="w-16 h-16 text-gray-400" />
                       </div>
                     )}
                   </div>
-                  
+
                   {isEditing && (
                     <label className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full cursor-pointer hover:bg-gray-800 transition-colors">
                       <Camera className="w-4 h-4" />
@@ -163,7 +177,7 @@ const Profile = () => {
               {/* Edit Button */}
               <div className="absolute top-6 right-6">
                 {!isEditing ? (
-                  <Button 
+                  <Button
                     onClick={() => setIsEditing(true)}
                     variant="outline"
                     className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-black backdrop-blur-sm"
@@ -173,7 +187,7 @@ const Profile = () => {
                   </Button>
                 ) : (
                   <div className="flex space-x-2">
-                    <Button 
+                    <Button
                       onClick={handleCancel}
                       variant="outline"
                       size="sm"
@@ -194,7 +208,7 @@ const Profile = () => {
                     <User className="h-5 w-5 text-black" />
                     <h3 className="text-xl font-semibold text-black">Personal Information</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
@@ -207,7 +221,7 @@ const Profile = () => {
                         className="border-gray-300"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input
@@ -221,7 +235,7 @@ const Profile = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
@@ -234,12 +248,12 @@ const Profile = () => {
                         className="border-gray-300"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Role</Label>
-                      <Select 
-                        value={formData.role} 
-                        onValueChange={(value: 'tenant' | 'landlord' | 'admin' | 'contractor' | 'designer' | 'worker') => 
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value: 'tenant' | 'landlord' | 'admin' | 'contractor' | 'designer' | 'worker') =>
                           setFormData(prev => ({ ...prev, role: value }))}
                         disabled={!isEditing}
                       >
@@ -267,7 +281,7 @@ const Profile = () => {
                     <MapPin className="h-5 w-5 text-black" />
                     <h3 className="text-xl font-semibold text-black">Additional Information</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -280,7 +294,7 @@ const Profile = () => {
                         className="border-gray-300"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="occupation">Occupation</Label>
                       <Input
@@ -293,7 +307,7 @@ const Profile = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
                     <Input
@@ -305,7 +319,7 @@ const Profile = () => {
                       className="border-gray-300"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
                     <textarea
@@ -319,7 +333,7 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Action Buttons */}
                 {isEditing && (
                   <div className="flex justify-end space-x-4 pt-6 border-t">
@@ -348,7 +362,7 @@ const Profile = () => {
                         {user.role === 'tenant' ? 'Properties Viewed' : user.role === 'landlord' ? 'Properties Listed' : 'Projects Managed'}
                       </div>
                     </div>
-                    
+
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-black mb-2">
                         {user.role === 'tenant' ? '2' : user.role === 'landlord' ? '8' : '15'}
@@ -357,7 +371,7 @@ const Profile = () => {
                         {user.role === 'tenant' ? 'Bookmarks' : user.role === 'landlord' ? 'Sold Properties' : 'Completed Projects'}
                       </div>
                     </div>
-                    
+
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-black mb-2">4.8</div>
                       <div className="text-sm text-muted-foreground">Rating</div>

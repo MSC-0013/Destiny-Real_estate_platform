@@ -151,8 +151,11 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       createdAt: new Date().toISOString(),
     };
 
-    setProperties(prev => [...prev, newProperty]);
-    localStorage.setItem('properties', JSON.stringify([...properties, newProperty]));
+    setProperties(prev => {
+      const updated = [...prev, newProperty];
+      localStorage.setItem('properties', JSON.stringify(updated)); 
+      return updated;
+    });
 
     try {
       const res = await API.post('/properties', newProperty);

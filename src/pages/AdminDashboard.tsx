@@ -814,20 +814,24 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-4 py-2">{urgency}</td>
                           </tr>
-                          {documents && (
+                          {attachments && Array.isArray(attachments) && attachments.length > 0 && (
                             <tr>
                               <td className="px-4 py-2 font-semibold">
                                 📎 Documents
                               </td>
-                              <td className="px-4 py-2">
-                                <a
-                                  href={documents}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-gray-900 font-medium underline"
-                                >
-                                  Download
-                                </a>
+                              <td className="px-4 py-2 space-x-2">
+                                {attachments.map((file: File, idx: number) => (
+                                  <a
+                                    key={idx}
+                                    href={URL.createObjectURL(file)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-gray-900 font-medium underline"
+                                    download={file.name}
+                                  >
+                                    {file.name || `Attachment ${idx + 1}`}
+                                  </a>
+                                ))}
                               </td>
                             </tr>
                           )}

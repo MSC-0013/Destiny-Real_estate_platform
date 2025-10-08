@@ -101,19 +101,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return getAllUsers().find(u => u._id === id);
   };
 
-  const updateProfile = async (userData: Partial<User> | FormData) => {
+  const updateProfile = async (userData: FormData) => {
     if (!user) return;
+
     try {
-      const res = await API.updateUser(
-        user._id,
-        userData,
-        userData instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : {}
-      );
+      // Always send FormData with multipart/form-data headers
+      const res = await API.updateUser(user._id, userData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Update user in state and localStorage
       persistUser(res.data);
     } catch (err) {
       console.error("Profile update failed:", err);
     }
   };
+
 
   const updateUser = async (id: string, userData: Partial<User>) => {
     try {
