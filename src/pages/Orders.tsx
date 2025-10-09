@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { OrderPdf } from '@/components/analytics/downloadOrderPDF';
+import { useEffect, useState } from 'react';
 import {
   Download,
   MapPin,
@@ -30,12 +31,21 @@ import {
 const Orders = () => {
   const { user } = useAuth();
   const { getUserOrders } = useOrder();
+  const [userOrders, setUserOrders] = useState([]);
+
+
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  const userOrders = getUserOrders(user._id);
+  useEffect(() => {
+    if (user?._id) {
+      const orders = getUserOrders(user._id);
+      setUserOrders(orders);
+    }
+  }, [user, getUserOrders]);
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

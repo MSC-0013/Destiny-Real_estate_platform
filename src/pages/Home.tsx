@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  ArrowRight, 
-  Search, 
-  Shield, 
-  Award, 
+import {
+  ArrowRight,
+  Search,
+  Shield,
+  Award,
   Users,
   Home as HomeIcon,
   Building,
@@ -37,10 +37,12 @@ const Home = () => {
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    if (!hasSearched) {
-      setSearchResults(properties.filter(p => p.featured && p.available).slice(0, 6));
+    if (!hasSearched && properties.length > 0) {
+      // Show all available properties
+      setSearchResults(properties.filter(p => p.available));
     }
   }, [properties, hasSearched]);
+
 
   const handleSearch = (filters: PropertyFilters) => {
     const results = searchProperties(filters);
@@ -86,13 +88,13 @@ const Home = () => {
     <div className="min-h-screen">
       {/* Hero Section - Modern Black & White Design */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4)), url(${heroRealEstate})`
           }}
         />
-        
+
         {/* Subtle Geometric Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-white/5 rounded-full blur-xl animate-pulse" />
@@ -104,31 +106,31 @@ const Home = () => {
           <Badge className="mb-6 bg-white/10 text-white border-white/20 backdrop-blur-sm">
             India's Premier Real Estate Platform
           </Badge>
-          
+
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-8 leading-tight">
             Find Your Perfect
             <span className="block text-white drop-shadow-2xl">
               Dream Home
             </span>
           </h1>
-          
+
           <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Discover premium properties, custom construction services, and interior design solutions 
+            Discover premium properties, custom construction services, and interior design solutions
             all in one place. Your journey to the perfect home starts here.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-white text-black hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-xl"
               onClick={() => navigate('/properties')}
             >
               Browse Properties
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
+            <Button
+              size="lg"
+              variant="outline"
               className="border-white/50 text-black hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
               onClick={() => navigate('/construction')}
             >
@@ -171,7 +173,7 @@ const Home = () => {
                       </li>
                     ))}
                   </ul>
-                  <Button 
+                  <Button
                     className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3"
                     onClick={() => navigate(service.link)}
                   >
@@ -216,7 +218,7 @@ const Home = () => {
               Use our advanced search to filter properties by location, price, type, and more
             </p>
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
             <SearchBar onSearch={handleSearch} />
           </div>
@@ -234,7 +236,7 @@ const Home = () => {
               {hasSearched ? `Found ${searchResults.length} Properties` : 'Premium Properties'}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {hasSearched 
+              {hasSearched
                 ? 'Properties matching your search criteria'
                 : 'Handpicked premium properties in prime locations across India'
               }
@@ -244,8 +246,9 @@ const Home = () => {
           {searchResults.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {searchResults.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <PropertyCard key={property._id || property.id} property={property} />
               ))}
+
             </div>
           ) : (
             <div className="text-center py-16">
@@ -254,12 +257,12 @@ const Home = () => {
                 {hasSearched ? 'No properties found' : 'No featured properties'}
               </h3>
               <p className="text-gray-500 mb-8">
-                {hasSearched 
+                {hasSearched
                   ? 'Try adjusting your search criteria to find more properties'
                   : 'Check back later for featured properties'
                 }
               </p>
-              <Button 
+              <Button
                 onClick={() => navigate('/properties')}
                 className="bg-black hover:bg-gray-800 text-white px-8 py-3"
               >
@@ -270,7 +273,7 @@ const Home = () => {
 
           {!hasSearched && searchResults.length > 0 && (
             <div className="text-center mt-12">
-              <Button 
+              <Button
                 onClick={() => navigate('/properties')}
                 size="lg"
                 className="bg-black hover:bg-gray-800 text-white px-8 py-3"
@@ -292,10 +295,10 @@ const Home = () => {
             Ready to Find Your Perfect Home?
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Join thousands of satisfied customers who have found their dream properties with us. 
+            Join thousands of satisfied customers who have found their dream properties with us.
             Whether you're buying, renting, or building, we're here to help.
           </p>
-          
+
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <div className="text-center">
               <div className="p-4 bg-white/10 rounded-full inline-flex mb-4">
@@ -319,19 +322,19 @@ const Home = () => {
               <p className="text-gray-300">Competitive pricing with transparent fee structure</p>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-white text-black hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-xl"
               onClick={() => navigate('/properties')}
             >
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
+            <Button
+              size="lg"
+              variant="outline"
               className="border-white/50 text-black hover:bg-white hover:text-black px-10 py-4 text-lg font-semibold backdrop-blur-sm"
               onClick={() => navigate('/help')}
             >
