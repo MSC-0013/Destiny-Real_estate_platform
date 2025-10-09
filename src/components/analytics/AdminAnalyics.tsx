@@ -20,7 +20,15 @@ const AnalyticsTab = () => {
   const { getAllUsers } = useAuth();
   const { orders } = useOrder();
 
-  const users = getAllUsers();
+  const [users, setUsers] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchUsers = async () => {
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
+    };
+    fetchUsers();
+  }, [getAllUsers]);
 
   // Helper function: get orders by user role  
   const ordersByUserRole = (role: string) =>

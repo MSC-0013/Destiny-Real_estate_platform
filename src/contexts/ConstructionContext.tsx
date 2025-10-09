@@ -87,17 +87,23 @@ export interface ApprovalRequest {
   requestedBy: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  projectType?: string;
+  description?: string;
+  budget?: number;
+  timeline?: string;
 }
 
 export interface RepairRequest {
   id: string;
   title: string;
+  propertyTitle?: string;
   description: string;
   clientId: string;
   clientName: string;
   email: string;
   phone: string;
   location: string;
+  priority?: "low" | "medium" | "high";
   address: string;
   projectType: "residential" | "commercial" | "renovation" | "interior";
   urgency: "low" | "medium" | "high";

@@ -1,45 +1,33 @@
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProperty } from "@/contexts/PropertyContext";
-import { useOrder } from "@/contexts/OrderContext";
 import { useConstruction } from "@/contexts/ConstructionContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useJob } from "@/contexts/JobContext";
+import { useProperty } from "@/contexts/PropertyContext";
 import { Button } from "@/components/ui/button";
-import { Navigate, Link } from "react-router-dom";
-import { User } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import {
   Users,
+  Building2,
+  Briefcase,
+  ClipboardList,
+  BarChart3,
+  FileText,
+  MapPin,
   Home,
-  ShoppingBag,
-  DollarSign,
-  Settings,
-  Plus,
-  Check,
-  X,
 } from "lucide-react";
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
-import { ConstructionPdf } from "@/components/analytics/Constructionpdf";
-import { generateRepairPDF } from "@/components/analytics/Reapairform";
-import { OrderPdf } from "@/components/analytics/downloadOrderPDF";
 import AnalyticsTab from "@/components/analytics/AdminAnalyics";
-import { useJob } from "@/contexts/JobContext";
-import JobDashboard from "@/components/JobsDashboard";
 
 const AdminDashboard = () => {
-  const { user, getAllUsers, updateProfile, logout, updateUser, deleteUser } = useAuth();
-  const { properties } = useProperty();
-  const { orders } = useOrder();
-  const [users, setUsers] = useState<User[]>([]);
-  const [filterRole, setFilterRole] = useState("all"); // "worker" | "contractor" | "designer" | "all"
-
-
+  const { getAllUsers, deleteUser } = useAuth();
   const {
     repairRequests,
+    constructionRequests,
+    projects,
     approveRepairRequest,
     rejectRepairRequest,
-    constructionRequests,
     approveConstructionRequest,
     rejectConstructionRequest,
   } = useConstruction();
@@ -47,953 +35,583 @@ const AdminDashboard = () => {
     workerApplications,
     contractorApplications,
     designerApplications,
+    approveJob,
+    rejectJob,
     assignJob,
   } = useJob();
+  const { properties } = useProperty();
+  const { toast } = useToast();
 
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const [employeeFilter, setEmployeeFilter] = useState("all"); // all / worker / contractor / designer
+  const [users, setUsers] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const { approveJob, rejectJob } = useJob();
-  const [expanded, setExpanded] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("all"); // <-- add this
-  const [searchTerm, setSearchTerm] = useState("");
-
-
-
-
-
-  const [activeTab, setActiveTab] = useState<
-    | "overview"
-    | "employees"
-    | "constructionRequests"
-    | "repairRequests"
-    | "analytics"
-    | "users"
-    | "workers"
-  >("overview");
-
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <Navigate to="/" replace />;
-
-  const totalRevenue = orders
-    .filter((order) => order.status === "completed")
-    .reduce((sum, order) => sum + order.amount, 0);
-
-
-  const getFilteredList = () => {
-    let list: any[] = [];
-
-    if (employeeFilter === "worker") list = workerApplications;
-    else if (employeeFilter === "contractor") list = contractorApplications;
-    else if (employeeFilter === "designer") list = designerApplications;
-    else list = [...workerApplications, ...contractorApplications, ...designerApplications];
-
-    return list.filter(
-      (item) =>
-        (filterStatus === "all" || item.status === filterStatus) &&
-        // Use optional chaining and fallback to empty string
-        (item.applicantName?.toLowerCase() ?? "").includes(searchTerm.toLowerCase())
-    );
-  };
-  // Add this useEffect at the top of AdminDashboard
-  useEffect(() => {
-    let isMounted = true;
-
+  React.useEffect(() => {
     const fetchUsers = async () => {
-      if (activeTab === "users") {
-        try {
-          const allUsers = (await getAllUsers()) || [];
-          if (isMounted) setUsers(allUsers);
-        } catch (err) {
-          console.error("Error fetching users:", err);
-        }
-      } else {
-        setUsers([]); // clear users when leaving the tab
-      }
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
     };
-
     fetchUsers();
+  }, [getAllUsers]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [activeTab]);
-
-
-  const pendingOrders = orders.filter(
-    (order) => order.status === "pending"
-  ).length;
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+  const handleApproveRepair = async (id: string) => {
+    await approveRepairRequest(id);
+    toast({ title: "Repair request approved" });
   };
+
+  const handleRejectRepair = async (id: string) => {
+    await rejectRepairRequest(id);
+    toast({ title: "Repair request rejected", variant: "destructive" });
+  };
+
+  const handleApproveConstruction = async (id: string) => {
+    await approveConstructionRequest(id);
+    toast({ title: "Construction request approved" });
+  };
+
+  const handleRejectConstruction = async (id: string) => {
+    await rejectConstructionRequest(id);
+    toast({ title: "Construction request rejected", variant: "destructive" });
+  };
+
   return (
-    <main className="min-h-screen bg-background pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Manage the entire real estate platform
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Manage platform operations and monitor activities
+            </p>
+          </div>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(val) =>
-            setActiveTab(
-              val as
-              | "overview"
-              | "constructionRequests"
-              | "repairRequests"
-              | "analytics"
-              | "users"
-              | "workers"
-            )
-          }
-          className="w-full"
-        >
-          <TabsList className="grid w-full grid-cols-7 mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="employees">Employees</TabsTrigger>
-            <TabsTrigger value="constructionRequests">
-              Construction Requests
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{users.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Properties</CardTitle>
+              <Home className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{properties.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Construction Projects
+              </CardTitle>
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{projects.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Job Applications
+              </CardTitle>
+              <Briefcase className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {workerApplications.length +
+                  contractorApplications.length +
+                  designerApplications.length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 h-auto p-2">
+            <TabsTrigger value="overview" className="flex items-center gap-2 text-xs md:text-sm">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="repairRequests">Repair Requests</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="workers">Job Applications</TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2 text-xs md:text-sm">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="properties" className="flex items-center gap-2 text-xs md:text-sm">
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Properties</span>
+            </TabsTrigger>
+            <TabsTrigger value="repair" className="flex items-center gap-2 text-xs md:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Repairs</span>
+            </TabsTrigger>
+            <TabsTrigger value="construction" className="flex items-center gap-2 text-xs md:text-sm">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Construction</span>
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-2 text-xs md:text-sm">
+              <Briefcase className="h-4 w-4" />
+              <span className="hidden sm:inline">Jobs</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">{/* Overview cards */}</TabsContent>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pending Requests</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Repair Requests</span>
+                    <Badge variant="secondary">
+                      {repairRequests.filter((r) => r.status === "pending").length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Construction Requests</span>
+                    <Badge variant="secondary">
+                      {
+                        constructionRequests.filter((r) => r.status === "pending")
+                          .length
+                      }
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Job Applications</span>
+                    <Badge variant="secondary">
+                      {[
+                        ...workerApplications,
+                        ...contractorApplications,
+                        ...designerApplications,
+                      ].filter((j) => j.status === "pending").length}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Employee Section  */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Platform Statistics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Active Properties</span>
+                    <Badge>
+                      {properties.filter((p) => p.available).length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Ongoing Projects</span>
+                    <Badge>
+                      {projects.filter((p) => p.status === "in-progress").length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Approved Workers</span>
+                    <Badge>
+                      {
+                        workerApplications.filter((e) => e.status === "approved")
+                          .length
+                      }
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-          <TabsContent value="employees">
-            <div className="p-6 space-y-8">
-              <h2 className="text-2xl font-bold mb-4">Current Employees</h2>
-
-              {/* Employee Summary */}
-              <div className="flex gap-6 mb-6">
-                <div className="bg-blue-100 p-4 rounded shadow flex-1 text-center">
-                  <p className="text-gray-700 font-semibold">Workers</p>
-                  <p className="text-xl font-bold">
-                    {
-                      workerApplications.filter((e) => e.status === "approved")
-                        .length
-                    }
-                  </p>
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3 text-sm font-medium">Name</th>
+                        <th className="text-left p-3 text-sm font-medium">Email</th>
+                        <th className="text-left p-3 text-sm font-medium">Role</th>
+                        <th className="text-left p-3 text-sm font-medium">Phone</th>
+                        <th className="text-left p-3 text-sm font-medium">Verified</th>
+                        <th className="text-left p-3 text-sm font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                            No users found
+                          </td>
+                        </tr>
+                      ) : (
+                        users.map((u) => (
+                          <tr key={u._id} className="border-b hover:bg-muted/50">
+                            <td className="p-3 text-sm">{u.name}</td>
+                            <td className="p-3 text-sm">{u.email}</td>
+                            <td className="p-3 text-sm">
+                              <Badge variant="outline" className="capitalize">
+                                {u.role}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-sm">{u.phone || "-"}</td>
+                            <td className="p-3 text-sm">{u.verified ? "✅" : "❌"}</td>
+                            <td className="p-3 text-sm space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  console.log("Edit user:", u._id);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={async () => {
+                                  if (confirm(`Delete user ${u.name}?`)) {
+                                    await deleteUser(u._id);
+                                    setUsers(users.filter((user) => user._id !== u._id));
+                                    toast({
+                                      title: "User deleted",
+                                      description: `${u.name} has been removed`,
+                                    });
+                                  }
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="bg-green-100 p-4 rounded shadow flex-1 text-center">
-                  <p className="text-gray-700 font-semibold">Contractors</p>
-                  <p className="text-xl font-bold">
-                    {
-                      contractorApplications.filter(
-                        (e) => e.status === "approved"
-                      ).length
-                    }
-                  </p>
-                </div>
-                <div className="bg-purple-100 p-4 rounded shadow flex-1 text-center">
-                  <p className="text-gray-700 font-semibold">Designers</p>
-                  <p className="text-xl font-bold">
-                    {
-                      designerApplications.filter(
-                        (e) => e.status === "approved"
-                      ).length
-                    }
-                  </p>
-                </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {/* Workers Section */}
-              <div>
-                <h3 className="text-xl font-bold mb-4">Workers</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Properties Tab */}
+          <TabsContent value="properties">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Properties</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {properties.map((prop) => (
+                    <Card key={prop.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      {prop.images[0] && (
+                        <img
+                          src={prop.images[0]}
+                          alt={prop.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      )}
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{prop.title}</h3>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {prop.location}
+                          </p>
+                          <p className="font-semibold text-primary text-lg">
+                            ${prop.price.toLocaleString()}
+                          </p>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant={prop.available ? "default" : "secondary"}>
+                              {prop.available ? "Available" : "Sold"}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {prop.category}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Repair Requests Tab */}
+          <TabsContent value="repair">
+            <Card>
+              <CardHeader>
+                <CardTitle>Repair Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {repairRequests.map((req) => (
+                    <Card key={req.id} className="p-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="space-y-2">
+                          <h3 className="font-semibold">{req.propertyTitle}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {req.description}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge
+                              variant={
+                                req.status === "approved"
+                                  ? "default"
+                                  : req.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {req.status}
+                            </Badge>
+                            <Badge variant="outline">Priority: {req.priority}</Badge>
+                          </div>
+                        </div>
+                        {req.status === "pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveRepair(req.id)}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectRepair(req.id)}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Construction Requests Tab */}
+          <TabsContent value="construction">
+            <Card>
+              <CardHeader>
+                <CardTitle>Construction Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {constructionRequests.map((req) => (
+                    <Card key={req.id} className="p-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="space-y-2">
+                          <h3 className="font-semibold">{req.projectType}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {req.description}
+                          </p>
+                          <p className="text-sm">
+                            Budget: ${req.budget.toLocaleString()}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge
+                              variant={
+                                req.status === "approved"
+                                  ? "default"
+                                  : req.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {req.status}
+                            </Badge>
+                            <Badge variant="outline">
+                              Timeline: {req.timeline}
+                            </Badge>
+                          </div>
+                        </div>
+                        {req.status === "pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveConstruction(req.id)}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectConstruction(req.id)}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Jobs Tab */}
+          <TabsContent value="jobs" className="space-y-6">
+            {/* Workers */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Workers</span>
+                  <Badge variant="secondary">
+                    {workerApplications.filter((e) => e.status === "approved").length}{" "}
+                    Approved
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {workerApplications
                     .filter((emp) => emp.status === "approved")
                     .map((emp) => (
-                      <div
-                        key={emp.id}
-                        className="border border-gray-300 rounded-xl p-4 shadow hover:shadow-lg transition"
-                      >
-                        <h4 className="font-bold text-lg mb-2">
+                      <Card key={emp.id} className="p-4">
+                        <h4 className="font-semibold text-lg mb-2">
                           {emp.applicantName}
                         </h4>
-                        <p>📞 Phone: {emp.workerDetails?.contact.phone}</p>
-                        <p>📧 Email: {emp.workerDetails?.contact.email}</p>
-                        <p>
-                          🎓 Education:{" "}
-                          {emp.workerDetails?.education.highestLevel}
-                        </p>
-                        <p>
-                          💼 Experience:{" "}
-                          {
-                            emp.workerDetails?.skillsAndCertifications
-                              .yearsExperience
-                          }{" "}
-                          yrs
-                        </p>
-                        <p>
-                          🏠 Address: {emp.workerDetails?.address?.street ?? "N/A"},{" "}
-                          {emp.workerDetails?.address?.city ?? "N/A"}
-                        </p>
-                        <p>
-                          🛠 Skills:{" "}
-                          {emp.workerDetails?.skillsAndCertifications.skills?.join(
-                            ", "
-                          )}
-                        </p>
-                        <p>
-                          📜 Certifications:{" "}
-                          {emp.workerDetails?.skillsAndCertifications.certifications?.join(
-                            ", "
-                          ) || "N/A"}
-                        </p>
-                        <p>
-                          ⚕️ Safety Training:{" "}
-                          {emp.workerDetails?.skillsAndCertifications
-                            .safetyTraining
-                            ? "Yes"
-                            : "No"}
-                        </p>
-                        <p>
-                          🚑 First Aid:{" "}
-                          {emp.workerDetails?.skillsAndCertifications
-                            .firstAidCertification
-                            ? "Yes"
-                            : "No"}
-                        </p>
-                        <p>
-                          📅 Availability:{" "}
-                          {emp.workerDetails?.employmentPreferences.startDate}
-                        </p>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>📞 {emp.phone}</p>
+                          <p>📧 {emp.email}</p>
+                          <p>🎓 {emp.educationLevel}</p>
+                          <p>💼 {emp.experienceYears} years</p>
+                          <p>🏠 {emp.address || "N/A"}</p>
+                          <p>🛠 {emp.constructionSkills?.join(", ")}</p>
+                        </div>
                         <Button
-                          className="mt-3"
-                          onClick={() =>
-                            assignJob(emp.id, "CONSTRUCTION_PROJECT_ID")
-                          }
+                          className="w-full mt-3"
+                          size="sm"
+                          onClick={() => assignJob(emp.id, "CONSTRUCTION_PROJECT_ID")}
                         >
-                          Assign to Construction
+                          Assign to Project
                         </Button>
-                      </div>
+                      </Card>
                     ))}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Contractors Section */}
-              <div>
-                <h3 className="text-xl font-bold mb-4">Contractors</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Contractors */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Contractors</span>
+                  <Badge variant="secondary">
+                    {
+                      contractorApplications.filter((e) => e.status === "approved")
+                        .length
+                    }{" "}
+                    Approved
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {contractorApplications
                     .filter((emp) => emp.status === "approved")
                     .map((emp) => (
-                      <div
-                        key={emp.id}
-                        className="border border-gray-300 rounded-xl p-4 shadow hover:shadow-lg transition"
-                      >
-                        <h4 className="font-bold text-lg mb-2">
+                      <Card key={emp.id} className="p-4">
+                        <h4 className="font-semibold text-lg mb-2">
                           {emp.applicantName}
                         </h4>
-                        <p>🏢 Company: {emp.contractorDetails?.companyName}</p>
-                        <p>📞 Phone: {emp.contractorDetails?.phone}</p>
-                        <p>📧 Email: {emp.contractorDetails?.email}</p>
-                        <p>
-                          🛠 Expertise: {emp.contractorDetails?.areasOfExpertise}
-                        </p>
-                        <p>
-                          💼 Experience:{" "}
-                          {emp.contractorDetails?.yearsExperience} yrs
-                        </p>
-                        <p>👥 Team Size: {emp.contractorDetails?.teamSize}</p>
-                        <p>
-                          🌍 Preferred Locations:{" "}
-                          {emp.contractorDetails?.preferredLocations}
-                        </p>
-                        <p>
-                          📜 Certifications:{" "}
-                          {emp.contractorDetails?.certifications.join(", ")}
-                        </p>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>🏢 {emp.companyName}</p>
+                          <p>📞 {emp.phone}</p>
+                          <p>📧 {emp.email}</p>
+                          <p>🛠 {emp.areasOfExpertise?.join(", ")}</p>
+                          <p>👥 Team: {emp.teamSize}</p>
+                        </div>
                         <Button
-                          className="mt-3"
-                          onClick={() =>
-                            assignJob(emp.id, "CONSTRUCTION_PROJECT_ID")
-                          }
+                          className="w-full mt-3"
+                          size="sm"
+                          onClick={() => assignJob(emp.id, "CONSTRUCTION_PROJECT_ID")}
                         >
-                          Assign to Construction
+                          Assign to Project
                         </Button>
-                      </div>
+                      </Card>
                     ))}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Designers Section */}
-              <div>
-                <h3 className="text-xl font-bold mb-4">Designers</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Designers */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Designers</span>
+                  <Badge variant="secondary">
+                    {
+                      designerApplications.filter((e) => e.status === "approved")
+                        .length
+                    }{" "}
+                    Approved
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {designerApplications
                     .filter((emp) => emp.status === "approved")
                     .map((emp) => (
-                      <div
-                        key={emp.id}
-                        className="border border-gray-300 rounded-xl p-4 shadow hover:shadow-lg transition"
-                      >
-                        <h4 className="font-bold text-lg mb-2">
+                      <Card key={emp.id} className="p-4">
+                        <h4 className="font-semibold text-lg mb-2">
                           {emp.applicantName}
                         </h4>
-                        <p>📧 Email: {emp.designerDetails?.email}</p>
-                        <p>📞 Phone: {emp.designerDetails?.phone}</p>
-                        <p>
-                          🎓 Education:{" "}
-                          {emp.designerDetails?.education.highestQualification}
-                        </p>
-                        <p>
-                          🖌 Skills:{" "}
-                          {emp.designerDetails?.designSkills.join(", ")}
-                        </p>
-                        {emp.designerDetails?.portfolio && (
-                          <p>
-                            🔗 Portfolio:{" "}
-                            <a
-                              href={emp.designerDetails.portfolio}
-                              target="_blank"
-                              className="text-blue-600 underline"
-                            >
-                              View
-                            </a>
-                          </p>
-                        )}
-                        <Button className="mt-3" onClick={() => { }}>
-                          Assign to Construction
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>📧 {emp.email}</p>
+                          <p>📞 {emp.phone}</p>
+                          <p>🎓 {emp.educationLevelDesigner}</p>
+                          <p>🛠 {emp.designSkills?.join(", ")}</p>
+                          <p>🎨 {emp.tools?.join(", ")}</p>
+                        </div>
+                        <Button
+                          className="w-full mt-3"
+                          size="sm"
+                          onClick={() => assignJob(emp.id, "CONSTRUCTION_PROJECT_ID")}
+                        >
+                          Assign to Project
                         </Button>
-                      </div>
+                      </Card>
                     ))}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          {/* Construction */}
-
-          <TabsContent value="constructionRequests">
-            {/* Construction Requests cards */}
-          </TabsContent>
-
-          <TabsContent value="repairRequests">
-            {/* Repair Requests cards */}
-          </TabsContent>
-
+          {/* Analytics Tab */}
           <TabsContent value="analytics">
             <AnalyticsTab />
-            {/* Analytics content */}
           </TabsContent>
-
-          <TabsContent value="users">{/* Users content */}</TabsContent>
-
-          <TabsContent value="workers">
-            <JobDashboard />
-          </TabsContent>
-
         </Tabs>
-
-        {/* Tab Content */}
-        {activeTab === "overview" && (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Properties
-                  </CardTitle>
-                  <Home className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{properties.length}</div>
-                  <p className="text-xs text-muted-foreground">All listings</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Orders
-                  </CardTitle>
-                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{orders.length}</div>
-                  <p className="text-xs text-muted-foreground">All orders</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Revenue
-                  </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    ${totalRevenue.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Platform revenue
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Pending Orders
-                  </CardTitle>
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pendingOrders}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Need attention
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </>
-        )}
-
-        {activeTab === "constructionRequests" && (
-          <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-gray-900">
-                🏗 Construction Requests
-              </h2>
-              <span className="text-gray-700 font-semibold text-lg bg-gray-200 px-3 py-1 rounded-full shadow">
-                Total: {constructionRequests.length}
-              </span>
-            </div>
-
-            {/* One-liner summary cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {constructionRequests.map((req) => (
-                <Card
-                  key={req.id}
-                  className="border border-gray-300 rounded-xl shadow-sm bg-white p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">🏷 {req.type || 'Construction Request'}</p>
-                    <p className="text-gray-600 text-sm">👤 {req.requestedBy}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${req.status === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : req.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                      }`}
-                  >
-                    {req.status === "pending"
-                      ? "⏳ Pending"
-                      : req.status === "approved"
-                        ? "✅ Approved"
-                        : "❌ Rejected"}
-                  </span>
-                </Card>
-              ))}
-            </div>
-
-            {constructionRequests.length > 0 ? (
-              constructionRequests.map((req: any) => {
-                const {
-                  id,
-                  title = req.projectType,
-                  clientName = req.clientName,
-                  email = req.email,
-                  phone = req.phone,
-                  projectType = req.projectType,
-                  location = req.location,
-                  area = req.area,
-                  bedrooms = req.bedrooms,
-                  bathrooms = req.bathrooms,
-                  floors = req.floors,
-                  budget = req.budget,
-                  timeline = req.timeline,
-                  specialRequirements = req.requirements,
-                  description = req.description,
-                  documents = req.designImages,
-                  status,
-                } = req;
-
-                return (
-                  <Card
-                    key={id}
-                    className="border border-gray-300 rounded-xl shadow-sm bg-white"
-                  >
-                    <CardContent className="p-6 flex flex-col space-y-6">
-                      {/* Request Details Table */}
-                      <table className="min-w-full border-collapse table-auto text-sm">
-                        <tbody className="divide-y divide-gray-300">
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
-                            <td className="px-4 py-2 text-gray-800">{title}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              👤 Client Name
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {clientName}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">✉ Email</td>
-                            <td className="px-4 py-2 text-gray-800">{email}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              📞 Phone
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">{phone}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🏗 Project Type
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {projectType}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              📍 Location
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {location}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">📐 Area</td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {area} sq.ft.
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🛏 Bedrooms
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {bedrooms}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🛁 Bathrooms
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {bathrooms}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🏠 Floors
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {floors}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              💰 Budget
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {budget}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              ⏱ Timeline
-                            </td>
-                            <td className="px-4 py-2 text-gray-800">
-                              {timeline}
-                            </td>
-                          </tr>
-                          {specialRequirements && (
-                            <tr>
-                              <td className="px-4 py-2 font-semibold">
-                                ⭐ Special Requirements
-                              </td>
-                              <td className="px-4 py-2 text-gray-800">
-                                {specialRequirements}
-                              </td>
-                            </tr>
-                          )}
-                          {description && (
-                            <tr>
-                              <td className="px-4 py-2 font-semibold">
-                                📝 Description
-                              </td>
-                              <td className="px-4 py-2 text-gray-800">
-                                {description}
-                              </td>
-                            </tr>
-                          )}
-                          {documents && (
-                            <tr>
-                              <td className="px-4 py-2 font-semibold">
-                                📎 Documents
-                              </td>
-                              <td className="px-4 py-2">
-                                <a
-                                  href={documents}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 font-semibold underline"
-                                >
-                                  Download
-                                </a>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-
-                      {/* Bottom Actions */}
-                      <div className="flex flex-wrap justify-end gap-3 mt-4">
-                        {status === "pending" ? (
-                          <>
-                            <Button
-                              onClick={() => {
-                                approveConstructionRequest(id);
-                              }}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <Check className="w-4 h-4 mr-1" /> Approve
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                rejectConstructionRequest(id);
-                              }}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <X className="w-4 h-4 mr-1" /> Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <span
-                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === "approved"
-                              ? "bg-gray-200 text-black"
-                              : "bg-gray-300 text-black"
-                              }`}
-                          >
-                            {status === "approved"
-                              ? "✅ Approved"
-                              : "❌ Rejected"}
-                          </span>
-                        )}
-
-                        <Button
-                          onClick={() => ConstructionPdf(req, "Construction")}
-                          variant="outline"
-                          className="text-black border-black"
-                        >
-                          📄 Generate PDF
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <p className="text-gray-500 italic">No construction requests</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === "repairRequests" && (
-          <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-gray-900">
-                🔧 Repair Requests
-              </h2>
-              <span className="text-gray-700 font-semibold text-lg bg-gray-200 px-3 py-1 rounded-full shadow">
-                Total: {repairRequests.length}
-              </span>
-            </div>
-
-            {/* One-liner summary cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {repairRequests.map((req) => (
-                <Card
-                  key={req.id}
-                  className="border border-gray-300 rounded-xl shadow-sm bg-white p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">🏷 {req.title}</p>
-                    <p className="text-gray-600 text-sm">👤 {req.clientName}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${req.status === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : req.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                      }`}
-                  >
-                    {req.status === "pending"
-                      ? "⏳ Pending"
-                      : req.status === "approved"
-                        ? "✅ Approved"
-                        : "❌ Rejected"}
-                  </span>
-                </Card>
-              ))}
-            </div>
-
-            {repairRequests.length > 0 ? (
-              repairRequests.map((req) => {
-                const {
-                  id,
-                  title,
-                  clientName,
-                  email,
-                  phone,
-                  location,
-                  description,
-                  address,
-                  estimatedCost,
-                  projectType,
-                  urgency,
-                  attachments,
-                  status,
-                } = req;
-
-                return (
-                  <Card
-                    key={id}
-                    className="border border-gray-300 rounded-xl shadow-sm bg-white"
-                  >
-                    <CardContent className="p-6 flex flex-col space-y-6">
-                      {/* Request Details Table */}
-                      <table className="w-full table-auto text-sm border-collapse">
-                        <tbody className="divide-y divide-gray-300">
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
-                            <td className="px-4 py-2">{title}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              👤 Client Name
-                            </td>
-                            <td className="px-4 py-2">{clientName}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">✉ Email</td>
-                            <td className="px-4 py-2">{email}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              📞 Phone
-                            </td>
-                            <td className="px-4 py-2">{phone}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">📍 Location</td>
-                            <td className="px-4 py-2">{location}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">🏷 Title</td>
-                            <td className="px-4 py-2">{title}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              📝 Description
-                            </td>
-                            <td className="px-4 py-2">{description}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🏠 Address
-                            </td>
-                            <td className="px-4 py-2">{address}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              💰 Estimated Cost
-                            </td>
-                            <td className="px-4 py-2">
-                              {estimatedCost || "N/A"}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              🏗 Project Type
-                            </td>
-                            <td className="px-4 py-2">{projectType}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-2 font-semibold">
-                              ⚡ Urgency
-                            </td>
-                            <td className="px-4 py-2">{urgency}</td>
-                          </tr>
-                          {attachments && Array.isArray(attachments) && attachments.length > 0 && (
-                            <tr>
-                              <td className="px-4 py-2 font-semibold">
-                                📎 Documents
-                              </td>
-                              <td className="px-4 py-2 space-x-2">
-                                {attachments.map((file: File, idx: number) => (
-                                  <a
-                                    key={idx}
-                                    href={URL.createObjectURL(file)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-900 font-medium underline"
-                                    download={file.name}
-                                  >
-                                    {file.name || `Attachment ${idx + 1}`}
-                                  </a>
-                                ))}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-
-                      {/* Bottom Actions: PDF & Approve/Reject */}
-                      <div className="flex justify-end gap-3 mt-4">
-                        {status === "pending" ? (
-                          <>
-                            <Button
-                              onClick={() => {
-                                approveRepairRequest(id);
-                              }}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <Check className="w-4 h-4 mr-1" /> Approve
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                rejectRepairRequest(id);
-                              }}
-                              variant="outline"
-                              className="text-black border-black"
-                            >
-                              <X className="w-4 h-4 mr-1" /> Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <span
-                            className={`font-bold px-4 py-2 rounded-full text-sm ${status === "approved"
-                              ? "bg-gray-200 text-black"
-                              : "bg-gray-300 text-black"
-                              }`}
-                          >
-                            {status === "approved"
-                              ? "✅ Approved"
-                              : "❌ Rejected"}
-                          </span>
-                        )}
-
-                        <Button
-                          onClick={() => generateRepairPDF(req)}
-                          variant="outline"
-                          className="text-black border-black"
-                        >
-                          📄 Generate PDF
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <p className="text-gray-500 italic">No repair requests</p>
-            )}
-          </div>
-        )}
-
-        {/* Users Tab Content */}
-        {activeTab === "users" && (
-          <div className="p-4 space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Users Management</h2>
-              <span className="text-gray-600 font-medium">
-                Total Users: {users.length}
-              </span>
-            </div>
-            <p className="text-muted-foreground mb-6">
-              View, edit, and manage all registered users.
-            </p>
-
-            {/* Users Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse border border-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border px-4 py-2 text-left">Name</th>
-                    <th className="border px-4 py-2 text-left">Email</th>
-                    <th className="border px-4 py-2 text-left">Role</th>
-                    <th className="border px-4 py-2 text-left">Phone</th>
-                    <th className="border px-4 py-2 text-left">Verified</th>
-                    <th className="border px-4 py-2 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {users.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-4 text-gray-500">
-                        No users found
-                      </td>
-                    </tr>
-                  ) : (
-                    users.map((u) => (
-                      <tr key={u._id} className="hover:bg-gray-50">
-                        <td className="border px-4 py-2">{u.name}</td>
-                        <td className="border px-4 py-2">{u.email}</td>
-                        <td className="border px-4 py-2 capitalize">{u.role}</td>
-                        <td className="border px-4 py-2">{u.phone || "-"}</td>
-                        <td className="border px-4 py-2">{u.verified ? "✅" : "❌"}</td>
-                        <td className="border px-4 py-2 space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(u._id, u.name)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(u._id, u.name)}
-                          >
-                            Delete
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "workers" && (
-          <JobDashboard />
-        )}
-
-
-
-
       </div>
-    </main>
+    </div>
   );
 };
 

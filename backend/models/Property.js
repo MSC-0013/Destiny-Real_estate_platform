@@ -20,6 +20,8 @@ const propertySchema = new mongoose.Schema({
   available: { type: Boolean, default: true },
   rentDuration: { type: String, enum: ['1month','6months','1year','custom'] },
   constructionStatus: { type: String, enum: ['completed','under-construction','planned'] },
+  latitude: Number,
+  longitude: Number,
   createdAt: { type: Date, default: Date.now },
 });
 

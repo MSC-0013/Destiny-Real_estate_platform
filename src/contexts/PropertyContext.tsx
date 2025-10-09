@@ -23,6 +23,8 @@ export interface Property {
   available: boolean;
   rentDuration?: '1month' | '6months' | '1year' | 'custom';
   constructionStatus?: 'completed' | 'under-construction' | 'planned';
+  latitude?: number;
+  longitude?: number;
   createdAt: string;
 }
 
@@ -145,40 +147,59 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const addProperty = async (propertyData: Omit<Property, 'id' | 'createdAt'>) => {
-    const newProperty: Property = {
-      ...propertyData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setProperties(prev => {
-      const updated = [...prev, newProperty];
-      localStorage.setItem('properties', JSON.stringify(updated)); 
-      return updated;
-    });
-
     try {
-      const res = await API.post('/properties', newProperty);
-      // Assign MongoDB _id after saving
-      setProperties(prev =>
-        prev.map(p => (p.id === newProperty.id ? { ...p, _id: res.data._id } : p))
-      );
+      // Send to backend first (includes Cloudinary upload)
+      const res = await API.post('/properties', propertyData);
+      
+      const newProperty: Property = {
+        ...res.data,
+        id: res.data._id,
+        _id: res.data._id,
+      };
+
+      setProperties(prev => {
+        const updated = [...prev, newProperty];
+        localStorage.setItem('properties', JSON.stringify(updated));
+        return updated;
+      });
     } catch (err) {
-      console.error('Error syncing property to backend:', err);
+      console.error('Error creating property:', err);
+      
+      // Fallback to local storage
+      const newProperty: Property = {
+        ...propertyData,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+      };
+      
+      setProperties(prev => {
+        const updated = [...prev, newProperty];
+        localStorage.setItem('properties', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
   const updateProperty = async (id: string, updates: Partial<Property>) => {
-    const updatedProperties = properties.map(prop =>
-      prop.id === id || prop._id === id ? { ...prop, ...updates } : prop
-    );
-    setProperties(updatedProperties);
-    localStorage.setItem('properties', JSON.stringify(updatedProperties));
-
     try {
-      await API.put(`/properties/${id}`, updates);
+      // Update backend first (includes Cloudinary upload if images changed)
+      const res = await API.put(`/properties/${id}`, updates);
+      
+      const updatedProperties = properties.map(prop =>
+        prop.id === id || prop._id === id ? { ...prop, ...res.data } : prop
+      );
+      
+      setProperties(updatedProperties);
+      localStorage.setItem('properties', JSON.stringify(updatedProperties));
     } catch (err) {
-      console.error('Error updating property in backend:', err);
+      console.error('Error updating property:', err);
+      
+      // Fallback to local update
+      const updatedProperties = properties.map(prop =>
+        prop.id === id || prop._id === id ? { ...prop, ...updates } : prop
+      );
+      setProperties(updatedProperties);
+      localStorage.setItem('properties', JSON.stringify(updatedProperties));
     }
   };
 
