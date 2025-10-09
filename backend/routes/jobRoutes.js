@@ -8,6 +8,7 @@ import {
   approveJob,
   rejectJob,
   assignJob,
+  deleteAllJobs
 } from "../controllers/jobController.js";
 
 const router = express.Router();
@@ -18,6 +19,8 @@ router.get("/", getJobs);                 // Get all jobs
 router.get("/:id", getJobById);           // Get single job
 router.put("/:id", updateJob);            // Update job
 router.delete("/:id", deleteJob);         // Delete job
+router.delete("/", deleteAllJobs);        // <--- DELETE ALL jobs at once
+
 
 // Status operations
 router.put("/:id/approve", approveJob);   // Approve job

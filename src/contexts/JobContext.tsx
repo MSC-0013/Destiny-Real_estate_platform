@@ -2,61 +2,95 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import API from "@/utils/api"; // Axios instance
 
 // -------------------- Interfaces --------------------
-export interface WorkerApplicationDetails {
-  fullName: string;
-  dateOfBirth: string;
-  gender: "Male" | "Female" | "Other";
-  nationality: string;
-  address: { street: string; city: string; state: string; zip: string; country: string; };
-  contact: { phone: string; alternatePhone?: string; email: string; };
-  employmentPreferences: { position: string; startDate: string; desiredSalary: string; preferredLocations: string; overtime: boolean; weekends: boolean; employmentType: "Full-time" | "Part-time" | "Temporary/Contract"; };
-  skillsAndCertifications: { skills: string[]; certifications?: string[]; safetyTraining: boolean; forkliftCertification: boolean; firstAidCertification: boolean; otherCertifications?: string; yearsExperience: number; };
-  education: { highestLevel: string; institutionName?: string; fieldOfStudy?: string; };
-  employmentHistory: { companyName: string; positionHeld: string; startDate: string; endDate: string; responsibilities: string; }[];
-  references: { name: string; relationship: string; contact: string; }[];
-  healthAndSafety: { medicalConditions?: string; canLiftHeavy: boolean; comfortableHeights: boolean; allergies?: string; };
-  legalAndBackground: { legallyAllowed: boolean; convictions?: string; };
-  additionalInfo: { motivation: string; achievements?: string; languages?: string[]; hobbies?: string[]; };
-}
-
-export interface ContractorApplicationDetails {
-  fullName: string; companyName: string; dateOfBirth: string; gender: "Male" | "Female" | "Other";
-  address: string; phone: string; email: string; website?: string; contractorType: "General" | "Subcontractor" | "Specialty";
-  licenseNumber: string; licenseExpiry: string; yearsExperience: number; teamSize: number; areasOfExpertise: string;
-  startDate: string; preferredLocations: string; willingToTravel: boolean; skills: string[]; certifications: string[]; insurance: string[];
-  businessType: "Sole Proprietor" | "Partnership" | "LLC" | "Corp"; taxNumber: string;
-  notableProjects: { projectName: string; role: string; startDate: string; endDate: string; value: string; }[];
-  legalAndSafety: { legallyAllowed: boolean; previousDisputes?: string; safetyPlanTraining: boolean; healthLimitations?: string; };
-  additionalInfo: { motivation: string; languagesSkillsEquipment?: string; };
-}
-
-export interface DesignerApplicationDetails {
-  fullName: string; dateOfBirth: string; gender: "Male" | "Female" | "Other"; address: string; phone: string; email: string;
-  portfolio?: string; positionApplied: string; startDate: string; preferredWorkType: "Full-time" | "Part-time" | "Freelance/Contract";
-  expectedSalary?: string; toolsProficiency: string[]; designSkills: string[]; certifications?: string[];
-  education: { highestQualification: string; fieldOfStudy?: string; institutionName?: string; };
-  employmentHistory: { companyOrClient: string; role: string; startDate: string; endDate: string; achievements?: string; }[];
-  portfolioSamples?: string[]; topProjects?: string[]; additionalInfo?: { languages?: string[]; hobbies?: string[]; motivation?: string; };
-}
-
 export interface JobApplication {
   id: string; // frontend-friendly ID
+  _id?: string; // raw MongoDB ID (optional)
+
+  // Common
   role: "worker" | "contractor" | "designer";
-  type: "construction" | "repair";
   applicantId: string;
   applicantName: string;
   status: "pending" | "approved" | "assigned" | "rejected";
   assignedProjectId?: string;
   createdAt: string;
 
-  workerDetails?: WorkerApplicationDetails;
-  contractorDetails?: ContractorApplicationDetails;
-  designerDetails?: DesignerApplicationDetails;
-
-  title?: string;
+  // Shared personal info
+  fullName: string;
+  dob?: string;
+  gender?: string;
+  address?: string;
+  phone?: string;
+  altPhone?: string;
+  email: string;
+  portfolio?: string;
+  linkedin?: string;
+  github?: string;
+  website?: string;
+  availability?: string;
   description?: string;
+  nationality?: string;
 
-  _id?: string; // raw MongoDB ID (optional)
+  // Worker fields
+  positionApplied?: string;
+  startDate?: string;
+  salary?: string;
+  preferredLocation?: string;
+  overtime?: boolean;
+  weekends?: boolean;
+  employmentType?: string;
+  constructionSkills?: string[];
+  certifications?: string[];
+  safetyTraining?: boolean;
+  firstAid?: boolean;
+  otherCertifications?: string;
+  experienceYears?: string;
+  educationLevel?: string;
+  institutionName?: string;
+  fieldOfStudy?: string;
+  employmentHistory?: Record<string, any>[];
+  references?: Record<string, any>[];
+  healthConditions?: string;
+  canLiftHeavy?: boolean;
+  comfortableHeights?: boolean;
+  allergies?: string;
+  legalWork?: boolean;
+  criminalRecord?: boolean;
+  criminalDetails?: string;
+  motivation?: string;
+  languages?: string;
+  hobbies?: string;
+
+  // Contractor fields
+  companyName?: string;
+  contractorType?: string;
+  licenseNumber?: string;
+  licenseExpiry?: string;
+  teamSize?: string;
+  areasOfExpertise?: string[];
+  skillsServices?: string[];
+  insurance?: string[];
+  businessType?: string;
+  taxNumber?: string;
+  notableProjects?: Record<string, any>[];
+  travelWillingness?: boolean;
+  safetyPlan?: boolean;
+  healthLimitations?: string;
+
+  // Designer fields
+  positionAppliedDesigner?: string;
+  workType?: string;
+  expectedSalary?: string;
+  tools?: string[];
+  designSkills?: string[];
+  educationLevelDesigner?: string;
+  fieldOfStudyDesigner?: string;
+  institutionDesigner?: string;
+  projectHistory?: Record<string, any>[];
+  topProjects?: string[];
+
+  // Optional extra info
+  title?: string;
+  descriptionExtra?: string;
 }
 
 // -------------------- Context --------------------
@@ -87,10 +121,10 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const fetchJobs = async () => {
       try {
         const res = await API.get("/jobs");
-        // Map MongoDB _id to id
+        // Map MongoDB _id to id for frontend
         const backendJobs: JobApplication[] = res.data.map((job: JobApplication) => ({
           ...job,
-          id: job.id || job._id, // fallback to _id
+          id: job.id || job._id,
         }));
         setJobs(backendJobs);
         localStorage.setItem("jobs", JSON.stringify(backendJobs));

@@ -3,13 +3,21 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertyProvider } from "@/contexts/PropertyContext";
 import { ConstructionProvider } from "@/contexts/ConstructionContext";
+import { JobProvider } from "@/contexts/JobContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { PaymentProvider } from "@/contexts/PaymentContext";
+
+import { ToastProvider } from "@/components/ui/toast";
+
 import Navbar from "@/components/Navbar";
 import Chatbot from "@/components/Chatbot";
+
+// Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -34,15 +42,9 @@ import Contract from "./pages/Contract";
 import Help from "./pages/Help";
 import SellerDashboard from "./pages/SellerDashboard";
 import EditProperty from './pages/EditProperty';
-import { JobProvider } from "@/contexts/JobContext";
-import { ToastProvider } from "@/components/ui/toast"; // add this
 import AddConstruction from "./pages/AddConstruction";
 import { ConstructionPage } from "./pages/ConstructionPage";
 import { ConstructionChart } from "./pages/ConstructionChart";
-import { PaymentProvider } from "@/contexts/PaymentContext";
-
-
-
 
 const queryClient = new QueryClient();
 
@@ -52,15 +54,11 @@ const App = () => (
       <PropertyProvider>
         <PaymentProvider>
           <ConstructionProvider>
-            <JobProvider>
-              <ToastProvider>
-
-
-                <WishlistProvider>
-                  <OrderProvider>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
+            <JobProvider> {/* <-- JobProvider wraps all components that need useJob */}
+              <WishlistProvider>
+                <OrderProvider>
+                  <TooltipProvider>
+                    <ToastProvider>
                       <BrowserRouter>
                         <div className="min-h-screen bg-background">
                           <Navbar />
@@ -91,21 +89,21 @@ const App = () => (
                             <Route path="/contract/:id/:type" element={<Contract />} />
                             <Route path="/edit-property/:id" element={<EditProperty />} />
                             <Route path="/help" element={<Help />} />
-                            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                            {/* Catch-all route */}
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <Chatbot />
+                          <Toaster />
+                          <Sonner />
                         </div>
                       </BrowserRouter>
-                    </TooltipProvider>
-                  </OrderProvider>
-                </WishlistProvider>
-              </ToastProvider>
+                    </ToastProvider>
+                  </TooltipProvider>
+                </OrderProvider>
+              </WishlistProvider>
             </JobProvider>
-
           </ConstructionProvider>
         </PaymentProvider>
-
       </PropertyProvider>
     </AuthProvider>
   </QueryClientProvider>

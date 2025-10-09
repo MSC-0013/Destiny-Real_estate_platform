@@ -24,8 +24,12 @@ import {
 } from 'lucide-react';
 
 const WorkerDashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { projects, getProjectsByRole } = useConstruction();
+
+  if (isLoading) return <p className="text-center py-12">Loading dashboard...</p>;
+
+
 
   const myProjects = getProjectsByRole(user?._id || '', 'worker');
   const activeProjects = myProjects.filter(p => p.status === 'in-progress');
@@ -371,9 +375,9 @@ const WorkerDashboard = () => {
               </CardHeader>
               <CardContent>
                 <JobApplicationForm
-                  applicantId={user._id}          // automatically linked to logged-in user
-                  applicantName={user.name}   // shows who applied
-                />              </CardContent>
+                  applicantId={user?._id || ''}
+                  applicantName={user?.name || ''}
+                />           </CardContent>
             </Card>
           </TabsContent>
 
