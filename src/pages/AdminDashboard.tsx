@@ -5,6 +5,8 @@ import { useConstruction } from "@/contexts/ConstructionContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navigate, Link } from "react-router-dom";
+import { User } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import {
   Users,
   Home,
@@ -29,6 +31,7 @@ const AdminDashboard = () => {
   const { user, getAllUsers, updateProfile, logout, updateUser, deleteUser } = useAuth();
   const { properties } = useProperty();
   const { orders } = useOrder();
+  const [users, setUsers] = useState<User[]>([]);
   const [filterRole, setFilterRole] = useState("all"); // "worker" | "contractor" | "designer" | "all"
 
 
@@ -54,6 +57,9 @@ const AdminDashboard = () => {
   const [expanded, setExpanded] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all"); // <-- add this
   const [searchTerm, setSearchTerm] = useState("");
+
+
+
 
 
   const [activeTab, setActiveTab] = useState<
@@ -89,8 +95,29 @@ const AdminDashboard = () => {
         (item.applicantName?.toLowerCase() ?? "").includes(searchTerm.toLowerCase())
     );
   };
+  // Add this useEffect at the top of AdminDashboard
+  useEffect(() => {
+    let isMounted = true;
 
+    const fetchUsers = async () => {
+      if (activeTab === "users") {
+        try {
+          const allUsers = (await getAllUsers()) || [];
+          if (isMounted) setUsers(allUsers);
+        } catch (err) {
+          console.error("Error fetching users:", err);
+        }
+      } else {
+        setUsers([]); // clear users when leaving the tab
+      }
+    };
 
+    fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab]);
 
 
   const pendingOrders = orders.filter(
@@ -892,12 +919,13 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Users Tab Content */}
         {activeTab === "users" && (
           <div className="p-4 space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Users Management</h2>
               <span className="text-gray-600 font-medium">
-                Total Users: {getAllUsers().length}
+                Total Users: {users.length}
               </span>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -918,44 +946,39 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {getAllUsers().map((u) => (
-                    <tr key={u._id} className="hover:bg-gray-50">
-                      <td className="border px-4 py-2">{u.name}</td>
-                      <td className="border px-4 py-2">{u.email}</td>
-                      <td className="border px-4 py-2 capitalize">{u.role}</td>
-                      <td className="border px-4 py-2">{u.phone || "-"}</td>
-                      <td className="border px-4 py-2">
-                        {u.verified ? "✅" : "❌"}
-                      </td>
-                      <td className="border px-4 py-2 space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const newName = prompt("Enter new name", u.name);
-                            if (newName) updateUser(u._id, { name: newName });
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Are you sure you want to delete ${u.name}?`
-                              )
-                            ) {
-                              deleteUser(u._id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-gray-500">
+                        No users found
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u._id} className="hover:bg-gray-50">
+                        <td className="border px-4 py-2">{u.name}</td>
+                        <td className="border px-4 py-2">{u.email}</td>
+                        <td className="border px-4 py-2 capitalize">{u.role}</td>
+                        <td className="border px-4 py-2">{u.phone || "-"}</td>
+                        <td className="border px-4 py-2">{u.verified ? "✅" : "❌"}</td>
+                        <td className="border px-4 py-2 space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(u._id, u.name)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(u._id, u.name)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -967,7 +990,7 @@ const AdminDashboard = () => {
         )}
 
 
-        
+
 
       </div>
     </main>

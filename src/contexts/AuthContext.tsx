@@ -33,8 +33,8 @@ interface AuthContextType {
   signup: (userData: Omit<User, '_id'> & { password: string }) => Promise<boolean>;
   logout: () => void;
   updateProfile: (userData: Partial<User> | FormData) => Promise<void>;
-  getAllUsers: () => User[];
-  getUserById: (id: string) => User | undefined;
+  getAllUsers: () => Promise<User[]>;
+  getUserById: (id: string) => Promise<User | undefined>;
   updateUser: (id: string, userData: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   isLoading: boolean;
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load current user from localStorage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) setUser(JSON.parse(savedUser));
@@ -93,13 +93,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
   };
 
-  const getAllUsers = (): User[] => {
-    return JSON.parse(localStorage.getItem('users') || '[]');
+  // Replace the getAllUsers function
+  const getAllUsers = async (): Promise<User[]> => {
+    try {
+      // Directly fetch from backend
+      const res = await API.getAllUsers();
+      return res.data; // backend already returns an array of users
+    } catch (err) {
+      console.error('Failed to fetch users from backend:', err);
+      return [];
+    }
   };
 
-  const getUserById = (id: string): User | undefined => {
-    return getAllUsers().find(u => u._id === id);
+  // Similarly, update getUserById to fetch from backend directly
+  const getUserById = async (id: string): Promise<User | undefined> => {
+    try {
+      const res = await API.getUserById(id);
+      return res.data;
+    } catch (err) {
+      console.error(`Failed to fetch user with id ${id}:`, err);
+      return undefined;
+    }
   };
+
 
   const updateProfile = async (userData: Partial<User> | FormData) => {
     if (!user) return;
@@ -118,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = async (id: string, userData: Partial<User>) => {
     try {
       const res = await API.updateUser(id, userData);
-      const users = getAllUsers();
+      const users = await getAllUsers();
       const updatedUsers = users.map(u => u._id === id ? { ...u, ...res.data } : u);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
       if (user?._id === id) persistUser({ ...user, ...res.data });
@@ -130,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteUser = async (id: string) => {
     try {
       await API.deleteUser(id);
-      const users = getAllUsers();
+      const users = await getAllUsers();
       const filteredUsers = users.filter(u => u._id !== id);
       localStorage.setItem('users', JSON.stringify(filteredUsers));
       if (user?._id === id) persistUser(null);
