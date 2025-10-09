@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import JobDashboard from "@/components/JobsDashboard";
 import {
   Users,
   Building2,
@@ -141,36 +142,54 @@ const AdminDashboard = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 h-auto p-2">
-            <TabsTrigger value="overview" className="flex items-center gap-2 text-xs md:text-sm">
+          <TabsList
+            className="
+      flex w-full overflow-x-auto gap-2 p-2 
+      sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 
+      scrollbar-hide
+    "
+          >
+            <TabsTrigger value="overview" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2 text-xs md:text-sm">
+
+            <TabsTrigger value="users" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="properties" className="flex items-center gap-2 text-xs md:text-sm">
+
+            <TabsTrigger value="properties" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Properties</span>
             </TabsTrigger>
-            <TabsTrigger value="repair" className="flex items-center gap-2 text-xs md:text-sm">
+
+            <TabsTrigger value="repair" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Repairs</span>
             </TabsTrigger>
-            <TabsTrigger value="construction" className="flex items-center gap-2 text-xs md:text-sm">
+
+            <TabsTrigger value="construction" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Construction</span>
             </TabsTrigger>
-            <TabsTrigger value="jobs" className="flex items-center gap-2 text-xs md:text-sm">
-              <Briefcase className="h-4 w-4" />
-              <span className="hidden sm:inline">Jobs</span>
+
+            <TabsTrigger value="employees" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Employees</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm">
+
+            <TabsTrigger value="jobApplications" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
+              <Briefcase className="h-4 w-4" />
+              <span className="hidden sm:inline">Job Applications</span>
+            </TabsTrigger>
+
+            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
           </TabsList>
+
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
@@ -380,8 +399,8 @@ const AdminDashboard = () => {
                                 req.status === "approved"
                                   ? "default"
                                   : req.status === "rejected"
-                                  ? "destructive"
-                                  : "secondary"
+                                    ? "destructive"
+                                    : "secondary"
                               }
                             >
                               {req.status}
@@ -439,8 +458,8 @@ const AdminDashboard = () => {
                                 req.status === "approved"
                                   ? "default"
                                   : req.status === "rejected"
-                                  ? "destructive"
-                                  : "secondary"
+                                    ? "destructive"
+                                    : "secondary"
                               }
                             >
                               {req.status}
@@ -476,7 +495,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {/* Jobs Tab */}
-          <TabsContent value="jobs" className="space-y-6">
+          <TabsContent value="employees" className="space-y-6">
             {/* Workers */}
             <Card>
               <CardHeader>
@@ -604,6 +623,11 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Job Applications Tab */}
+          <TabsContent value="jobApplications">
+            <JobDashboard />
+          </TabsContent>
+
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
@@ -611,7 +635,7 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 };
 
