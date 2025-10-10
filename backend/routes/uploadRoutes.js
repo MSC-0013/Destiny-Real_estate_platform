@@ -4,6 +4,26 @@ import upload from "../utils/multer.js"; // multer config
 
 const router = express.Router();
 
+
+// General file upload endpoint (POST /api/upload)
+router.post("/", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    // Return the Cloudinary URL
+    res.json({ 
+      url: req.file.path,
+      filename: req.file.filename 
+    });
+  } catch (err) {
+    console.error("Failed to upload file:", err);
+    res.status(500).json({ error: "Failed to upload file" });
+  }
+});
+
+
 // Update user profile (with optional file upload)
 router.put("/:id", upload.single("profileImage"), async (req, res) => {
   try {

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import JobDashboard from "@/components/JobsDashboard";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Building2,
@@ -18,6 +19,8 @@ import {
   FileText,
   MapPin,
   Home,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import AnalyticsTab from "@/components/analytics/AdminAnalyics";
 
@@ -47,7 +50,9 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [repairFilter, setRepairFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [constructionFilter, setConstructionFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
-
+  const [expandedRepair, setExpandedRepair] = useState<string | null>(null);
+  const [expandedConstruction, setExpandedConstruction] = useState<string | null>(null);
+  const navigate = useNavigate();
   React.useEffect(() => {
     const fetchUsers = async () => {
       const allUsers = await getAllUsers();
@@ -69,6 +74,15 @@ const AdminDashboard = () => {
   const handleApproveConstruction = async (id: string) => {
     await approveConstructionRequest(id);
     toast({ title: "Construction request approved" });
+  };
+
+  const handleCreateProject = (req: any) => {
+    // Navigate to add-construction with pre-filled data
+    navigate('/add-construction', {
+      state: {
+        constructionRequest: req
+      }
+    });
   };
 
   const handleRejectConstruction = async (id: string) => {
@@ -380,6 +394,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {/* Repair Requests Tab */}
+          {/* Repair Requests Tab */}
           <TabsContent value="repair">
             <Card>
               <CardHeader>
@@ -404,52 +419,136 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   {repairRequests
                     .filter((r) => (repairFilter === "all" ? true : r.status === repairFilter))
-                    .map((req) => (
-                      <Card key={req.id || (req as any)._id} className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="space-y-2">
-                            <h3 className="font-semibold">{req.title || req.propertyTitle || "Repair Request"}</h3>
-                            <p className="text-sm text-muted-foreground">{req.description}</p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
-                              <span>Type: {req.projectType}</span>
-                              <span>Urgency: {req.urgency}</span>
-                              <span>Location: {req.location}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge
-                                variant={
-                                  req.status === "approved"
-                                    ? "default"
-                                    : req.status === "rejected"
-                                    ? "destructive"
-                                    : "secondary"
-                                }
-                              >
-                                {req.status}
-                              </Badge>
-                              {req.priority && (
-                                <Badge variant="outline">Priority: {req.priority}</Badge>
+                    .map((req) => {
+                      const isExpanded = expandedRepair === req.id;
+                      return (
+                        <Card key={req.id || (req as any)._id} className="overflow-hidden">
+                          <div className="flex flex-col md:flex-row gap-4 p-4">
+                            {/* Left Side - Images */}
+                            {req.attachments && req.attachments.length > 0 && (
+                              <div className="md:w-48 flex-shrink-0">
+                                <img
+                                  src={typeof req.attachments[0] === 'string' ? req.attachments[0] : URL.createObjectURL(req.attachments[0])}
+                                  alt="Repair issue"
+                                  className="w-full h-32 md:h-full object-cover rounded-lg"
+                                />
+                                {req.attachments.length > 1 && (
+                                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                                    +{req.attachments.length - 1} more
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Right Side - Content */}
+                            <div className="flex-1 space-y-3">
+                              {/* Header Row */}
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-semibold text-lg">{req.title || req.propertyTitle || "Repair Request"}</h3>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {req.description}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant={
+                                    req.status === "approved"
+                                      ? "default"
+                                      : req.status === "rejected"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                >
+                                  {req.status}
+                                </Badge>
+                              </div>
+
+                              {/* Summary Info */}
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                                <span>🏗️ Type: {req.projectType}</span>
+                                <span>⚠️ Urgency: {req.urgency}</span>
+                                <span>📍 {req.location}</span>
+                              </div>
+
+                              {/* Expandable Details */}
+                              {isExpanded && (
+                                <div className="space-y-3 pt-3 border-t">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                      <p className="font-semibold">Contact Details:</p>
+                                      <p>👤 {req.clientName}</p>
+                                      <p>📧 {req.email}</p>
+                                      <p>📞 {req.phone}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">Location Details:</p>
+                                      <p>📍 {req.address}</p>
+                                      {req.priority && <p>🎯 Priority: {req.priority}</p>}
+                                      {req.estimatedCost && <p>💰 Est. Cost: ₹{req.estimatedCost}</p>}
+                                    </div>
+                                  </div>
+
+                                  {req.attachments && req.attachments.length > 1 && (
+                                    <div>
+                                      <p className="font-semibold text-sm mb-2">Attachments:</p>
+                                      <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                                        {req.attachments.slice(1).map((att, idx) => (
+                                          <img
+                                            key={idx}
+                                            src={typeof att === 'string' ? att : URL.createObjectURL(att)}
+                                            alt={`Attachment ${idx + 2}`}
+                                            className="w-full h-20 object-cover rounded"
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               )}
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-between pt-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setExpandedRepair(isExpanded ? null : req.id)}
+                                  className="text-xs"
+                                >
+                                  {isExpanded ? (
+                                    <>
+                                      <ChevronUp className="h-4 w-4 mr-1" />
+                                      Hide Details
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="h-4 w-4 mr-1" />
+                                      Show Details
+                                    </>
+                                  )}
+                                </Button>
+
+                                {req.status === "pending" && (
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => handleApproveRepair(req.id)}>
+                                      Approve
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={() => handleRejectRepair(req.id)}>
+                                      Reject
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          {req.status === "pending" && (
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleApproveRepair(req.id)}>
-                                Approve
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleRejectRepair(req.id)}>
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Construction Requests Tab */}
           {/* Construction Requests Tab */}
           <TabsContent value="construction">
             <Card>
@@ -475,57 +574,155 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   {constructionRequests
                     .filter((r) => (constructionFilter === "all" ? true : r.status === constructionFilter))
-                    .map((req) => (
-                      <Card key={req.id || (req as any)._id} className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="space-y-2">
-                            <h3 className="font-semibold">{req.projectType}</h3>
-                            <p className="text-sm text-muted-foreground">{req.description}</p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                              <span>Client: {req.clientName}</span>
-                              <span>Location: {req.location}</span>
-                              <span>Area: {req.area}</span>
-                              <span>Rooms: {req.bedrooms} bed / {req.bathrooms} bath</span>
-                              <span>Floors: {req.floors}</span>
-                              <span>Budget: {req.budgetRange || (req as any).budget}</span>
-                              <span>Timeline: {req.timeline}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge
-                                variant={
-                                  req.status === "approved"
-                                    ? "default"
-                                    : req.status === "rejected"
-                                    ? "destructive"
-                                    : "secondary"
-                                }
-                              >
-                                {req.status}
-                              </Badge>
+                    .map((req) => {
+                      const isExpanded = expandedConstruction === req.id;
+                      return (
+                        <Card key={req.id || (req as any)._id} className="overflow-hidden">
+                          <div className="flex flex-col md:flex-row gap-4 p-4">
+                            {/* Left Side - Images */}
+                            {req.designImages && req.designImages.length > 0 && (
+                              <div className="md:w-48 flex-shrink-0">
+                                <img
+                                  src={req.designImages[0]}
+                                  alt="Design reference"
+                                  className="w-full h-32 md:h-full object-cover rounded-lg"
+                                />
+                                {req.designImages.length > 1 && (
+                                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                                    +{req.designImages.length - 1} more
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Right Side - Content */}
+                            <div className="flex-1 space-y-3">
+                              {/* Header Row */}
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-semibold text-lg">{req.projectType}</h3>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {req.description || "No description provided"}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant={
+                                    req.status === "approved"
+                                      ? "default"
+                                      : req.status === "rejected"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                >
+                                  {req.status}
+                                </Badge>
+                              </div>
+
+                              {/* Summary Info */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                                <span>👤 {req.clientName}</span>
+                                <span>📍 {req.location}</span>
+                                <span>📐 {req.area} sq ft</span>
+                                <span>🛏️ {req.bedrooms} bed / {req.bathrooms} bath</span>
+                              </div>
+
+                              {/* Expandable Details */}
+                              {isExpanded && (
+                                <div className="space-y-3 pt-3 border-t">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                      <p className="font-semibold">Contact Details:</p>
+                                      <p>📧 {req.email}</p>
+                                      <p>📞 {req.phone}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">Project Specs:</p>
+                                      <p>🏢 Floors: {req.floors}</p>
+                                      <p>💰 Budget: ₹{req.budgetRange || (req as any).budget}</p>
+                                      <p>⏱️ Timeline: {req.timeline}</p>
+                                    </div>
+                                  </div>
+
+                                  {req.requirements && req.requirements.length > 0 && (
+                                    <div>
+                                      <p className="font-semibold text-sm mb-2">Special Requirements:</p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {req.requirements.map((r, idx) => (
+                                          <Badge key={idx} variant="outline" className="text-xs">
+                                            {r}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {req.designImages && req.designImages.length > 1 && (
+                                    <div>
+                                      <p className="font-semibold text-sm mb-2">Design References:</p>
+                                      <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                                        {req.designImages.slice(1).map((img, idx) => (
+                                          <img
+                                            key={idx}
+                                            src={img}
+                                            alt={`Design ${idx + 2}`}
+                                            className="w-full h-20 object-cover rounded"
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-between pt-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setExpandedConstruction(isExpanded ? null : req.id)}
+                                  className="text-xs"
+                                >
+                                  {isExpanded ? (
+                                    <>
+                                      <ChevronUp className="h-4 w-4 mr-1" />
+                                      Hide Details
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="h-4 w-4 mr-1" />
+                                      Show Details
+                                    </>
+                                  )}
+                                </Button>
+
+                                <div className="flex gap-2">
+                                  {req.status === "pending" && (
+                                    <>
+                                      <Button size="sm" onClick={() => handleApproveConstruction(req.id)}>
+                                        Approve
+                                      </Button>
+                                      <Button size="sm" variant="destructive" onClick={() => handleRejectConstruction(req.id)}>
+                                        Reject
+                                      </Button>
+                                    </>
+                                  )}
+                                  {req.status === "approved" && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="bg-black hover:bg-gray-800"
+                                      onClick={() => handleCreateProject(req)}
+                                    >
+                                      Create Project
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            {req.status === "pending" && (
-                              <>
-                                <Button size="sm" onClick={() => handleApproveConstruction(req.id)}>
-                                  Approve
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleRejectConstruction(req.id)}>
-                                  Reject
-                                </Button>
-                              </>
-                            )}
-                            {req.status === "approved" && (
-                              <Button size="sm" variant="outline" onClick={() => {
-                                (useConstruction() as any).createProjectFromRequest(req.id);
-                              }}>
-                                Create Project
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>

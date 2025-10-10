@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useConstruction } from "@/contexts/ConstructionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface ConstructionRequest {
   clientName: string;
@@ -27,22 +27,24 @@ const AddConstruction = () => {
   const { addProject } = useConstruction();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const constructionRequest = location.state?.constructionRequest;
 
   const [formData, setFormData] = useState<ConstructionRequest>({
-    clientName: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    projectType: "",
-    location: "",
-    area: "",
-    bedrooms: "",
-    bathrooms: "",
-    floors: "1",
-    budget: "",
-    timeline: "",
-    description: "",
-    requirements: [],
-    designImages: [],
+    clientName: constructionRequest?.clientName || user?.name || "",
+    email: constructionRequest?.email || user?.email || "",
+    phone: constructionRequest?.phone || user?.phone || "",
+    projectType: constructionRequest?.projectType || "",
+    location: constructionRequest?.location || "",
+    area: constructionRequest?.area || "",
+    bedrooms: constructionRequest?.bedrooms || "",
+    bathrooms: constructionRequest?.bathrooms || "",
+    floors: constructionRequest?.floors || "1",
+    budget: constructionRequest?.budgetRange || (constructionRequest as any)?.budget || "",
+    timeline: constructionRequest?.timeline || "",
+    description: constructionRequest?.description || "",
+    requirements: constructionRequest?.requirements || [],
+    designImages: constructionRequest?.designImages || [],
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});

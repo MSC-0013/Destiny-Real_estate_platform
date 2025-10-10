@@ -8,13 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  MapPin, 
-  Home, 
-  IndianRupee, 
-  Calendar, 
-  User, 
-  FileText, 
+import { useConstruction } from '@/contexts/ConstructionContext';
+import { uploadFile } from '@/utils/api';
+import {
+  MapPin,
+  Home,
+  IndianRupee,
+  Calendar,
+  User,
+  FileText,
   Upload,
   Plus,
   X,
@@ -41,10 +43,11 @@ interface ConstructionRequest {
 const ConstructionRequestForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { addConstructionRequest } = (require("@/contexts/ConstructionContext") as any).useConstruction();
+  const { addConstructionRequest } = useConstruction();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
-  
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
   const [formData, setFormData] = useState<ConstructionRequest>({
     clientName: user?.name || '',
     email: user?.email || '',
@@ -86,9 +89,12 @@ const ConstructionRequestForm = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // In a real app, you'd upload these to a server
-      // For now, we'll just show placeholders
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+      const filesArray = Array.from(files);
+      // Store actual File objects
+      setImageFiles(prev => [...prev, ...filesArray]);
+
+      // Create preview URLs
+      const newImages = filesArray.map(file => URL.createObjectURL(file));
       setFormData(prev => ({
         ...prev,
         designImages: [...prev.designImages, ...newImages]
@@ -97,17 +103,35 @@ const ConstructionRequestForm = () => {
   };
 
   const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
     setFormData(prev => ({
       ...prev,
       designImages: prev.designImages.filter((_, i) => i !== index)
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Upload images to Cloudinary first
+      let uploadedImageUrls: string[] = [];
+
+      if (imageFiles.length > 0) {
+        toast({
+          title: 'Uploading images...',
+          description: `Uploading ${imageFiles.length} image(s) to cloud storage.`,
+        });
+
+        const uploadPromises = imageFiles.map(async (file) => {
+          const { data } = await uploadFile(file);
+          return data.url; // Cloudinary URL
+        });
+
+        uploadedImageUrls = await Promise.all(uploadPromises);
+      }
+
+      // Now send to context with Cloudinary URLs
       await addConstructionRequest({
         clientName: formData.clientName,
         email: formData.email,
@@ -123,14 +147,12 @@ const ConstructionRequestForm = () => {
         timeline: formData.timeline,
         description: formData.description,
         requirements: formData.requirements,
-        designImages: formData.designImages,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      } as any);
+        designImages: uploadedImageUrls, // ✅ Use Cloudinary URLs instead of blob URLs
+      });
 
       toast({
         title: 'Request Submitted Successfully!',
-        description: 'Your construction request has been sent to our admin team for review. We\'ll contact you within 24 hours.',
+        description: 'Your construction request has been sent to our admin team for review.',
       });
 
       // Reset form
@@ -150,8 +172,11 @@ const ConstructionRequestForm = () => {
         requirements: [],
         designImages: []
       });
+      setImageFiles([]); // ✅ Clear file objects
+      setNewRequirement('');
 
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: 'Error',
         description: 'Failed to submit request. Please try again.',
@@ -173,7 +198,7 @@ const ConstructionRequestForm = () => {
           Tell us about your dream property and we'll make it a reality
         </p>
       </CardHeader>
-      
+
       <CardContent className="p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
@@ -182,7 +207,7 @@ const ConstructionRequestForm = () => {
               <User className="h-5 w-5 text-black" />
               <h3 className="text-lg font-semibold text-black">Personal Information</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="clientName">Full Name *</Label>
@@ -194,7 +219,7 @@ const ConstructionRequestForm = () => {
                   className="border-gray-300"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
@@ -206,7 +231,7 @@ const ConstructionRequestForm = () => {
                   className="border-gray-300"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone *</Label>
                 <Input
@@ -226,7 +251,7 @@ const ConstructionRequestForm = () => {
               <Home className="h-5 w-5 text-black" />
               <h3 className="text-lg font-semibold text-black">Project Details</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="projectType">Project Type *</Label>
@@ -244,7 +269,7 @@ const ConstructionRequestForm = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="location">Location *</Label>
                 <Input
@@ -270,7 +295,7 @@ const ConstructionRequestForm = () => {
                   className="border-gray-300"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Bedrooms *</Label>
                 <Select value={formData.bedrooms} onValueChange={(value) => handleInputChange('bedrooms', value)}>
@@ -286,7 +311,7 @@ const ConstructionRequestForm = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="bathrooms">Bathrooms *</Label>
                 <Select value={formData.bathrooms} onValueChange={(value) => handleInputChange('bathrooms', value)}>
@@ -302,7 +327,7 @@ const ConstructionRequestForm = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="floors">Floors</Label>
                 <Select value={formData.floors} onValueChange={(value) => handleInputChange('floors', value)}>
@@ -326,7 +351,7 @@ const ConstructionRequestForm = () => {
               <IndianRupee className="h-5 w-5 text-black" />
               <h3 className="text-lg font-semibold text-black">Budget & Timeline</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">Budget Range (₹) *</Label>
@@ -343,7 +368,7 @@ const ConstructionRequestForm = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="timeline">Expected Timeline *</Label>
                 <Select value={formData.timeline} onValueChange={(value) => handleInputChange('timeline', value)}>
@@ -367,7 +392,7 @@ const ConstructionRequestForm = () => {
               <FileText className="h-5 w-5 text-black" />
               <h3 className="text-lg font-semibold text-black">Special Requirements</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex space-x-2">
                 <Input
@@ -381,7 +406,7 @@ const ConstructionRequestForm = () => {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {formData.requirements.map((req, index) => (
                   <Badge key={index} variant="outline" className="text-sm py-1 px-3">
@@ -418,7 +443,7 @@ const ConstructionRequestForm = () => {
               <Upload className="h-5 w-5 text-black" />
               <h3 className="text-lg font-semibold text-black">Design References (Optional)</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <input
@@ -435,7 +460,7 @@ const ConstructionRequestForm = () => {
                   <p className="text-sm text-gray-400">PNG, JPG up to 10MB each</p>
                 </label>
               </div>
-              
+
               {formData.designImages.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {formData.designImages.map((image, index) => (

@@ -132,10 +132,10 @@ const ConstructionDetails = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-2xl font-bold">₹{project.estimatedCost.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₹{project.estimatedCost?.toLocaleString() || '0'}</p>
                 <p className="text-sm text-muted-foreground">Estimated Cost</p>
                 <div className="mt-4">
-                  <p className="text-lg font-semibold text-green-600">₹{project.actualCost.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-green-600">₹{project.actualCost?.toLocaleString() || '0'}</p>
                   <p className="text-sm text-muted-foreground">Spent So Far</p>
                 </div>
               </div>

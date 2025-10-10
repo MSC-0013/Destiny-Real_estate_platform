@@ -135,7 +135,8 @@ const ContractorDashboard = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Budget</p>
-                            <p className="font-medium">₹{project.estimatedCost.toLocaleString()}</p>
+                            <p className="font-medium">₹{project.estimatedCost?.toLocaleString() || '0'}
+                            </p>
                           </div>
                         </div>
 
@@ -191,7 +192,8 @@ const ContractorDashboard = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Budget</p>
-                            <p className="font-medium">₹{project.estimatedCost.toLocaleString()}</p>
+                            <p className="font-medium">₹{project.estimatedCost?.toLocaleString() || '0'}
+                            </p>
                           </div>
                         </div>
 
@@ -248,7 +250,8 @@ const ContractorDashboard = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Final Cost</p>
-                            <p className="font-medium">₹{project.actualCost.toLocaleString()}</p>
+                            <p className="font-medium">₹{project.actualCost?.toLocaleString() || '0'}
+                            </p>
                           </div>
                         </div>
 

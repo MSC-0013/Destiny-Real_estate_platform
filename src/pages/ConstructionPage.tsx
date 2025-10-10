@@ -26,8 +26,8 @@ export const ConstructionPage: React.FC = () => {
               <p><strong>Client:</strong> {p.clientName}</p>
               <p><strong>Location:</strong> {p.location}</p>
               <p><strong>Type:</strong> {p.projectType}</p>
-              <p><strong>Estimated Cost:</strong> ₹{p.estimatedCost.toLocaleString()}</p>
-              <p><strong>Actual Cost:</strong> ₹{p.actualCost.toLocaleString()}</p>
+              <p><strong>Estimated Cost:</strong> ₹{p.estimatedCost?.toLocaleString() || '0'}</p>
+              <p><strong>Actual Cost:</strong> ₹{p.actualCost?.toLocaleString() || '0'}</p>
               <p><strong>Phase:</strong> {p.phase}</p>
             </CardContent>
           </Card>
