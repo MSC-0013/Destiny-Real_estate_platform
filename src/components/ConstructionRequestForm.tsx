@@ -41,6 +41,7 @@ interface ConstructionRequest {
 const ConstructionRequestForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addConstructionRequest } = (require("@/contexts/ConstructionContext") as any).useConstruction();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   
@@ -107,19 +108,25 @@ const ConstructionRequestForm = () => {
     setIsSubmitting(true);
 
     try {
-      // In a real app, this would be sent to your backend
-      const requestData = {
-        ...formData,
-        id: Date.now().toString(),
-        status: 'pending',
+      await addConstructionRequest({
+        clientName: formData.clientName,
+        email: formData.email,
+        phone: formData.phone,
+        userId: user?._id,
+        projectType: formData.projectType,
+        location: formData.location,
+        area: formData.area,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        floors: formData.floors,
+        budgetRange: formData.budget,
+        timeline: formData.timeline,
+        description: formData.description,
+        requirements: formData.requirements,
+        designImages: formData.designImages,
+        status: "pending",
         createdAt: new Date().toISOString(),
-        userId: user?._id
-      };
-
-      // Save to localStorage for demo purposes
-      const existingRequests = JSON.parse(localStorage.getItem('constructionRequests') || '[]');
-      existingRequests.push(requestData);
-      localStorage.setItem('constructionRequests', JSON.stringify(existingRequests));
+      } as any);
 
       toast({
         title: 'Request Submitted Successfully!',

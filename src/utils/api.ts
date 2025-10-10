@@ -107,9 +107,9 @@ export const createRepairRequest = (requestData: any) =>
   API.post("/construction/repair-requests", requestData);
 export const getAllRepairRequests = () => API.get("/construction/repair-requests");
 export const approveRepairRequest = (id: string) =>
-  API.put(`/construction/repair-requests/${id}/approve`);
+  API.put(`/construction/repair-requests/approve/${id}`);
 export const rejectRepairRequest = (id: string) =>
-  API.put(`/construction/repair-requests/${id}/reject`);
+  API.put(`/construction/repair-requests/reject/${id}`);
 
 // ------------------------------------
 // Construction Request Routes
@@ -119,9 +119,11 @@ export const createConstructionRequest = (requestData: any) =>
 export const getAllConstructionRequests = () =>
   API.get("/construction/construction-requests");
 export const approveConstructionRequest = (id: string) =>
-  API.put(`/construction/construction-requests/${id}/approve`);
+  API.put(`/construction/construction-requests/approve/${id}`);
 export const rejectConstructionRequest = (id: string) =>
-  API.put(`/construction/construction-requests/${id}/reject`);
+  API.put(`/construction/construction-requests/reject/${id}`);
+export const createProjectFromConstructionRequest = (id: string) =>
+  API.post(`/construction/construction-requests/${id}/create-project`);
 
 // ------------------------------------
 // File Upload

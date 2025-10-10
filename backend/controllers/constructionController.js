@@ -1,5 +1,6 @@
 import ConstructionProject from "../models/ConstructionProject.js";
 import RepairRequest from "../models/RepairRequest.js";
+import ConstructionRequest from "../models/ConstructionRequest.js";
 
 // -------------------- Construction --------------------
 export const getProjects = async (req, res) => {
@@ -56,59 +57,143 @@ export const deleteProject = async (req, res) => {
 // -------------------- Repair Requests --------------------
 export const getRepairRequests = async (req, res) => {
   try {
-    const requests = await RepairRequest.find().sort({
-      createdAt: -1
-    });
+    const requests = await RepairRequest.find().sort({ createdAt: -1 });
     res.status(200).json(requests);
   } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 };
 
-
 export const addRepairRequest = async (req, res) => {
-  console.log("Received repair request:", req.body); // <-- log incoming request
   try {
-    const request = new RepairRequest(req.body);
+    const payload = {
+      ...req.body,
+      attachments: Array.isArray(req.body.attachments) ? req.body.attachments : [],
+      urgency: req.body.urgency || "medium",
+      status: req.body.status || "pending",
+    };
+    const request = new RepairRequest(payload);
     await request.save();
     res.status(201).json(request);
   } catch (err) {
-    console.error("Error saving repair request:", err);
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 };
 
-
 export const approveRepairRequest = async (req, res) => {
   try {
-    const request = await RepairRequest.findByIdAndUpdate(req.params.id, {
-      status: "approved"
-    }, {
-      new: true
-    });
+    const request = await RepairRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true }
+    );
     res.status(200).json(request);
   } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 };
 
 export const rejectRepairRequest = async (req, res) => {
   try {
-    const request = await RepairRequest.findByIdAndUpdate(req.params.id, {
-      status: "rejected"
-    }, {
-      new: true
-    });
+    const request = await RepairRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: "rejected" },
+      { new: true }
+    );
     res.status(200).json(request);
   } catch (err) {
-    res.status(500).json({
-      error: err.message
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// -------------------- Construction Requests --------------------
+export const getConstructionRequests = async (req, res) => {
+  try {
+    const requests = await ConstructionRequest.find().sort({ createdAt: -1 });
+    res.status(200).json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const addConstructionRequest = async (req, res) => {
+  try {
+    const payload = {
+      ...req.body,
+      requirements: Array.isArray(req.body.requirements) ? req.body.requirements : [],
+      designImages: Array.isArray(req.body.designImages) ? req.body.designImages : [],
+      status: req.body.status || "pending",
+    };
+    const request = new ConstructionRequest(payload);
+    await request.save();
+    res.status(201).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const approveConstructionRequest = async (req, res) => {
+  try {
+    const request = await ConstructionRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true }
+    );
+    res.status(200).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const rejectConstructionRequest = async (req, res) => {
+  try {
+    const request = await ConstructionRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: "rejected" },
+      { new: true }
+    );
+    res.status(200).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Create a project from a construction request
+export const createProjectFromConstructionRequest = async (req, res) => {
+  try {
+    const request = await ConstructionRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ error: "Request not found" });
+
+    const project = new ConstructionProject({
+      title: `${request.projectType} for ${request.clientName}`,
+      description: request.description || "",
+      clientId: request.userId || "",
+      clientName: request.clientName,
+      location: request.location,
+      address: "",
+      projectType: ["residential", "commercial", "renovation", "interior"].includes(
+        (request.projectType || "").toLowerCase()
+      )
+        ? request.projectType.toLowerCase()
+        : "residential",
+      status: "in-progress",
+      phase: "planning",
+      estimatedCost: 0,
+      tasks: [],
+      materials: [],
+      payments: [],
+      requests: [],
+      adminId: req.user?.id || "",
     });
+
+    await project.save();
+
+    request.projectId = project._id;
+    request.status = "approved";
+    await request.save();
+
+    res.status(201).json({ project, request });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

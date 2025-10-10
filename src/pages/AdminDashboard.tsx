@@ -45,6 +45,8 @@ const AdminDashboard = () => {
 
   const [users, setUsers] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [repairFilter, setRepairFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [constructionFilter, setConstructionFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   React.useEffect(() => {
     const fetchUsers = async () => {
@@ -381,53 +383,68 @@ const AdminDashboard = () => {
           <TabsContent value="repair">
             <Card>
               <CardHeader>
-                <CardTitle>Repair Requests</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Repair Requests</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{repairRequests.length} total</Badge>
+                    <select
+                      className="border rounded px-2 py-1 text-sm"
+                      value={repairFilter}
+                      onChange={(e) => setRepairFilter(e.target.value as any)}
+                    >
+                      <option value="all">All</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {repairRequests.map((req) => (
-                    <Card key={req.id} className="p-4">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold">{req.propertyTitle}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {req.description}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge
-                              variant={
-                                req.status === "approved"
-                                  ? "default"
-                                  : req.status === "rejected"
+                  {repairRequests
+                    .filter((r) => (repairFilter === "all" ? true : r.status === repairFilter))
+                    .map((req) => (
+                      <Card key={req.id || (req as any)._id} className="p-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="space-y-2">
+                            <h3 className="font-semibold">{req.title || req.propertyTitle || "Repair Request"}</h3>
+                            <p className="text-sm text-muted-foreground">{req.description}</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                              <span>Type: {req.projectType}</span>
+                              <span>Urgency: {req.urgency}</span>
+                              <span>Location: {req.location}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge
+                                variant={
+                                  req.status === "approved"
+                                    ? "default"
+                                    : req.status === "rejected"
                                     ? "destructive"
                                     : "secondary"
-                              }
-                            >
-                              {req.status}
-                            </Badge>
-                            <Badge variant="outline">Priority: {req.priority}</Badge>
+                                }
+                              >
+                                {req.status}
+                              </Badge>
+                              {req.priority && (
+                                <Badge variant="outline">Priority: {req.priority}</Badge>
+                              )}
+                            </div>
                           </div>
+                          {req.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleApproveRepair(req.id)}>
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleRejectRepair(req.id)}>
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        {req.status === "pending" && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveRepair(req.id)}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRejectRepair(req.id)}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -437,58 +454,78 @@ const AdminDashboard = () => {
           <TabsContent value="construction">
             <Card>
               <CardHeader>
-                <CardTitle>Construction Requests</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Construction Requests</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{constructionRequests.length} total</Badge>
+                    <select
+                      className="border rounded px-2 py-1 text-sm"
+                      value={constructionFilter}
+                      onChange={(e) => setConstructionFilter(e.target.value as any)}
+                    >
+                      <option value="all">All</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {constructionRequests.map((req) => (
-                    <Card key={req.id} className="p-4">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold">{req.projectType}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {req.description}
-                          </p>
-                          <p className="text-sm">
-                            Budget: ${req.budget.toLocaleString()}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge
-                              variant={
-                                req.status === "approved"
-                                  ? "default"
-                                  : req.status === "rejected"
+                  {constructionRequests
+                    .filter((r) => (constructionFilter === "all" ? true : r.status === constructionFilter))
+                    .map((req) => (
+                      <Card key={req.id || (req as any)._id} className="p-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="space-y-2">
+                            <h3 className="font-semibold">{req.projectType}</h3>
+                            <p className="text-sm text-muted-foreground">{req.description}</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                              <span>Client: {req.clientName}</span>
+                              <span>Location: {req.location}</span>
+                              <span>Area: {req.area}</span>
+                              <span>Rooms: {req.bedrooms} bed / {req.bathrooms} bath</span>
+                              <span>Floors: {req.floors}</span>
+                              <span>Budget: {req.budgetRange || (req as any).budget}</span>
+                              <span>Timeline: {req.timeline}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge
+                                variant={
+                                  req.status === "approved"
+                                    ? "default"
+                                    : req.status === "rejected"
                                     ? "destructive"
                                     : "secondary"
-                              }
-                            >
-                              {req.status}
-                            </Badge>
-                            <Badge variant="outline">
-                              Timeline: {req.timeline}
-                            </Badge>
+                                }
+                              >
+                                {req.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {req.status === "pending" && (
+                              <>
+                                <Button size="sm" onClick={() => handleApproveConstruction(req.id)}>
+                                  Approve
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleRejectConstruction(req.id)}>
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {req.status === "approved" && (
+                              <Button size="sm" variant="outline" onClick={() => {
+                                (useConstruction() as any).createProjectFromRequest(req.id);
+                              }}>
+                                Create Project
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        {req.status === "pending" && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveConstruction(req.id)}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRejectConstruction(req.id)}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
                 </div>
               </CardContent>
             </Card>

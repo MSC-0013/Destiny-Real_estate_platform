@@ -5,9 +5,22 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 
 // -------------------- API Config --------------------
-const API = axios.create({
-  baseURL: "http://localhost:5000/api",
-});
+import API, {
+  createRepairRequest as apiCreateRepairRequest,
+  getAllRepairRequests as apiGetAllRepairRequests,
+  approveRepairRequest as apiApproveRepairRequest,
+  rejectRepairRequest as apiRejectRepairRequest,
+  createConstructionRequest as apiCreateConstructionRequest,
+  getAllConstructionRequests as apiGetAllConstructionRequests,
+  approveConstructionRequest as apiApproveConstructionRequest,
+  rejectConstructionRequest as apiRejectConstructionRequest,
+  getAllProjects as apiGetAllProjects,
+  createProject as apiCreateProject,
+  updateProject as apiUpdateProject,
+  deleteProject as apiDeleteProject,
+  createProjectFromConstructionRequest as apiCreateProjectFromConstructionRequest,
+} from "@/utils/api";
+
 
 // -------------------- Interfaces --------------------
 export interface ConstructionProject {
@@ -107,11 +120,34 @@ export interface RepairRequest {
   address: string;
   projectType: "residential" | "commercial" | "renovation" | "interior";
   urgency: "low" | "medium" | "high";
-  attachments?: File[];
+  attachments?: File[] | string[];
   estimatedCost?: number;
   status: "pending" | "approved" | "in-progress" | "completed" | "rejected";
   createdAt: string;
   adminId?: string;
+}
+
+export interface ConstructionRequest {
+  id: string;
+  clientName: string;
+  email: string;
+  phone: string;
+  userId?: string;
+  projectType: string;
+  location: string;
+  area?: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  floors?: string;
+  budgetRange?: string;
+  timeline?: string;
+  description?: string;
+  requirements?: string[];
+  designImages?: string[];
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  adminId?: string;
+  projectId?: string;
 }
 
 // -------------------- Context Type --------------------
@@ -142,13 +178,20 @@ interface ConstructionContextType {
     request: Omit<ApprovalRequest, "id" | "createdAt" | "status">
   ) => void;
   approveRequest: (projectId: string, requestId: string, approve: boolean) => void;
+
+  // Repairs
   repairRequests: RepairRequest[];
-  addRepairRequest: (request: Omit<RepairRequest, "id" | "createdAt" | "status">) => void;
-  approveRepairRequest: (id: string) => void;
-  rejectRepairRequest: (id: string) => void;
-  constructionRequests: ApprovalRequest[];
-  approveConstructionRequest: (id: string) => void;
-  rejectConstructionRequest: (id: string) => void;
+  addRepairRequest: (request: Omit<RepairRequest, "id" | "createdAt" | "status">) => Promise<void>;
+  approveRepairRequest: (id: string) => Promise<void>;
+  rejectRepairRequest: (id: string) => Promise<void>;
+
+  // Construction Requests
+  constructionRequests: ConstructionRequest[];
+  addConstructionRequest: (req: Omit<ConstructionRequest, "id" | "createdAt" | "status" | "projectId">) => Promise<void>;
+  approveConstructionRequest: (id: string) => Promise<void>;
+  rejectConstructionRequest: (id: string) => Promise<void>;
+  createProjectFromRequest: (id: string) => Promise<void>;
+
   updateProjectMaterials: (projectId: string, materials: Material[]) => void;
 }
 
@@ -176,36 +219,51 @@ const dbPromise = openDB<ConstructionDB>("construction-db", 1, {
 export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<ConstructionProject[]>([]);
   const [repairRequests, setRepairRequests] = useState<RepairRequest[]>([]);
-  const [constructionRequests, setConstructionRequests] = useState<ApprovalRequest[]>([]);
+  const [constructionRequests, setConstructionRequests] = useState<ConstructionRequest[]>([]);
 
-  // Load data from LocalStorage / IndexedDB
+  // Load data from Backend first, then hydrate LocalStorage / IndexedDB
   useEffect(() => {
     const loadData = async () => {
       const db = await dbPromise;
 
-      // Projects
-      const allProjects = await db.getAll("projects");
-      if (allProjects.length > 0) {
-        setProjects(allProjects);
-        localStorage.setItem("constructionProjects", JSON.stringify(allProjects));
-      } else {
+      // Projects from backend
+      try {
+        const { data } = await apiGetAllProjects();
+        const normalized = (data || []).map((p: any) => ({ ...p, id: p._id || p.id }));
+        setProjects(normalized);
+        localStorage.setItem("constructionProjects", JSON.stringify(normalized));
         const tx = db.transaction("projects", "readwrite");
-        for (const proj of []) tx.store.put(proj); // replace [] with sampleProjects if needed
+        for (const proj of normalized) await tx.store.put(proj);
         await tx.done;
+      } catch (e) {
+        // fallback to IndexedDB
+        const allProjects = await db.getAll("projects");
+        if (allProjects.length > 0) {
+          setProjects(allProjects);
+          localStorage.setItem("constructionProjects", JSON.stringify(allProjects));
+        }
       }
 
-      // Repair Requests
-      const savedRepairRequests = localStorage.getItem("repairRequests");
-      if (savedRepairRequests) {
-        const parsed = JSON.parse(savedRepairRequests) as RepairRequest[];
-        setRepairRequests(parsed);
+      // Repair Requests from backend
+      try {
+        const { data } = await apiGetAllRepairRequests();
+        const normalized = (data || []).map((r: any) => ({ ...r, id: r._id || r.id }));
+        setRepairRequests(normalized);
+        localStorage.setItem("repairRequests", JSON.stringify(normalized));
+      } catch (e) {
+        const saved = localStorage.getItem("repairRequests");
+        if (saved) setRepairRequests(JSON.parse(saved));
       }
 
-      // Construction Requests
-      const savedConstructionRequests = localStorage.getItem("constructionRequests");
-      if (savedConstructionRequests) {
-        const parsed = JSON.parse(savedConstructionRequests) as ApprovalRequest[];
-        setConstructionRequests(parsed);
+      // Construction Requests from backend
+      try {
+        const { data } = await apiGetAllConstructionRequests();
+        const normalized = (data || []).map((r: any) => ({ ...r, id: r._id || r.id }));
+        setConstructionRequests(normalized);
+        localStorage.setItem("constructionRequests", JSON.stringify(normalized));
+      } catch (e) {
+        const saved = localStorage.getItem("constructionRequests");
+        if (saved) setConstructionRequests(JSON.parse(saved));
       }
     };
     loadData();
@@ -241,7 +299,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         clientName: project.clientName,
         location: project.location,
         address: project.address,
-        projectType: project.projectType, // Must match backend enum
+        projectType: project.projectType,
         status: project.status || "pending",
         phase: project.phase || "planning",
         startDate: project.startDate,
@@ -257,13 +315,13 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         adminId: project.adminId,
       };
 
-      const res = await API.post("/construction/projects", payload);
+      const res = await apiCreateProject(payload);
+      const saved = { ...res.data, id: res.data._id || res.data.id };
 
-      // Update frontend state & localStorage
-      setProjects(prev => [...prev, res.data]);
-      localStorage.setItem("projects", JSON.stringify([...projects, res.data]));
-    } catch (error) {
-      console.error("Failed to add project:", error.response?.data || error.message);
+      setProjects(prev => [...prev, saved]);
+      localStorage.setItem("constructionProjects", JSON.stringify([...projects, saved]));
+    } catch (error: any) {
+      console.error("Failed to add project:", error?.response?.data || error?.message);
     }
   };
 
@@ -275,7 +333,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const project = updatedProjects.find((p) => p.id === id);
     if (project) {
       try {
-        await API.put(`/construction/projects/${id}`, project);
+        await apiUpdateProject(id, project);
       } catch (error) {
         console.error("Backend updateProject error:", error);
       }
@@ -287,7 +345,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     await saveProjects(updated);
 
     try {
-      await API.delete(`/construction/projects/${id}`);
+      await apiDeleteProject(id);
     } catch (error) {
       console.error("Backend deleteProject error:", error);
     }
@@ -385,31 +443,33 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         clientName: request.clientName,
         location: request.location,
         address: request.address,
-        projectType: request.projectType, // Must match backend enum exactly
-        urgency: request.urgency || "medium", // default
-        attachments: request.attachments?.map(file => file.name) || [],
+        projectType: request.projectType,
+        urgency: request.urgency || "medium",
+        attachments: Array.isArray(request.attachments)
+          ? (request.attachments as any[]).map((f: any) => (typeof f === "string" ? f : f.name))
+          : [],
         estimatedCost: request.estimatedCost,
         status: "pending",
         adminId: request.adminId || "",
       };
 
-      const res = await API.post("/construction/repair-requests", payload);
+      const res = await apiCreateRepairRequest(payload);
+      const saved = { ...res.data, id: res.data._id || res.data.id };
 
-      // Update frontend state & localStorage
-      setRepairRequests(prev => [...prev, res.data]);
-      localStorage.setItem("repairRequests", JSON.stringify([...repairRequests, res.data]));
-    } catch (error) {
-      console.error("Failed to add repair request:", error.response?.data || error.message);
+      setRepairRequests(prev => [...prev, saved]);
+      localStorage.setItem("repairRequests", JSON.stringify([...repairRequests, saved]));
+    } catch (error: any) {
+      console.error("Failed to add repair request:", error?.response?.data || error?.message);
     }
   };
 
   const approveRepairRequest = async (id: string) => {
     try {
-      await API.put(`/construction/repair-requests/${id}/approve`);
+      const { data } = await apiApproveRepairRequest(id);
       const updated: RepairRequest[] = repairRequests.map((r) =>
-        r.id === id ? { ...r, status: "approved" } : r
+        r.id === id ? { ...r, status: data?.status || "approved" } : r
       );
-      saveRepairRequests(updated);
+      await saveRepairRequests(updated);
     } catch (error) {
       console.error("Failed to approve repair request:", error);
       throw error;
@@ -418,24 +478,44 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const rejectRepairRequest = async (id: string) => {
     try {
-      await API.put(`/construction/repair-requests/${id}/reject`);
+      const { data } = await apiRejectRepairRequest(id);
       const updated: RepairRequest[] = repairRequests.map((r) =>
-        r.id === id ? { ...r, status: "rejected" } : r
+        r.id === id ? { ...r, status: data?.status || "rejected" } : r
       );
-      saveRepairRequests(updated);
+      await saveRepairRequests(updated);
     } catch (error) {
       console.error("Failed to reject repair request:", error);
       throw error;
     }
   };
 
+  const addConstructionRequest = async (
+    req: Omit<ConstructionRequest, "id" | "createdAt" | "status" | "projectId">
+  ) => {
+    try {
+      const payload = {
+        ...req,
+        budgetRange: (req as any).budget || req.budgetRange,
+        status: "pending",
+      };
+      const { data } = await apiCreateConstructionRequest(payload);
+      const saved = { ...data, id: data._id || data.id };
+      const updated = [...constructionRequests, saved as any];
+      setConstructionRequests(updated);
+      localStorage.setItem("constructionRequests", JSON.stringify(updated));
+    } catch (error) {
+      console.error("Failed to add construction request:", error);
+      throw error;
+    }
+  };
+
   const approveConstructionRequest = async (id: string) => {
     try {
-      await API.put(`/construction/construction-requests/${id}/approve`);
-      const updated: ApprovalRequest[] = constructionRequests.map((r) =>
-        r.id === id ? { ...r, status: "approved" } : r
+      const { data } = await apiApproveConstructionRequest(id);
+      const updated = constructionRequests.map((r) =>
+        r.id === id ? { ...r, status: data?.status || "approved" } : r
       );
-      saveConstructionRequests(updated);
+      saveConstructionRequests(updated as any);
     } catch (error) {
       console.error("Failed to approve construction request:", error);
       throw error;
@@ -444,13 +524,24 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const rejectConstructionRequest = async (id: string) => {
     try {
-      await API.put(`/construction/construction-requests/${id}/reject`);
-      const updated: ApprovalRequest[] = constructionRequests.map((r) =>
-        r.id === id ? { ...r, status: "rejected" } : r
+      const { data } = await apiRejectConstructionRequest(id);
+      const updated = constructionRequests.map((r) =>
+        r.id === id ? { ...r, status: data?.status || "rejected" } : r
       );
-      saveConstructionRequests(updated);
+      saveConstructionRequests(updated as any);
     } catch (error) {
       console.error("Failed to reject construction request:", error);
+      throw error;
+    }
+  };
+
+  const createProjectFromRequest = async (id: string) => {
+    try {
+      const { data } = await apiCreateProjectFromConstructionRequest(id);
+      const project = { ...data.project, id: data.project._id || data.project.id };
+      await saveProjects([...projects, project]);
+    } catch (error) {
+      console.error("Failed to create project from request:", error);
       throw error;
     }
   };
@@ -482,8 +573,10 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         approveRepairRequest,
         rejectRepairRequest,
         constructionRequests,
+        addConstructionRequest,
         approveConstructionRequest,
         rejectConstructionRequest,
+        createProjectFromRequest,
         updateProjectMaterials,
       }}
     >
