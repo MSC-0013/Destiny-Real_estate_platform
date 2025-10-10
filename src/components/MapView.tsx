@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useProperty } from '@/contexts/PropertyContext';
 import { 
   MapPin, 
   Search, 
@@ -10,88 +11,23 @@ import {
   Bed,
   Bath,
   Ruler,
-  Star,
   Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'leaflet/dist/leaflet.css';
 
-interface Property {
-  id: string;
-  title: string;
-  price: string;
-  location: string;
-  type: string;
-  bedrooms: number;
-  bathrooms: number;
-  area: string;
-  image: string;
-  rating: number;
-  position: { lat: number; lng: number };
-}
-
-// Sample properties with coordinates
-const sampleProperties: Property[] = [
-  {
-    id: '1',
-    title: 'Modern Luxury Villa',
-    price: '₹8,50,00,000',
-    location: 'Bangalore, Karnataka',
-    type: 'Villa',
-    bedrooms: 4,
-    bathrooms: 3,
-    area: '3500 sq.ft',
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400',
-    rating: 4.8,
-    position: { lat: 12.9716, lng: 77.5946 }
-  },
-  {
-    id: '2',
-    title: 'Premium Apartment',
-    price: '₹1,20,00,000',
-    location: 'Mumbai, Maharashtra',
-    type: 'Apartment',
-    bedrooms: 3,
-    bathrooms: 2,
-    area: '1800 sq.ft',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400',
-    rating: 4.5,
-    position: { lat: 19.0760, lng: 72.8777 }
-  },
-  {
-    id: '3',
-    title: 'Contemporary House',
-    price: '₹95,00,000',
-    location: 'Pune, Maharashtra',
-    type: 'House',
-    bedrooms: 3,
-    bathrooms: 2,
-    area: '2200 sq.ft',
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400',
-    rating: 4.6,
-    position: { lat: 18.5204, lng: 73.8567 }
-  },
-  {
-    id: '4',
-    title: 'Waterfront Villa',
-    price: '₹12,00,00,000',
-    location: 'Goa',
-    type: 'Villa',
-    bedrooms: 5,
-    bathrooms: 4,
-    area: '4500 sq.ft',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400',
-    rating: 4.9,
-    position: { lat: 15.2993, lng: 74.1240 }
-  }
-];
-
 const MapView = () => {
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const { properties } = useProperty();
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const mapRef = React.useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
+
+  // Filter properties that have coordinates
+  const propertiesWithCoords = properties.filter(
+    p => p.latitude && p.longitude
+  );
 
   React.useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current) return;
@@ -106,31 +42,35 @@ const MapView = () => {
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
 
-      // Create map
-      const map = L.map(mapRef.current!).setView([15.5, 75.5], 6);
+      // Create map - center on India
+      const map = L.map(mapRef.current!).setView([20.5937, 78.9629], 5);
       
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
 
-      // Add markers
-      sampleProperties.forEach((property) => {
-        const marker = L.marker([property.position.lat, property.position.lng]).addTo(map);
+      // Add markers for properties with coordinates
+      propertiesWithCoords.forEach((property) => {
+        const marker = L.marker([property.latitude!, property.longitude!]).addTo(map);
         
         const popupContent = `
           <div style="width: 250px;">
-            <img src="${property.image}" alt="${property.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;" />
+            ${property.images[0] ? `<img src="${property.images[0]}" alt="${property.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;" />` : ''}
             <div style="padding: 12px;">
               <h3 style="font-weight: bold; margin: 0 0 8px 0; font-size: 14px;">${property.title}</h3>
               <p style="color: #666; font-size: 12px; margin: 4px 0; display: flex; align-items: center; gap: 4px;">
                 📍 ${property.location}
               </p>
+              ${property.bedrooms ? `
               <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666; margin: 8px 0;">
                 <span>🛏️ ${property.bedrooms} Beds</span>
                 <span>🚿 ${property.bathrooms} Baths</span>
-                <span>📐 ${property.area}</span>
+                <span>📐 ${property.area} sq.ft</span>
               </div>
+              ` : ''}
               <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #eee;">
-                <p style="font-size: 16px; font-weight: bold; color: hsl(var(--primary)); margin: 0;">${property.price}</p>
-                <span style="font-size: 12px;">⭐ ${property.rating}</span>
+                <p style="font-size: 16px; font-weight: bold; color: hsl(var(--primary)); margin: 0;">₹${property.price.toLocaleString()}</p>
+                <span style="font-size: 12px; background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">${property.type}</span>
               </div>
             </div>
           </div>
@@ -146,7 +86,7 @@ const MapView = () => {
         map.remove();
       };
     });
-  }, []);
+  }, [propertiesWithCoords.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -163,7 +103,7 @@ const MapView = () => {
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant="secondary" className="text-sm px-4 py-1">
               <Home className="h-3 w-3 mr-1" />
-              {sampleProperties.length} Properties
+              {propertiesWithCoords.length} Properties
             </Badge>
             <Button 
               variant="outline" 
@@ -254,57 +194,93 @@ const MapView = () => {
           </Card>
 
           {/* Property List Below Map */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {sampleProperties.map((property) => (
-              <motion.div
-                key={property.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card 
-                  className="overflow-hidden cursor-pointer hover:shadow-xl transition-all border-2 hover:border-primary/50"
-                  onClick={() => setSelectedProperty(property)}
-                >
-                  <div className="relative">
-                    <img 
-                      src={property.image} 
-                      alt={property.title}
-                      className="w-full h-40 object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm">
-                      {property.type}
-                    </Badge>
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm px-2 py-1 rounded">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs font-medium">{property.rating}</span>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-semibold text-base line-clamp-1">{property.title}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {property.location}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Bed className="h-3 w-3" />
-                        {property.bedrooms}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Bath className="h-3 w-3" />
-                        {property.bathrooms}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Ruler className="h-3 w-3" />
-                        {property.area}
-                      </span>
-                    </div>
-                    <p className="text-lg font-bold text-primary pt-2 border-t">{property.price}</p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          {propertiesWithCoords.length > 0 ? (
+            <div className="mt-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                Properties on Map ({propertiesWithCoords.length})
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {propertiesWithCoords.map((property) => (
+                  <motion.div
+                    key={property.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card 
+                      className="overflow-hidden cursor-pointer hover:shadow-xl transition-all border-2 hover:border-primary/50 h-full flex flex-col"
+                      onClick={() => {
+                        setSelectedProperty(property);
+                        if (mapInstance && property.latitude && property.longitude) {
+                          mapInstance.setView([property.latitude, property.longitude], 13);
+                        }
+                      }}
+                    >
+                      <div className="relative">
+                        {property.images[0] ? (
+                          <img 
+                            src={property.images[0]} 
+                            alt={property.title}
+                            className="w-full h-40 object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-40 bg-muted flex items-center justify-center">
+                            <Home className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        )}
+                        <Badge className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm capitalize">
+                          {property.type}
+                        </Badge>
+                        {property.featured && (
+                          <Badge className="absolute top-2 left-2 bg-yellow-500 text-white">
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="p-4 space-y-2 flex-1 flex flex-col">
+                        <h3 className="font-semibold text-base line-clamp-1">{property.title}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="line-clamp-1">{property.location}</span>
+                        </p>
+                        {property.bedrooms && (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Bed className="h-3 w-3" />
+                              {property.bedrooms}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Bath className="h-3 w-3" />
+                              {property.bathrooms}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Ruler className="h-3 w-3" />
+                              {property.area} sq.ft
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1"></div>
+                        <div className="pt-2 border-t flex items-center justify-between">
+                          <p className="text-lg font-bold text-primary">₹{property.price.toLocaleString()}</p>
+                          <Badge variant="outline" className="capitalize text-xs">
+                            {property.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed">
+              <Home className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No Properties with Location Data</h3>
+              <p className="text-muted-foreground">
+                Properties need latitude and longitude coordinates to appear on the map.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
