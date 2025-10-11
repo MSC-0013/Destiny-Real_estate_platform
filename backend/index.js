@@ -11,6 +11,8 @@ import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import propertyRoutes from "./routes/propertyRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import investmentRoutes from "./routes/investmentRoutes.js";
+
 
 
 
@@ -66,6 +68,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments',paymentRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/investments", investmentRoutes);
+
 
 
 

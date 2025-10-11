@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, Wallet, MapPin, Users, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useInvest } from "@/contexts/InvestContext"; // your context for investment API
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import property images
 import luxuryTowerMumbai from '@/assets/invest/luxury-tower-mumbai.jpg';
@@ -330,38 +332,46 @@ const Invest = () => {
   const { toast } = useToast();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [shareCount, setShareCount] = useState(1);
+  const { addInvestment } = useInvest();
+  const { user } = useAuth(); // get logged-in user
+
+
   const [investments, setInvestments] = useState<Investment[]>(() => {
     const saved = localStorage.getItem('investments');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const handleBuyShares = () => {
-    if (!selectedProperty || shareCount < 1) return;
+  const handleBuyShares = async () => {
+    if (!selectedProperty || shareCount < 1 || !user) return;
 
     const totalCost = selectedProperty.sharePrice * shareCount;
+    const growthRate = 3.2;
+
     const newInvestment: Investment = {
       property_id: selectedProperty.id,
-      user_id: 'current-user', // Replace with actual user ID from auth
+      user_id: user._id,
       property_name: selectedProperty.name,
       shares_owned: shareCount,
       total_investment: totalCost,
       date: new Date().toISOString(),
-      current_value: totalCost * 1.032, // Simulate 3.2% growth
-      growth_percentage: 3.2,
+      current_value: totalCost * (1 + growthRate / 100),
+      growth_percentage: growthRate,
     };
 
+    // Check if the user already invested in this property
     const existingInvestmentIndex = investments.findIndex(
-      inv => inv.property_id === selectedProperty.id
+      (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
     );
 
-    let updatedInvestments;
+    let updatedInvestments: Investment[];
     if (existingInvestmentIndex >= 0) {
       updatedInvestments = [...investments];
+      const existing = updatedInvestments[existingInvestmentIndex];
       updatedInvestments[existingInvestmentIndex] = {
-        ...updatedInvestments[existingInvestmentIndex],
-        shares_owned: updatedInvestments[existingInvestmentIndex].shares_owned + shareCount,
-        total_investment: updatedInvestments[existingInvestmentIndex].total_investment + totalCost,
-        current_value: (updatedInvestments[existingInvestmentIndex].total_investment + totalCost) * 1.032,
+        ...existing,
+        shares_owned: existing.shares_owned + shareCount,
+        total_investment: existing.total_investment + totalCost,
+        current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
       };
     } else {
       updatedInvestments = [...investments, newInvestment];
@@ -370,14 +380,18 @@ const Invest = () => {
     localStorage.setItem('investments', JSON.stringify(updatedInvestments));
     setInvestments(updatedInvestments);
 
+    // Call backend
+    await addInvestment(newInvestment);
+
     toast({
       title: 'Payment Successful!',
       description: 'Investment added to your portfolio',
     });
 
-    setShareCount(1);
     setSelectedProperty(null);
+    setShareCount(1);
   };
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -447,8 +461,8 @@ const Invest = () => {
           {properties.map((property) => (
             <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="h-56 relative overflow-hidden">
-                <img 
-                  src={property.image} 
+                <img
+                  src={property.image}
                   alt={property.name}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                 />
@@ -506,7 +520,7 @@ const Invest = () => {
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button 
+                    <Button
                       className="w-full bg-gradient-to-r from-primary to-primary/80 hover:opacity-90"
                       onClick={() => setSelectedProperty(property)}
                     >
@@ -527,10 +541,15 @@ const Invest = () => {
                           id="shares"
                           type="number"
                           min="1"
-                          max={property.availableShares}
+                          max={selectedProperty?.availableShares || 1}
                           value={shareCount}
-                          onChange={(e) => setShareCount(parseInt(e.target.value) || 1)}
+                          onChange={(e) => {
+                            let val = parseInt(e.target.value) || 1;
+                            if (val > selectedProperty?.availableShares!) val = selectedProperty.availableShares;
+                            setShareCount(val);
+                          }}
                         />
+
                       </div>
                       <div className="p-4 bg-muted rounded-lg space-y-2">
                         <div className="flex justify-between text-sm">

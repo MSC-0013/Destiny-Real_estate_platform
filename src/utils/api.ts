@@ -125,6 +125,15 @@ export const rejectConstructionRequest = (id: string) =>
 export const createProjectFromConstructionRequest = (id: string) =>
   API.post(`/construction/construction-requests/${id}/create-project`);
 
+
+export const getInvestments = (userId: string) => API.get(`/investments/${userId}`);
+export const createInvestment = (data: any) => API.post(`/investments`, data);
+export const deleteInvestment = (id: string) => API.delete(`/investments/${id}`);
+
+// ✅ NEW — Admin route to get all investor stats & profits
+export const getAllInvestorDetails = () => API.get(`/investments/all-details`);
+
+
 // ------------------------------------
 // File Upload
 // ------------------------------------
