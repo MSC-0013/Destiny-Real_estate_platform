@@ -355,6 +355,7 @@ useEffect(() => {
   });
 }, [user]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
 
 
   const handleBuyShares = async () => {
@@ -683,7 +684,7 @@ const handleDeleteInvestment = async (investmentId: string) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {investments.map((investment, index) => (
   <Card key={index} className="hover:shadow-md transition-shadow p-4">
-    {/* Sell button above */}
+    {/* Sell input above */}
     <div className="flex gap-2 mb-2">
       <Input
         type="number"
@@ -729,7 +730,7 @@ const handleDeleteInvestment = async (investmentId: string) => {
       </div>
     </CardContent>
 
-    {/* Sell button below */}
+    {/* Sell input below */}
     <div className="flex gap-2 mt-2">
       <Input
         type="number"
@@ -747,8 +748,7 @@ const handleDeleteInvestment = async (investmentId: string) => {
       <Button onClick={() => handleSellShares(investment)}>Sell</Button>
     </div>
   </Card>
-))}
-            </div>
+))}      </div>
           </div>
         )}
       </div>
