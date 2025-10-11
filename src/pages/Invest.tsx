@@ -754,6 +754,6 @@ const handleDeleteInvestment = async (investmentId: string) => {
       </div>
     </div>
   );
-};
+}
 
 export default Invest;
