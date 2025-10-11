@@ -335,62 +335,120 @@ const Invest = () => {
   const { addInvestment } = useInvest();
   const { user } = useAuth(); // get logged-in user
 
+useEffect(() => {
+  if (!user?._id) return;
 
-  const [investments, setInvestments] = useState<Investment[]>(() => {
-    const saved = localStorage.getItem('investments');
-    return saved ? JSON.parse(saved) : [];
+  const local = JSON.parse(localStorage.getItem('investments') || '[]');
+  setInvestments(local); // show localStorage immediately
+
+  // Fetch from backend
+  fetchInvestments(user._id).then(() => {
+    const backend = JSON.parse(localStorage.getItem('investments') || '[]'); // after context fetch
+    const merged = [...local];
+
+    backend.forEach((inv: Investment) => {
+      if (!merged.find((l: Investment) => l._id === inv._id)) merged.push(inv);
+    });
+
+    setInvestments(merged);
+    localStorage.setItem('investments', JSON.stringify(merged));
   });
+}, [user]);
+  const [investments, setInvestments] = useState<Investment[]>([]);
+
 
   const handleBuyShares = async () => {
-    if (!selectedProperty || shareCount < 1 || !user) return;
+  if (!selectedProperty || shareCount < 1 || !user) return;
 
-    const totalCost = selectedProperty.sharePrice * shareCount;
-    const growthRate = 3.2;
+  const totalCost = selectedProperty.sharePrice * shareCount;
+  const growthRate = 3.2;
 
-    const newInvestment: Investment = {
-      property_id: selectedProperty.id,
-      user_id: user._id,
-      property_name: selectedProperty.name,
-      shares_owned: shareCount,
-      total_investment: totalCost,
-      date: new Date().toISOString(),
-      current_value: totalCost * (1 + growthRate / 100),
-      growth_percentage: growthRate,
+  const newInvestment: Investment = {
+    property_id: selectedProperty.id,
+    user_id: user._id,
+    property_name: selectedProperty.name,
+    shares_owned: shareCount,
+    total_investment: totalCost,
+    date: new Date().toISOString(),
+    current_value: totalCost * (1 + growthRate / 100),
+    growth_percentage: growthRate,
+  };
+
+  // Check if the user already invested in this property
+  const existingInvestmentIndex = investments.findIndex(
+    (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
+  );
+
+  let updatedInvestments: Investment[];
+  if (existingInvestmentIndex >= 0) {
+    updatedInvestments = [...investments];
+    const existing = updatedInvestments[existingInvestmentIndex];
+    updatedInvestments[existingInvestmentIndex] = {
+      ...existing,
+      shares_owned: existing.shares_owned + shareCount,
+      total_investment: existing.total_investment + totalCost,
+      current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
     };
+  } else {
+    updatedInvestments = [...investments, newInvestment];
+  }
 
-    // Check if the user already invested in this property
-    const existingInvestmentIndex = investments.findIndex(
-      (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
-    );
+  // Save to localStorage immediately for fast UI update
+  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+  setInvestments(updatedInvestments);
 
-    let updatedInvestments: Investment[];
-    if (existingInvestmentIndex >= 0) {
-      updatedInvestments = [...investments];
-      const existing = updatedInvestments[existingInvestmentIndex];
-      updatedInvestments[existingInvestmentIndex] = {
-        ...existing,
-        shares_owned: existing.shares_owned + shareCount,
-        total_investment: existing.total_investment + totalCost,
-        current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
-      };
-    } else {
-      updatedInvestments = [...investments, newInvestment];
+  try {
+    // Call backend and get saved investment with _id
+    const savedInvestment = await addInvestment(newInvestment);
+
+    // Update the last added investment with backend _id in localStorage
+    if (!existingInvestmentIndex) {
+      updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
+      localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+      setInvestments(updatedInvestments);
     }
-
-    localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-    setInvestments(updatedInvestments);
-
-    // Call backend
-    await addInvestment(newInvestment);
 
     toast({
       title: 'Payment Successful!',
       description: 'Investment added to your portfolio',
     });
+  } catch (error) {
+    toast({
+      title: 'Failed to save investment',
+      description: 'Something went wrong while saving to backend.',
+      variant: 'destructive',
+    });
+  }
+
+  setSelectedProperty(null);
+  setShareCount(1);
+};
+
 
     setSelectedProperty(null);
     setShareCount(1);
   };
+const handleDeleteInvestment = async (investmentId: string) => {
+  // Update localStorage immediately
+  const updated = investments.filter(inv => inv._id !== investmentId);
+  setInvestments(updated);
+  localStorage.setItem('investments', JSON.stringify(updated));
+
+  // Delete from backend
+  try {
+    await deleteInvestment(investmentId); // use context function
+    toast({
+      title: 'Investment Removed',
+      description: 'Investment deleted successfully',
+    });
+  } catch (error) {
+    toast({
+      title: 'Failed to delete investment',
+      description: 'Something went wrong while deleting investment.',
+      variant: 'destructive',
+    });
+  }
+};
 
 
   const formatCurrency = (amount: number) => {
