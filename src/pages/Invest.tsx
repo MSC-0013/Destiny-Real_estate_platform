@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect  } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -318,6 +318,7 @@ const properties: Property[] = [
 ];
 
 interface Investment {
+  _id?: string; 
   property_id: string;
   user_id: string;
   property_name: string;
@@ -332,7 +333,7 @@ const Invest = () => {
   const { toast } = useToast();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [shareCount, setShareCount] = useState(1);
-  const { addInvestment } = useInvest();
+  const { addInvestment, fetchInvestments, deleteInvestment } = useInvest();
   const { user } = useAuth(); // get logged-in user
 
 useEffect(() => {
@@ -403,11 +404,13 @@ const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
     const savedInvestment = await addInvestment(newInvestment);
 
     // Update the last added investment with backend _id in localStorage
-    if (!existingInvestmentIndex) {
-      updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
-      localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-      setInvestments(updatedInvestments);
-    }
+   // Update the last added investment with backend _id in localStorage
+if (existingInvestmentIndex === -1) {
+  updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
+  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+  setInvestments(updatedInvestments);
+}
+
 
     toast({
       title: 'Payment Successful!',
@@ -425,10 +428,6 @@ const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
   setShareCount(1);
 };
 
-
-    setSelectedProperty(null);
-    setShareCount(1);
-  };
 
 const handleSellShares = async (investment: Investment) => {
   const shares = sellCount[investment.property_id] || 0;
@@ -508,7 +507,7 @@ const handleDeleteInvestment = async (investmentId: string) => {
   const totalGrowthPercentage = totalInvested > 0 ? ((totalGrowth / totalInvested) * 100).toFixed(2) : '0';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -678,79 +677,64 @@ const handleDeleteInvestment = async (investmentId: string) => {
         </div>
 
         {/* My Investments */}
-        {investments.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">My Investments</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {investments.map((investment, index) => (
-  <Card key={index} className="hover:shadow-md transition-shadow p-4">
-    {/* Sell input above */}
-    <div className="flex gap-2 mb-2">
-      <Input
-        type="number"
-        min={1}
-        max={investment.shares_owned}
-        value={sellCount[investment.property_id] || ''}
-        onChange={(e) =>
-          setSellCount({
-            ...sellCount,
-            [investment.property_id]: Number(e.target.value),
-          })
-        }
-        placeholder={`Shares to sell (max ${investment.shares_owned})`}
-      />
-      <Button onClick={() => handleSellShares(investment)}>Sell</Button>
-    </div>
+       {investments.length > 0 && (
+  <div>
+    <h2 className="text-2xl font-bold mb-4">My Investments</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {investments.map((investment) => (
+        <Card key={investment._id || investment.property_id} className="hover:shadow-md transition-shadow p-4">
+          <CardHeader>
+            <CardTitle className="text-lg">{investment.property_name}</CardTitle>
+            <CardDescription>
+              Invested on {new Date(investment.date).toLocaleDateString()}
+            </CardDescription>
+          </CardHeader>
 
-    <CardHeader>
-      <CardTitle className="text-lg">{investment.property_name}</CardTitle>
-      <CardDescription>
-        Invested on {new Date(investment.date).toLocaleDateString()}
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-2 text-sm">
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Shares Owned:</span>
-        <span className="font-semibold">{investment.shares_owned}</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Total Invested:</span>
-        <span className="font-semibold">{formatCurrency(investment.total_investment)}</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Current Value:</span>
-        <span className="font-semibold text-green-500">{formatCurrency(investment.current_value)}</span>
-      </div>
-      <div className="flex justify-between items-center border-t pt-2">
-        <span className="text-muted-foreground">Growth:</span>
-        <span className="font-semibold text-green-500 flex items-center gap-1">
-          <TrendingUp className="h-4 w-4" />
-          +{investment.growth_percentage}%
-        </span>
-      </div>
-    </CardContent>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Shares Owned:</span>
+              <span className="font-semibold">{investment.shares_owned}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total Invested:</span>
+              <span className="font-semibold">{formatCurrency(investment.total_investment)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Current Value:</span>
+              <span className="font-semibold text-green-500">{formatCurrency(investment.current_value)}</span>
+            </div>
+            <div className="flex justify-between items-center border-t pt-2">
+              <span className="text-muted-foreground">Growth:</span>
+              <span className="font-semibold text-green-500 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4" />
+                +{investment.growth_percentage}%
+              </span>
+            </div>
+          </CardContent>
 
-    {/* Sell input below */}
-    <div className="flex gap-2 mt-2">
-      <Input
-        type="number"
-        min={1}
-        max={investment.shares_owned}
-        value={sellCount[investment.property_id] || ''}
-        onChange={(e) =>
-          setSellCount({
-            ...sellCount,
-            [investment.property_id]: Number(e.target.value),
-          })
-        }
-        placeholder={`Shares to sell (max ${investment.shares_owned})`}
-      />
-      <Button onClick={() => handleSellShares(investment)}>Sell</Button>
-    </div>
-  </Card>
-))}      </div>
+          {/* Sell input */}
+          <div className="flex gap-2 mt-2">
+            <Input
+              type="number"
+              min={1}
+              max={investment.shares_owned}
+              value={sellCount[investment.property_id] || ''}
+              onChange={(e) =>
+                setSellCount({
+                  ...sellCount,
+                  [investment.property_id]: Number(e.target.value),
+                })
+              }
+              placeholder={`Shares to sell (max ${investment.shares_owned})`}
+            />
+            <Button onClick={() => handleSellShares(investment)}>Sell</Button>
           </div>
-        )}
+        </Card>
+      ))}
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );
