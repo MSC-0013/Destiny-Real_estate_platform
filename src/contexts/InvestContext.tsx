@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import * as API from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,12 +44,19 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
   const [allInvestorDetails, setAllInvestorDetails] = useState<InvestorDetails[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 🧩 Fetch investments for a single user
+  // 🟢 Load investments from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("investments");
+    if (saved) setInvestments(JSON.parse(saved));
+  }, []);
+
+  // 🧩 Fetch investments for a single user and sync with backend
   const fetchInvestments = async (userId: string) => {
     try {
       setLoading(true);
       const res = await API.getInvestments(userId);
       setInvestments(res.data);
+      localStorage.setItem("investments", JSON.stringify(res.data));
     } catch (error) {
       console.error("❌ Failed to fetch investments:", error);
       toast({
@@ -67,18 +74,37 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
-      // Automatically calculate profit and admin commission
+      // Calculate profit and admin commission
       const profit = investment.total_investment * (investment.growth_percentage / 100);
-      const admin_commission = profit * 0.01; // 1% admin profit
+      const admin_commission = profit * 0.01;
 
-      const dataWithProfit = {
-        ...investment,  
+      const newInvestment: Investment = {
+        ...investment,
         profit,
         admin_commission,
+        _id: `temp-${Date.now()}`, // temporary id for immediate UI
       };
 
-      const res = await API.createInvestment(dataWithProfit);
-      setInvestments((prev) => [...prev, res.data]);
+      // 1️⃣ Show in UI immediately and save to localStorage
+      setInvestments((prev) => {
+        const updated = [...prev, newInvestment];
+        localStorage.setItem("investments", JSON.stringify(updated));
+        return updated;
+      });
+
+      // 2️⃣ Persist to backend
+      const res = await API.createInvestment(newInvestment);
+
+      // 3️⃣ Replace temp id with real backend id
+      setInvestments((prev) =>
+        prev.map((inv) => (inv._id === newInvestment._id ? res.data : inv))
+      );
+      localStorage.setItem(
+        "investments",
+        JSON.stringify(
+          investments.map((inv) => (inv._id === newInvestment._id ? res.data : inv))
+        )
+      );
 
       toast({
         title: "Investment Successful!",
@@ -100,8 +126,17 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
   const deleteInvestment = async (investmentId: string) => {
     try {
       setLoading(true);
+
+      // 1️⃣ Remove locally immediately
+      setInvestments((prev) => {
+        const updated = prev.filter((inv) => inv._id !== investmentId);
+        localStorage.setItem("investments", JSON.stringify(updated));
+        return updated;
+      });
+
+      // 2️⃣ Remove from backend
       await API.deleteInvestment(investmentId);
-      setInvestments((prev) => prev.filter((inv) => inv._id !== investmentId));
+
       toast({
         title: "Investment Removed",
         description: "Investment deleted successfully.",
@@ -118,7 +153,7 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🧩 NEW — Fetch all investor details (Admin View)
+  // 🧩 Fetch all investor details (Admin View)
   const fetchAllInvestorDetails = async () => {
     try {
       setLoading(true);
@@ -159,9 +194,6 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
 
 export const useInvest = () => {
   const context = useContext(InvestContext);
-  if (!context) {
-    throw new Error("useInvest must be used within an InvestProvider");
-  }
+  if (!context) throw new Error("useInvest must be used within an InvestProvider");
   return context;
 };
- 
