@@ -1,9 +1,11 @@
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { InvestProvider } from "@/contexts/InvestContext";
+import { ToastProvider } from "@/components/ui/toast";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertyProvider } from "@/contexts/PropertyContext";
@@ -12,8 +14,7 @@ import { JobProvider } from "@/contexts/JobContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import { PaymentProvider } from "@/contexts/PaymentContext";
-
-import { ToastProvider } from "@/components/ui/toast";
+import { InvestProvider } from "@/contexts/InvestContext";
 
 import Navbar from "@/components/Navbar";
 import Chatbot from "@/components/Chatbot";
@@ -57,55 +58,55 @@ const App = () => (
       <PropertyProvider>
         <PaymentProvider>
           <ConstructionProvider>
-            <JobProvider> {/* <-- JobProvider wraps all components that need useJob */}
+            <JobProvider>
               <WishlistProvider>
                 <OrderProvider>
-                 <InvestProvider>
-                  <TooltipProvider>
-                    <ToastProvider>
-                      <BrowserRouter>
-                        <div className="min-h-screen bg-background">
-                          <Navbar />
-                          <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/signup" element={<Signup />} />
-                            <Route path="/properties" element={<Properties />} />
-                            <Route path="/property/:id" element={<PropertyDetails />} />
-                            <Route path="/add-property" element={<AddProperty />} />
-                            <Route path="/wishlist" element={<Wishlist />} />
-                            <Route path="/profile" element={<Profile />} />
-                            <Route path="/orders" element={<Orders />} />
-                            <Route path="/orderspage" element={<Orders />} />
-                            <Route path="/constructionpage" element={<ConstructionPage />} />
-                            <Route path="/add-construction" element={<AddConstruction />} />
-                            <Route path="/construction/chart" element={<ConstructionChart />} />
-                            <Route path="/tenant-dashboard" element={<TenantDashboard />} />
-                            <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
-                            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                            <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
-                            <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-                            <Route path="/designer-dashboard" element={<DesignerDashboard />} />
-                            <Route path="/construction" element={<Construction />} />
-                            <Route path="/construction/rentals" element={<ConstructionRentals />} />
-                            <Route path="/construction/sales" element={<ConstructionSales />} />
-                            <Route path="/construction/:id" element={<ConstructionDetails />} />
-                            <Route path="/contract/:id/:type" element={<Contract />} />
-                            <Route path="/edit-property/:id" element={<EditProperty />} />
-                            <Route path="/invest" element={<Invest />} />
-                            <Route path="/chat" element={<Chat />} />
-                            <Route path="/help" element={<Help />} />
-                            {/* Catch-all route */}
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                          <Chatbot />
-                          <Toaster />
-                          <Sonner />
-                        </div>
-                      </BrowserRouter>
-                    </ToastProvider>
-                  </TooltipProvider>
-                 <InvestProvider>
+                  <InvestProvider>
+                    <TooltipProvider>
+                      <ToastProvider>
+                        <BrowserRouter>
+                          <div className="min-h-screen bg-background">
+                            <Navbar />
+                            <Routes>
+                              <Route path="/" element={<Home />} />
+                              <Route path="/login" element={<Login />} />
+                              <Route path="/signup" element={<Signup />} />
+                              <Route path="/properties" element={<Properties />} />
+                              <Route path="/property/:id" element={<PropertyDetails />} />
+                              <Route path="/add-property" element={<AddProperty />} />
+                              <Route path="/wishlist" element={<Wishlist />} />
+                              <Route path="/profile" element={<Profile />} />
+                              <Route path="/orders" element={<Orders />} />
+                              <Route path="/orderspage" element={<Orders />} />
+                              <Route path="/constructionpage" element={<ConstructionPage />} />
+                              <Route path="/add-construction" element={<AddConstruction />} />
+                              <Route path="/construction/chart" element={<ConstructionChart />} />
+                              <Route path="/tenant-dashboard" element={<TenantDashboard />} />
+                              <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
+                              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                              <Route path="/contractor-dashboard" element={<ContractorDashboard />} />
+                              <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+                              <Route path="/designer-dashboard" element={<DesignerDashboard />} />
+                              <Route path="/construction" element={<Construction />} />
+                              <Route path="/construction/rentals" element={<ConstructionRentals />} />
+                              <Route path="/construction/sales" element={<ConstructionSales />} />
+                              <Route path="/construction/:id" element={<ConstructionDetails />} />
+                              <Route path="/contract/:id/:type" element={<Contract />} />
+                              <Route path="/edit-property/:id" element={<EditProperty />} />
+                              <Route path="/invest" element={<Invest />} />
+                              <Route path="/chat" element={<Chat />} />
+                              <Route path="/help" element={<Help />} />
+                              {/* Catch-all route */}
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                            <Chatbot />
+                            <Toaster />
+                            <Sonner />
+                          </div>
+                        </BrowserRouter>
+                      </ToastProvider>
+                    </TooltipProvider>
+                  </InvestProvider>
                 </OrderProvider>
               </WishlistProvider>
             </JobProvider>
