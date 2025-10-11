@@ -339,7 +339,8 @@ const Invest = () => {
 useEffect(() => {
   if (!user?._id) return;
 
-  const local = JSON.parse(localStorage.getItem('investments') || '[]');
+  const local = JSON.parse(localStorage.getItem('investments') || '[]').filter(Boolean);
+
   setInvestments(local); // show localStorage immediately
 
   // Fetch from backend
@@ -399,30 +400,31 @@ const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
   localStorage.setItem('investments', JSON.stringify(updatedInvestments));
   setInvestments(updatedInvestments);
 
-  try {
-    // Call backend and get saved investment with _id
+ try {
     const savedInvestment = await addInvestment(newInvestment);
 
-    // Update the last added investment with backend _id in localStorage
-   // Update the last added investment with backend _id in localStorage
-if (existingInvestmentIndex === -1) {
-  updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
-  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-  setInvestments(updatedInvestments);
+    if (savedInvestment) {
+        // Only update localStorage if backend returned a valid object
+        if (existingInvestmentIndex === -1) {
+            updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
+            localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+            setInvestments(updatedInvestments);
+        }
+        toast({
+            title: 'Payment Successful!',
+            description: 'Investment added to your portfolio',
+        });
+    } else {
+        throw new Error('Backend did not return saved investment');
+    }
+} catch (error) {
+    console.error('Error saving investment:', error); // log for debugging
+    toast({
+        title: 'Failed to save investment',
+        description: 'Something went wrong while saving to backend.',
+        variant: 'destructive',
+    });
 }
-
-
-    toast({
-      title: 'Payment Successful!',
-      description: 'Investment added to your portfolio',
-    });
-  } catch (error) {
-    toast({
-      title: 'Failed to save investment',
-      description: 'Something went wrong while saving to backend.',
-      variant: 'destructive',
-    });
-  }
 
   setSelectedProperty(null);
   setShareCount(1);
@@ -689,56 +691,70 @@ const totalCurrentValue = investments.reduce(
   <div>
     <h2 className="text-2xl font-bold mb-4">My Investments</h2>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {investments.map((investment) => (
-        <Card key={investment._id || investment.property_id} className="hover:shadow-md transition-shadow p-4">
-          <CardHeader>
-            <CardTitle className="text-lg">{investment.property_name}</CardTitle>
-            <CardDescription>
-              Invested on {new Date(investment.date).toLocaleDateString()}
-            </CardDescription>
-          </CardHeader>
+      {investments
+        .filter(Boolean) // Remove any undefined/null investments
+        .map((investment) =>
+          investment ? (
+            <Card
+              key={investment._id || investment.property_id}
+              className="hover:shadow-md transition-shadow p-4"
+            >
+              <CardHeader>
+                <CardTitle className="text-lg">{investment.property_name}</CardTitle>
+                <CardDescription>
+                  Invested on{' '}
+                  {investment.date
+                    ? new Date(investment.date).toLocaleDateString()
+                    : 'N/A'}
+                </CardDescription>
+              </CardHeader>
 
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Shares Owned:</span>
-              <span className="font-semibold">{investment.shares_owned}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Invested:</span>
-              <span className="font-semibold">{formatCurrency(investment.total_investment)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Current Value:</span>
-              <span className="font-semibold text-green-500">{formatCurrency(investment.current_value)}</span>
-            </div>
-            <div className="flex justify-between items-center border-t pt-2">
-              <span className="text-muted-foreground">Growth:</span>
-              <span className="font-semibold text-green-500 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4" />
-                +{investment.growth_percentage}%
-              </span>
-            </div>
-          </CardContent>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shares Owned:</span>
+                  <span className="font-semibold">{investment.shares_owned || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Invested:</span>
+                  <span className="font-semibold">
+                    {formatCurrency(investment.total_investment || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Current Value:</span>
+                  <span className="font-semibold text-green-500">
+                    {formatCurrency(investment.current_value || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-muted-foreground">Growth:</span>
+                  <span className="font-semibold text-green-500 flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4" />
+                    +{investment.growth_percentage || 0}%
+                  </span>
+                </div>
+              </CardContent>
 
-          {/* Sell input */}
-          <div className="flex gap-2 mt-2">
-            <Input
-              type="number"
-              min={1}
-              max={investment.shares_owned}
-              value={sellCount[investment.property_id] || ''}
-              onChange={(e) =>
-                setSellCount({
-                  ...sellCount,
-                  [investment.property_id]: Number(e.target.value),
-                })
-              }
-              placeholder={`Shares to sell (max ${investment.shares_owned})`}
-            />
-            <Button onClick={() => handleSellShares(investment)}>Sell</Button>
-          </div>
-        </Card>
-      ))}
+              {/* Sell input */}
+              <div className="flex gap-2 mt-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={investment.shares_owned || 1}
+                  value={sellCount[investment.property_id] || ''}
+                  onChange={(e) =>
+                    setSellCount({
+                      ...sellCount,
+                      [investment.property_id]: Number(e.target.value),
+                    })
+                  }
+                  placeholder={`Shares to sell (max ${investment.shares_owned || 0})`}
+                />
+                <Button onClick={() => handleSellShares(investment)}>Sell</Button>
+              </div>
+            </Card>
+          ) : null
+        )}
     </div>
   </div>
 )}
