@@ -428,6 +428,48 @@ useEffect(() => {
     setSelectedProperty(null);
     setShareCount(1);
   };
+
+const handleSellShares = async (investment: Investment) => {
+  const shares = sellCount[investment.property_id] || 0;
+  if (!user || shares < 1 || shares > investment.shares_owned) {
+    toast({
+      title: 'Invalid Share Amount',
+      description: `Enter a valid number of shares to sell (max ${investment.shares_owned})`,
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  const updatedInvestments = investments.map((inv) =>
+    inv.property_id === investment.property_id
+      ? {
+          ...inv,
+          shares_owned: inv.shares_owned - shares,
+          total_investment: inv.total_investment * ((inv.shares_owned - shares) / inv.shares_owned),
+        }
+      : inv
+  ).filter(inv => inv.shares_owned > 0);
+
+  setInvestments(updatedInvestments);
+  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+
+  try {
+    await deleteInvestment(investment._id, shares); // adjust if your backend supports partial sell
+    toast({
+      title: 'Shares Sold',
+      description: `Successfully sold ${shares} shares of ${investment.property_name}`,
+    });
+  } catch (error) {
+    toast({
+      title: 'Failed to sell shares',
+      description: 'Something went wrong while updating backend.',
+      variant: 'destructive',
+    });
+  }
+
+  setSellCount({ ...sellCount, [investment.property_id]: 0 });
+};
+
 const handleDeleteInvestment = async (investmentId: string) => {
   // Update localStorage immediately
   const updated = investments.filter(inv => inv._id !== investmentId);
@@ -640,36 +682,72 @@ const handleDeleteInvestment = async (investmentId: string) => {
             <h2 className="text-2xl font-bold mb-4">My Investments</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {investments.map((investment, index) => (
-                <Card key={index} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{investment.property_name}</CardTitle>
-                    <CardDescription>
-                      Invested on {new Date(investment.date).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shares Owned:</span>
-                      <span className="font-semibold">{investment.shares_owned}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Invested:</span>
-                      <span className="font-semibold">{formatCurrency(investment.total_investment)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Current Value:</span>
-                      <span className="font-semibold text-green-500">{formatCurrency(investment.current_value)}</span>
-                    </div>
-                    <div className="flex justify-between items-center border-t pt-2">
-                      <span className="text-muted-foreground">Growth:</span>
-                      <span className="font-semibold text-green-500 flex items-center gap-1">
-                        <TrendingUp className="h-4 w-4" />
-                        +{investment.growth_percentage}%
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+  <Card key={index} className="hover:shadow-md transition-shadow p-4">
+    {/* Sell button above */}
+    <div className="flex gap-2 mb-2">
+      <Input
+        type="number"
+        min={1}
+        max={investment.shares_owned}
+        value={sellCount[investment.property_id] || ''}
+        onChange={(e) =>
+          setSellCount({
+            ...sellCount,
+            [investment.property_id]: Number(e.target.value),
+          })
+        }
+        placeholder={`Shares to sell (max ${investment.shares_owned})`}
+      />
+      <Button onClick={() => handleSellShares(investment)}>Sell</Button>
+    </div>
+
+    <CardHeader>
+      <CardTitle className="text-lg">{investment.property_name}</CardTitle>
+      <CardDescription>
+        Invested on {new Date(investment.date).toLocaleDateString()}
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-2 text-sm">
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">Shares Owned:</span>
+        <span className="font-semibold">{investment.shares_owned}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">Total Invested:</span>
+        <span className="font-semibold">{formatCurrency(investment.total_investment)}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">Current Value:</span>
+        <span className="font-semibold text-green-500">{formatCurrency(investment.current_value)}</span>
+      </div>
+      <div className="flex justify-between items-center border-t pt-2">
+        <span className="text-muted-foreground">Growth:</span>
+        <span className="font-semibold text-green-500 flex items-center gap-1">
+          <TrendingUp className="h-4 w-4" />
+          +{investment.growth_percentage}%
+        </span>
+      </div>
+    </CardContent>
+
+    {/* Sell button below */}
+    <div className="flex gap-2 mt-2">
+      <Input
+        type="number"
+        min={1}
+        max={investment.shares_owned}
+        value={sellCount[investment.property_id] || ''}
+        onChange={(e) =>
+          setSellCount({
+            ...sellCount,
+            [investment.property_id]: Number(e.target.value),
+          })
+        }
+        placeholder={`Shares to sell (max ${investment.shares_owned})`}
+      />
+      <Button onClick={() => handleSellShares(investment)}>Sell</Button>
+    </div>
+  </Card>
+))}
             </div>
           </div>
         )}
