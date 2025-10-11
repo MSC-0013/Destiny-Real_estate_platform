@@ -4,9 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, TrendingUp, Wallet } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Building2, TrendingUp, Wallet, MapPin, Users, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Import property images
+import luxuryTowerMumbai from '@/assets/invest/luxury-tower-mumbai.jpg';
+import oceanViewGoa from '@/assets/invest/ocean-view-goa.jpg';
+import techParkBangalore from '@/assets/invest/tech-park-bangalore.jpg';
+import heritageJaipur from '@/assets/invest/heritage-jaipur.jpg';
+import ecoComplexPune from '@/assets/invest/eco-complex-pune.jpg';
+import waterfrontKochi from '@/assets/invest/waterfront-kochi.jpg';
+import mallDelhi from '@/assets/invest/mall-delhi.jpg';
+import resortShimla from '@/assets/invest/resort-shimla.jpg';
+import officeHyderabad from '@/assets/invest/office-hyderabad.jpg';
+import lakesideUdaipur from '@/assets/invest/lakeside-udaipur.jpg';
+import towersAhmedabad from '@/assets/invest/towers-ahmedabad.jpg';
+import townshipChennai from '@/assets/invest/township-chennai.jpg';
+import hotelKolkata from '@/assets/invest/hotel-kolkata.jpg';
 
 interface Property {
   id: string;
@@ -18,6 +34,9 @@ interface Property {
   expectedReturn: number;
   image: string;
   growthData: { month: string; value: number }[];
+  type: string;
+  occupancy: number;
+  yearBuilt: number;
 }
 
 const properties: Property[] = [
@@ -29,7 +48,10 @@ const properties: Property[] = [
     sharePrice: 10000,
     availableShares: 1000,
     expectedReturn: 7.5,
-    image: '/placeholder.svg',
+    image: luxuryTowerMumbai,
+    type: 'Residential',
+    occupancy: 92,
+    yearBuilt: 2022,
     growthData: [
       { month: 'Jan', value: 10000 },
       { month: 'Feb', value: 10200 },
@@ -45,9 +67,12 @@ const properties: Property[] = [
     location: 'Goa',
     totalValue: 7500000,
     sharePrice: 7500,
-    availableShares: 1000,
+    availableShares: 850,
     expectedReturn: 8.2,
-    image: '/placeholder.svg',
+    image: oceanViewGoa,
+    type: 'Resort',
+    occupancy: 88,
+    yearBuilt: 2021,
     growthData: [
       { month: 'Jan', value: 7500 },
       { month: 'Feb', value: 7650 },
@@ -63,9 +88,12 @@ const properties: Property[] = [
     location: 'Bangalore, Karnataka',
     totalValue: 15000000,
     sharePrice: 15000,
-    availableShares: 1000,
+    availableShares: 1200,
     expectedReturn: 6.8,
-    image: '/placeholder.svg',
+    image: techParkBangalore,
+    type: 'Commercial',
+    occupancy: 95,
+    yearBuilt: 2023,
     growthData: [
       { month: 'Jan', value: 15000 },
       { month: 'Feb', value: 15300 },
@@ -73,6 +101,216 @@ const properties: Property[] = [
       { month: 'Apr', value: 15900 },
       { month: 'May', value: 16200 },
       { month: 'Jun', value: 16500 },
+    ]
+  },
+  {
+    id: '4',
+    name: 'Heritage Palace Hotel',
+    location: 'Jaipur, Rajasthan',
+    totalValue: 12000000,
+    sharePrice: 12000,
+    availableShares: 900,
+    expectedReturn: 9.5,
+    image: heritageJaipur,
+    type: 'Hospitality',
+    occupancy: 85,
+    yearBuilt: 2019,
+    growthData: [
+      { month: 'Jan', value: 12000 },
+      { month: 'Feb', value: 12300 },
+      { month: 'Mar', value: 12700 },
+      { month: 'Apr', value: 13100 },
+      { month: 'May', value: 13400 },
+      { month: 'Jun', value: 13800 },
+    ]
+  },
+  {
+    id: '5',
+    name: 'Eco Green Complex',
+    location: 'Pune, Maharashtra',
+    totalValue: 8500000,
+    sharePrice: 8500,
+    availableShares: 1100,
+    expectedReturn: 7.8,
+    image: ecoComplexPune,
+    type: 'Residential',
+    occupancy: 90,
+    yearBuilt: 2023,
+    growthData: [
+      { month: 'Jan', value: 8500 },
+      { month: 'Feb', value: 8700 },
+      { month: 'Mar', value: 8950 },
+      { month: 'Apr', value: 9200 },
+      { month: 'May', value: 9400 },
+      { month: 'Jun', value: 9650 },
+    ]
+  },
+  {
+    id: '6',
+    name: 'Marina Waterfront',
+    location: 'Kochi, Kerala',
+    totalValue: 9500000,
+    sharePrice: 9500,
+    availableShares: 950,
+    expectedReturn: 8.5,
+    image: waterfrontKochi,
+    type: 'Residential',
+    occupancy: 93,
+    yearBuilt: 2022,
+    growthData: [
+      { month: 'Jan', value: 9500 },
+      { month: 'Feb', value: 9750 },
+      { month: 'Mar', value: 10000 },
+      { month: 'Apr', value: 10300 },
+      { month: 'May', value: 10550 },
+      { month: 'Jun', value: 10850 },
+    ]
+  },
+  {
+    id: '7',
+    name: 'Grand Mall & Plaza',
+    location: 'Delhi NCR',
+    totalValue: 18000000,
+    sharePrice: 18000,
+    availableShares: 1300,
+    expectedReturn: 6.5,
+    image: mallDelhi,
+    type: 'Commercial',
+    occupancy: 97,
+    yearBuilt: 2020,
+    growthData: [
+      { month: 'Jan', value: 18000 },
+      { month: 'Feb', value: 18200 },
+      { month: 'Mar', value: 18500 },
+      { month: 'Apr', value: 18800 },
+      { month: 'May', value: 19100 },
+      { month: 'Jun', value: 19500 },
+    ]
+  },
+  {
+    id: '8',
+    name: 'Mountain View Resort',
+    location: 'Shimla, Himachal Pradesh',
+    totalValue: 6500000,
+    sharePrice: 6500,
+    availableShares: 800,
+    expectedReturn: 9.2,
+    image: resortShimla,
+    type: 'Resort',
+    occupancy: 82,
+    yearBuilt: 2018,
+    growthData: [
+      { month: 'Jan', value: 6500 },
+      { month: 'Feb', value: 6700 },
+      { month: 'Mar', value: 6900 },
+      { month: 'Apr', value: 7100 },
+      { month: 'May', value: 7350 },
+      { month: 'Jun', value: 7600 },
+    ]
+  },
+  {
+    id: '9',
+    name: 'HITEC City Tower',
+    location: 'Hyderabad, Telangana',
+    totalValue: 14000000,
+    sharePrice: 14000,
+    availableShares: 1150,
+    expectedReturn: 7.2,
+    image: officeHyderabad,
+    type: 'Commercial',
+    occupancy: 94,
+    yearBuilt: 2023,
+    growthData: [
+      { month: 'Jan', value: 14000 },
+      { month: 'Feb', value: 14300 },
+      { month: 'Mar', value: 14650 },
+      { month: 'Apr', value: 15000 },
+      { month: 'May', value: 15300 },
+      { month: 'Jun', value: 15700 },
+    ]
+  },
+  {
+    id: '10',
+    name: 'Lake Palace Villas',
+    location: 'Udaipur, Rajasthan',
+    totalValue: 11000000,
+    sharePrice: 11000,
+    availableShares: 750,
+    expectedReturn: 8.8,
+    image: lakesideUdaipur,
+    type: 'Luxury',
+    occupancy: 87,
+    yearBuilt: 2021,
+    growthData: [
+      { month: 'Jan', value: 11000 },
+      { month: 'Feb', value: 11300 },
+      { month: 'Mar', value: 11600 },
+      { month: 'Apr', value: 12000 },
+      { month: 'May', value: 12350 },
+      { month: 'Jun', value: 12750 },
+    ]
+  },
+  {
+    id: '11',
+    name: 'Skyline Residency',
+    location: 'Ahmedabad, Gujarat',
+    totalValue: 8800000,
+    sharePrice: 8800,
+    availableShares: 1050,
+    expectedReturn: 7.6,
+    image: towersAhmedabad,
+    type: 'Residential',
+    occupancy: 91,
+    yearBuilt: 2022,
+    growthData: [
+      { month: 'Jan', value: 8800 },
+      { month: 'Feb', value: 9000 },
+      { month: 'Mar', value: 9250 },
+      { month: 'Apr', value: 9500 },
+      { month: 'May', value: 9750 },
+      { month: 'Jun', value: 10050 },
+    ]
+  },
+  {
+    id: '12',
+    name: 'Smart City Township',
+    location: 'Chennai, Tamil Nadu',
+    totalValue: 13500000,
+    sharePrice: 13500,
+    availableShares: 1250,
+    expectedReturn: 7.0,
+    image: townshipChennai,
+    type: 'Mixed-Use',
+    occupancy: 89,
+    yearBuilt: 2023,
+    growthData: [
+      { month: 'Jan', value: 13500 },
+      { month: 'Feb', value: 13800 },
+      { month: 'Mar', value: 14100 },
+      { month: 'Apr', value: 14450 },
+      { month: 'May', value: 14750 },
+      { month: 'Jun', value: 15100 },
+    ]
+  },
+  {
+    id: '13',
+    name: 'Heritage Boutique Hotel',
+    location: 'Kolkata, West Bengal',
+    totalValue: 7200000,
+    sharePrice: 7200,
+    availableShares: 900,
+    expectedReturn: 8.9,
+    image: hotelKolkata,
+    type: 'Hospitality',
+    occupancy: 86,
+    yearBuilt: 2020,
+    growthData: [
+      { month: 'Jan', value: 7200 },
+      { month: 'Feb', value: 7400 },
+      { month: 'Mar', value: 7650 },
+      { month: 'Apr', value: 7900 },
+      { month: 'May', value: 8150 },
+      { month: 'Jun', value: 8450 },
     ]
   },
 ];
@@ -207,13 +445,24 @@ const Invest = () => {
         {/* Available Properties */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {properties.map((property) => (
-            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Building2 className="h-20 w-20 text-primary/40" />
+            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="h-56 relative overflow-hidden">
+                <img 
+                  src={property.image} 
+                  alt={property.name}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <Badge className="bg-primary/90 backdrop-blur-sm">{property.type}</Badge>
+                  <Badge className="bg-green-500/90 backdrop-blur-sm">{property.occupancy}% Occupied</Badge>
+                </div>
               </div>
               <CardHeader>
                 <CardTitle className="text-xl">{property.name}</CardTitle>
-                <CardDescription>{property.location}</CardDescription>
+                <CardDescription className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {property.location}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm">
@@ -232,6 +481,13 @@ const Invest = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Expected Annual Return:</span>
                     <span className="font-semibold text-green-500">{property.expectedReturn}%</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Year Built:
+                    </span>
+                    <span className="font-semibold">{property.yearBuilt}</span>
                   </div>
                 </div>
 
