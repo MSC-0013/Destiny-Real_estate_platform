@@ -501,8 +501,16 @@ const handleDeleteInvestment = async (investmentId: string) => {
     }).format(amount);
   };
 
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.total_investment, 0);
-  const totalCurrentValue = investments.reduce((sum, inv) => sum + inv.current_value, 0);
+  const totalInvested = investments.reduce(
+  (sum, inv) => sum + (inv?.total_investment || 0),
+  0
+);
+
+const totalCurrentValue = investments.reduce(
+  (sum, inv) => sum + (inv?.current_value || 0),
+  0
+);
+
   const totalGrowth = totalCurrentValue - totalInvested;
   const totalGrowthPercentage = totalInvested > 0 ? ((totalGrowth / totalInvested) * 100).toFixed(2) : '0';
 
