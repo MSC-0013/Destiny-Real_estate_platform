@@ -284,7 +284,7 @@ export const ConstructionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     localStorage.setItem("repairRequests", JSON.stringify(requests));
   };
 
-  const saveConstructionRequests = (requests: ApprovalRequest[]) => {
+  const saveConstructionRequests = (requests: ConstructionRequest[]) => {
     setConstructionRequests(requests);
     localStorage.setItem("constructionRequests", JSON.stringify(requests));
   };

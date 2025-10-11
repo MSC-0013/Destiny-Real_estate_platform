@@ -41,6 +41,8 @@ import ConstructionSales from "./pages/ConstructionSales";
 import Contract from "./pages/Contract";
 import Help from "./pages/Help";
 import SellerDashboard from "./pages/SellerDashboard";
+import Invest from "./pages/Invest";
+import Chat from "./pages/Chat";
 import EditProperty from './pages/EditProperty';
 import AddConstruction from "./pages/AddConstruction";
 import { ConstructionPage } from "./pages/ConstructionPage";
@@ -88,6 +90,8 @@ const App = () => (
                             <Route path="/construction/:id" element={<ConstructionDetails />} />
                             <Route path="/contract/:id/:type" element={<Contract />} />
                             <Route path="/edit-property/:id" element={<EditProperty />} />
+                            <Route path="/invest" element={<Invest />} />
+                            <Route path="/chat" element={<Chat />} />
                             <Route path="/help" element={<Help />} />
                             {/* Catch-all route */}
                             <Route path="*" element={<NotFound />} />

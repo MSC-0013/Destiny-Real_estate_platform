@@ -177,10 +177,7 @@ const PropertyDetails = () => {
                       variant="outline" 
                       size="lg" 
                       className="flex items-center gap-2 h-12"
-                      onClick={() => {
-                        // Contact seller functionality
-                        window.open(`tel:${property.sellerPhone}`, '_self');
-                      }}
+                      onClick={() => navigate(`/chat?seller_id=${property.sellerId}&buyer_id=${user?._id || 'guest'}`)}
                     >
                       <MapPin className="w-5 h-5" />
                       Contact Seller

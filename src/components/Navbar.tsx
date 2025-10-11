@@ -69,6 +69,9 @@ const Navbar = () => {
           <Link to="/construction" className="text-sm font-medium text-foreground/80 hover:text-foreground">
             Construction
           </Link>
+          <Link to="/invest" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            Invest
+          </Link>
           <Link to="/help" className="text-sm font-medium text-foreground/80 hover:text-foreground flex items-center">
             <HelpCircle className="mr-1 h-4 w-4" /> Help
           </Link>
