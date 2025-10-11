@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { InvestProvider } from "@/contexts/InvestContext";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertyProvider } from "@/contexts/PropertyContext";
@@ -59,6 +60,7 @@ const App = () => (
             <JobProvider> {/* <-- JobProvider wraps all components that need useJob */}
               <WishlistProvider>
                 <OrderProvider>
+                 <InvestProvider>
                   <TooltipProvider>
                     <ToastProvider>
                       <BrowserRouter>
@@ -103,6 +105,7 @@ const App = () => (
                       </BrowserRouter>
                     </ToastProvider>
                   </TooltipProvider>
+                 <InvestProvider>
                 </OrderProvider>
               </WishlistProvider>
             </JobProvider>
