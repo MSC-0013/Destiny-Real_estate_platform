@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useInvest } from "@/contexts/InvestContext"; // your context for investment API
 import { useAuth } from "@/contexts/AuthContext";
-
+import WalletCard from "@/components/WalletCard";
+import { WalletProvider, useWallet } from "@/contexts/WalletContext";
 // Import property images
 import luxuryTowerMumbai from '@/assets/invest/luxury-tower-mumbai.jpg';
 import oceanViewGoa from '@/assets/invest/ocean-view-goa.jpg';
@@ -335,6 +336,7 @@ const Invest = () => {
   const [shareCount, setShareCount] = useState(1);
   const { addInvestment, fetchInvestments, deleteInvestment } = useInvest();
   const { user } = useAuth(); // get logged-in user
+  const { canAfford, withdraw } = useWallet();
 
 useEffect(() => {
   if (!user?._id) return;
@@ -364,7 +366,23 @@ const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
   if (!selectedProperty || shareCount < 1 || !user) return;
 
   const totalCost = selectedProperty.sharePrice * shareCount;
-  const growthRate = 3.2;
+
+  // Ensure user has enough wallet balance
+  if (!canAfford(totalCost)) {
+    toast({
+      title: 'Insufficient Wallet Balance',
+      description: 'Add money to your wallet to complete this purchase.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  // Deduct from wallet (demo)
+  withdraw(totalCost);
+
+  // Use a realistic growth rate based on property expected return
+  const baseRate = selectedProperty.expectedReturn;
+  const growthRate = Math.max(2, Math.min(12, baseRate));
 
   const newInvestment: Investment = {
     property_id: selectedProperty.id,
@@ -456,7 +474,10 @@ const handleSellShares = async (investment: Investment) => {
   localStorage.setItem('investments', JSON.stringify(updatedInvestments));
 
   try {
-    await deleteInvestment(investment._id, shares); // adjust if your backend supports partial sell
+    // Only delete from backend if selling all remaining shares
+    if (shares >= investment.shares_owned && investment._id) {
+      await deleteInvestment(investment._id);
+    }
     toast({
       title: 'Shares Sold',
       description: `Successfully sold ${shares} shares of ${investment.property_name}`,
@@ -517,8 +538,9 @@ const totalCurrentValue = investments.reduce(
   const totalGrowthPercentage = totalInvested > 0 ? ((totalGrowth / totalInvested) * 100).toFixed(2) : '0';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/50">
-      <div className="container mx-auto px-4 py-8">
+    <WalletProvider>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/50">
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

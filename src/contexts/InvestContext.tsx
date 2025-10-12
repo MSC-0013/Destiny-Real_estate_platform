@@ -31,7 +31,7 @@ interface InvestContextType {
   allInvestorDetails: InvestorDetails[];
   loading: boolean;
   fetchInvestments: (userId: string) => Promise<void>;
-  addInvestment: (investment: Omit<Investment, "_id">) => Promise<void>;
+  addInvestment: (investment: Omit<Investment, "_id">) => Promise<Investment>; // return saved investment
   deleteInvestment: (investmentId: string) => Promise<void>;
   fetchAllInvestorDetails: () => Promise<void>;
 }
@@ -70,53 +70,53 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 🧩 Add new investment (Buy shares)
-  const addInvestment = async (investment: Omit<Investment, "_id">) => {
+  const addInvestment = async (investment: Omit<Investment, "_id">): Promise<Investment> => {
+    setLoading(true);
+    const profit = investment.total_investment * (investment.growth_percentage / 100);
+    const admin_commission = profit * 0.01;
+
+    const tempId = `temp-${Date.now()}`;
+    const optimistic: Investment = {
+      ...investment,
+      profit,
+      admin_commission,
+      _id: tempId,
+    };
+
+    // Optimistic update + persist locally
+    setInvestments((prev) => {
+      const updated = [...prev, optimistic];
+      localStorage.setItem("investments", JSON.stringify(updated));
+      return updated;
+    });
+
     try {
-      setLoading(true);
+      // Do NOT send _id to backend to avoid MongoDB CastError
+      const { _id: _omit, ...payload } = optimistic;
+      const res = await API.createInvestment(payload);
 
-      // Calculate profit and admin commission
-      const profit = investment.total_investment * (investment.growth_percentage / 100);
-      const admin_commission = profit * 0.01;
-
-      const newInvestment: Investment = {
-        ...investment,
-        profit,
-        admin_commission,
-        _id: `temp-${Date.now()}`, // temporary id for immediate UI
-      };
-
-      // 1️⃣ Show in UI immediately and save to localStorage
+      // Replace optimistic with saved record
       setInvestments((prev) => {
-        const updated = [...prev, newInvestment];
-        localStorage.setItem("investments", JSON.stringify(updated));
-        return updated;
+        const replaced = prev.map((inv) => (inv._id === tempId ? res.data : inv));
+        localStorage.setItem("investments", JSON.stringify(replaced));
+        return replaced;
       });
-
-      // 2️⃣ Persist to backend
-      const res = await API.createInvestment(newInvestment);
-
-      // 3️⃣ Replace temp id with real backend id
-      setInvestments((prev) =>
-        prev.map((inv) => (inv._id === newInvestment._id ? res.data : inv))
-      );
-      localStorage.setItem(
-        "investments",
-        JSON.stringify(
-          investments.map((inv) => (inv._id === newInvestment._id ? res.data : inv))
-        )
-      );
 
       toast({
         title: "Investment Successful!",
         description: "Your investment has been added successfully.",
       });
+
+      return res.data as Investment;
     } catch (error) {
       console.error("❌ Error adding investment:", error);
       toast({
         title: "Failed to add investment",
-        description: "Something went wrong while saving your investment.",
+        description: "Saved locally. Will sync when backend is available.",
         variant: "destructive",
       });
+      // Keep optimistic record; let caller handle lack of backend response
+      throw error;
     } finally {
       setLoading(false);
     }

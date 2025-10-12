@@ -5,12 +5,15 @@ export const createInvestment = async (req, res) => {
   try {
     const data = req.body;
 
-    // calculate profit and admin commission
-    const profit = data.total_investment * (data.growth_percentage / 100);
+    // Remove any client-sent _id to prevent CastError and ensure Mongo handles ObjectId
+    const { _id: _omit, profit: _p, admin_commission: _a, ...clean } = data;
+
+    // calculate profit and admin commission (server-authoritative)
+    const profit = clean.total_investment * (clean.growth_percentage / 100);
     const admin_commission = profit * 0.01; // 1% for admin
 
     const newInvestment = new Investment({
-      ...data,
+      ...clean,
       profit,
       admin_commission,
     });
@@ -19,7 +22,7 @@ export const createInvestment = async (req, res) => {
     res.status(201).json(saved);
   } catch (error) {
     console.error("Error creating investment:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error?.message });
   }
 };
 
