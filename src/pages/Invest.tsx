@@ -341,23 +341,9 @@ const Invest = () => {
   useEffect(() => {
     if (!user?._id) return;
 
-    const local = JSON.parse(localStorage.getItem('investments') || '[]').filter(Boolean);
-
-    setInvestments(local); // show localStorage immediately
-
-    // Fetch from backend
-    fetchInvestments(user._id).then(() => {
-      const backend = JSON.parse(localStorage.getItem('investments') || '[]'); // after context fetch
-      const merged = [...local];
-
-      backend.forEach((inv: Investment) => {
-        if (!merged.find((l: Investment) => l._id === inv._id)) merged.push(inv);
-      });
-
-      setInvestments(merged);
-      localStorage.setItem('investments', JSON.stringify(merged));
-    });
+    fetchInvestments(user._id); // only fetch from backend
   }, [user]);
+
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
 
@@ -367,7 +353,7 @@ const Invest = () => {
 
     const totalCost = selectedProperty.sharePrice * shareCount;
 
-    // Ensure user has enough wallet balance
+    // Check wallet
     if (!canAfford(totalCost)) {
       toast({
         title: 'Insufficient Wallet Balance',
@@ -377,12 +363,11 @@ const Invest = () => {
       return;
     }
 
-    // Deduct from wallet (demo)
+    // Deduct wallet balance (demo)
     withdraw(totalCost);
 
-    // Use a realistic growth rate based on property expected return
-    const baseRate = selectedProperty.expectedReturn;
-    const growthRate = Math.max(2, Math.min(12, baseRate));
+    const growthRate = Math.max(2, Math.min(12, selectedProperty.expectedReturn));
+    const calculateCurrentValue = (investmentTotal: number) => investmentTotal * (1 + growthRate / 100);
 
     const newInvestment: Investment = {
       property_id: selectedProperty.id,
@@ -391,52 +376,48 @@ const Invest = () => {
       shares_owned: shareCount,
       total_investment: totalCost,
       date: new Date().toISOString(),
-      current_value: totalCost * (1 + growthRate / 100),
+      current_value: calculateCurrentValue(totalCost),
       growth_percentage: growthRate,
     };
 
-    // Check if the user already invested in this property
-    const existingInvestmentIndex = investments.findIndex(
+    // Check if user already has investment in this property
+    const existingIndex = investments.findIndex(
       (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
     );
 
     let updatedInvestments: Investment[];
-    if (existingInvestmentIndex >= 0) {
-      updatedInvestments = [...investments];
-      const existing = updatedInvestments[existingInvestmentIndex];
-      updatedInvestments[existingInvestmentIndex] = {
+    if (existingIndex >= 0) {
+      const existing = investments[existingIndex];
+      const updatedInvestment = {
         ...existing,
         shares_owned: existing.shares_owned + shareCount,
         total_investment: existing.total_investment + totalCost,
-        current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
+        current_value: calculateCurrentValue(existing.total_investment + totalCost),
       };
+      updatedInvestments = [...investments];
+      updatedInvestments[existingIndex] = updatedInvestment;
     } else {
       updatedInvestments = [...investments, newInvestment];
     }
 
-    // Save to localStorage immediately for fast UI update
-    localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-    setInvestments(updatedInvestments);
+    // Immediate UI update
+    setInvestments([...updatedInvestments]);
 
     try {
       const savedInvestment = await addInvestment(newInvestment);
 
-      if (savedInvestment) {
-        // Only update localStorage if backend returned a valid object
-        if (existingInvestmentIndex === -1) {
-          updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
-          localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-          setInvestments(updatedInvestments);
-        }
-        toast({
-          title: 'Payment Successful!',
-          description: 'Investment added to your portfolio',
-        });
-      } else {
-        throw new Error('Backend did not return saved investment');
+      if (savedInvestment && existingIndex === -1) {
+        // Update newly added investment with backend object
+        updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
+        setInvestments([...updatedInvestments]);
       }
+
+      toast({
+        title: 'Payment Successful!',
+        description: 'Investment added to your portfolio',
+      });
     } catch (error) {
-      console.error('Error saving investment:', error); // log for debugging
+      console.error('Error saving investment:', error);
       toast({
         title: 'Failed to save investment',
         description: 'Something went wrong while saving to backend.',
@@ -444,6 +425,7 @@ const Invest = () => {
       });
     }
 
+    // Reset selections
     setSelectedProperty(null);
     setShareCount(1);
   };
@@ -460,21 +442,21 @@ const Invest = () => {
       return;
     }
 
-    const updatedInvestments = investments.map((inv) =>
-      inv.property_id === investment.property_id
-        ? {
-          ...inv,
-          shares_owned: inv.shares_owned - shares,
-          total_investment: inv.total_investment * ((inv.shares_owned - shares) / inv.shares_owned),
-        }
-        : inv
-    ).filter(inv => inv.shares_owned > 0);
+    const updatedInvestments = investments
+      .map((inv) =>
+        inv.property_id === investment.property_id
+          ? {
+            ...inv,
+            shares_owned: inv.shares_owned - shares,
+            total_investment: inv.total_investment * ((inv.shares_owned - shares) / inv.shares_owned),
+          }
+          : inv
+      )
+      .filter((inv) => inv.shares_owned > 0);
 
-    setInvestments(updatedInvestments);
-    localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+    setInvestments([...updatedInvestments]);
 
     try {
-      // Only delete from backend if selling all remaining shares
       if (shares >= investment.shares_owned && investment._id) {
         await deleteInvestment(investment._id);
       }
@@ -494,14 +476,11 @@ const Invest = () => {
   };
 
   const handleDeleteInvestment = async (investmentId: string) => {
-    // Update localStorage immediately
-    const updated = investments.filter(inv => inv._id !== investmentId);
-    setInvestments(updated);
-    localStorage.setItem('investments', JSON.stringify(updated));
+    const updated = investments.filter((inv) => inv._id !== investmentId);
+    setInvestments([...updated]); // <-- Fixed: use 'updated' instead of 'updatedInvestments'
 
-    // Delete from backend
     try {
-      await deleteInvestment(investmentId); // use context function
+      await deleteInvestment(investmentId);
       toast({
         title: 'Investment Removed',
         description: 'Investment deleted successfully',
@@ -515,24 +494,16 @@ const Invest = () => {
     }
   };
 
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
     }).format(amount);
-  };
 
-  const totalInvested = investments.reduce(
-    (sum, inv) => sum + (inv?.total_investment || 0),
-    0
-  );
+  const totalInvested = investments.reduce((sum, inv) => sum + (inv?.total_investment || 0), 0);
+  const totalCurrentValue = investments.reduce((sum, inv) => sum + (inv?.current_value || 0), 0);
 
-  const totalCurrentValue = investments.reduce(
-    (sum, inv) => sum + (inv?.current_value || 0),
-    0
-  );
 
   const totalGrowth = totalCurrentValue - totalInvested;
   const totalGrowthPercentage = totalInvested > 0 ? ((totalGrowth / totalInvested) * 100).toFixed(2) : '0';
@@ -547,9 +518,6 @@ const Invest = () => {
           <div className="mb-8">
             <WalletCard />
           </div>
-
-
-
 
           {/* Portfolio Summary */}
           {investments.length > 0 && (
