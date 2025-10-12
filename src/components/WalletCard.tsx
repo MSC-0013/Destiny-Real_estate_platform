@@ -37,10 +37,20 @@ export default function WalletCard() {
                 <div className="space-y-2">
                   <Label htmlFor="add-amt">Amount</Label>
                   <div className="flex gap-2">
-                    <div className="flex items-center gap-1 rounded-md border px-3"><IndianRupee className="h-4 w-4" /></div>
-                    <Input id="add-amt" type="number" value={addAmt} onChange={(e) => setAddAmt(e.target.value)} placeholder="10000" />
+                    <div className="flex items-center gap-1 rounded-md border px-3">
+                      <IndianRupee className="h-4 w-4" />
+                    </div>
+                    <Input
+                      id="add-amt"
+                      type="number"
+                      value={addAmt}
+                      onChange={(e) => setAddAmt(e.target.value)}
+                      placeholder="10000"
+                    />
                   </div>
-                  <Button className="w-full" onClick={() => addAmt && addFunds(parseFloat(addAmt))}>Add</Button>
+                  <Button className="w-full" onClick={() => addAmt && addFunds(parseFloat(addAmt))}>
+                    Add
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -57,10 +67,20 @@ export default function WalletCard() {
                 <div className="space-y-2">
                   <Label htmlFor="wd-amt">Amount</Label>
                   <div className="flex gap-2">
-                    <div className="flex items-center gap-1 rounded-md border px-3"><IndianRupee className="h-4 w-4" /></div>
-                    <Input id="wd-amt" type="number" value={wdAmt} onChange={(e) => setWdAmt(e.target.value)} placeholder="5000" />
+                    <div className="flex items-center gap-1 rounded-md border px-3">
+                      <IndianRupee className="h-4 w-4" />
+                    </div>
+                    <Input
+                      id="wd-amt"
+                      type="number"
+                      value={wdAmt}
+                      onChange={(e) => setWdAmt(e.target.value)}
+                      placeholder="5000"
+                    />
                   </div>
-                  <Button className="w-full" onClick={() => wdAmt && withdraw(parseFloat(wdAmt))}>Withdraw</Button>
+                  <Button className="w-full" onClick={() => wdAmt && withdraw(parseFloat(wdAmt))}>
+                    Withdraw
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

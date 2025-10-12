@@ -59,14 +59,14 @@ const Properties = () => {
       });
 
       const map = L.map(mapRef.current!).setView([20.5937, 78.9629], 5);
-      
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
 
       propertiesWithCoords.forEach((property) => {
         const marker = L.marker([property.latitude!, property.longitude!]).addTo(map);
-        
+
         const popupContent = `
           <div style="width: 250px;">
             ${property.images[0] ? `<img src="${property.images[0]}" alt="${property.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;" />` : ''}
@@ -85,7 +85,7 @@ const Properties = () => {
             </div>
           </div>
         `;
-        
+
         marker.bindPopup(popupContent);
         marker.on('click', () => setSelectedProperty(property));
       });
@@ -162,11 +162,11 @@ const Properties = () => {
                     Hide Map
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                   {/* Map */}
                   <div className="lg:col-span-2 relative">
-                    <div 
+                    <div
                       ref={mapRef}
                       className="h-[400px] md:h-[500px] w-full"
                     />
@@ -181,66 +181,54 @@ const Properties = () => {
                   </div>
 
                   {/* Property List Sidebar */}
-                  <div className="lg:col-span-1 border-t lg:border-t-0 lg:border-l bg-muted/30">
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
-                        All Properties ({filteredProperties.length})
-                      </h3>
-                      <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
-                        {filteredProperties.length > 0 ? (
-                          filteredProperties.map((property) => (
-                            <motion.div
-                              key={property.id}
-                              whileHover={{ scale: 1.02 }}
-                              onClick={() => {
-                                setSelectedProperty(property);
-                                if (mapInstance && property.latitude && property.longitude) {
-                                  mapInstance.setView([property.latitude, property.longitude], 13);
-                                }
-                              }}
-                            >
-                              <Card className={`overflow-hidden cursor-pointer transition-all border-2 ${
-                                selectedProperty?.id === property.id ? 'border-primary shadow-lg' : 'border-transparent hover:border-primary/50'
-                              }`}>
-                                <div className="flex gap-3 p-3">
-                                  {property.images[0] ? (
-                                    <img 
-                                      src={property.images[0]} 
-                                      alt={property.title}
-                                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-20 h-20 bg-muted flex items-center justify-center rounded-lg flex-shrink-0">
-                                      <Home className="h-6 w-6 text-muted-foreground" />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-sm line-clamp-1">{property.title}</h4>
-                                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                                      <MapPin className="h-3 w-3 inline mr-1" />
-                                      {property.location}
-                                    </p>
-                                    <p className="text-sm font-bold text-primary mt-1">₹{property.price.toLocaleString()}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="text-xs capitalize">{property.type}</Badge>
-                                      {!property.latitude && (
-                                        <span className="text-xs text-muted-foreground">No map data</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </Card>
-                            </motion.div>
-                          ))
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground text-sm">
-                            No properties found
-                          </div>
-                        )}
-                      </div>
+                  <div className="lg:col-span-1 border-t lg:border-t-0 lg:border-l bg-white/5 flex items-center justify-center">
+                    <div className="text-center px-6 py-8 space-y-4">
+                      {/* Title */}
+                      <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="text-3xl md:text-4xl font-bold text-black/80"
+                      >
+                        🏡 Explore the Map
+                      </motion.h2>
+
+                      {/* Description */}
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="text-sm md:text-base text-black/60"
+                      >
+                        Zoom in and click the markers to view premium properties around the world.
+                      </motion.p>
+
+                      {/* Subtitle / Highlight */}
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                        className="text-lg md:text-xl font-semibold text-black/40 tracking-widest uppercase"
+                      >
+                        ✦ Dream Homes Await ✦
+                      </motion.p>
+
+                      {/* Property Types */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.6 }}
+                        className="flex justify-center gap-3 mt-4"
+                      >
+                        <span className="inline-block px-3 py-1 border border-black/20 text-black/70 font-medium rounded">🏠 Villa</span>
+                        <span className="inline-block px-3 py-1 border border-black/20 text-black/70 font-medium rounded">🏢 Apartment</span>
+                        <span className="inline-block px-3 py-1 border border-black/20 text-black/70 font-medium rounded">🏡 House</span>
+                      </motion.div>
                     </div>
                   </div>
+
+
+
                 </div>
               </Card>
             </motion.div>

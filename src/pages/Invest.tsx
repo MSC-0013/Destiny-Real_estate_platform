@@ -1,4 +1,4 @@
-import { useState,useEffect  } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -319,7 +319,7 @@ const properties: Property[] = [
 ];
 
 interface Investment {
-  _id?: string; 
+  _id?: string;
   property_id: string;
   user_id: string;
   property_name: string;
@@ -336,184 +336,184 @@ const Invest = () => {
   const [shareCount, setShareCount] = useState(1);
   const { addInvestment, fetchInvestments, deleteInvestment } = useInvest();
   const { user } = useAuth(); // get logged-in user
-  const { canAfford, withdraw } = useWallet();
+  const { canAfford, withdraw, balance } = useWallet();
 
-useEffect(() => {
-  if (!user?._id) return;
+  useEffect(() => {
+    if (!user?._id) return;
 
-  const local = JSON.parse(localStorage.getItem('investments') || '[]').filter(Boolean);
+    const local = JSON.parse(localStorage.getItem('investments') || '[]').filter(Boolean);
 
-  setInvestments(local); // show localStorage immediately
+    setInvestments(local); // show localStorage immediately
 
-  // Fetch from backend
-  fetchInvestments(user._id).then(() => {
-    const backend = JSON.parse(localStorage.getItem('investments') || '[]'); // after context fetch
-    const merged = [...local];
+    // Fetch from backend
+    fetchInvestments(user._id).then(() => {
+      const backend = JSON.parse(localStorage.getItem('investments') || '[]'); // after context fetch
+      const merged = [...local];
 
-    backend.forEach((inv: Investment) => {
-      if (!merged.find((l: Investment) => l._id === inv._id)) merged.push(inv);
+      backend.forEach((inv: Investment) => {
+        if (!merged.find((l: Investment) => l._id === inv._id)) merged.push(inv);
+      });
+
+      setInvestments(merged);
+      localStorage.setItem('investments', JSON.stringify(merged));
     });
-
-    setInvestments(merged);
-    localStorage.setItem('investments', JSON.stringify(merged));
-  });
-}, [user]);
+  }, [user]);
   const [investments, setInvestments] = useState<Investment[]>([]);
-const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
+  const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
 
 
   const handleBuyShares = async () => {
-  if (!selectedProperty || shareCount < 1 || !user) return;
+    if (!selectedProperty || shareCount < 1 || !user) return;
 
-  const totalCost = selectedProperty.sharePrice * shareCount;
+    const totalCost = selectedProperty.sharePrice * shareCount;
 
-  // Ensure user has enough wallet balance
-  if (!canAfford(totalCost)) {
-    toast({
-      title: 'Insufficient Wallet Balance',
-      description: 'Add money to your wallet to complete this purchase.',
-      variant: 'destructive',
-    });
-    return;
-  }
+    // Ensure user has enough wallet balance
+    if (!canAfford(totalCost)) {
+      toast({
+        title: 'Insufficient Wallet Balance',
+        description: 'Add money to your wallet to complete this purchase.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  // Deduct from wallet (demo)
-  withdraw(totalCost);
+    // Deduct from wallet (demo)
+    withdraw(totalCost);
 
-  // Use a realistic growth rate based on property expected return
-  const baseRate = selectedProperty.expectedReturn;
-  const growthRate = Math.max(2, Math.min(12, baseRate));
+    // Use a realistic growth rate based on property expected return
+    const baseRate = selectedProperty.expectedReturn;
+    const growthRate = Math.max(2, Math.min(12, baseRate));
 
-  const newInvestment: Investment = {
-    property_id: selectedProperty.id,
-    user_id: user._id,
-    property_name: selectedProperty.name,
-    shares_owned: shareCount,
-    total_investment: totalCost,
-    date: new Date().toISOString(),
-    current_value: totalCost * (1 + growthRate / 100),
-    growth_percentage: growthRate,
-  };
-
-  // Check if the user already invested in this property
-  const existingInvestmentIndex = investments.findIndex(
-    (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
-  );
-
-  let updatedInvestments: Investment[];
-  if (existingInvestmentIndex >= 0) {
-    updatedInvestments = [...investments];
-    const existing = updatedInvestments[existingInvestmentIndex];
-    updatedInvestments[existingInvestmentIndex] = {
-      ...existing,
-      shares_owned: existing.shares_owned + shareCount,
-      total_investment: existing.total_investment + totalCost,
-      current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
+    const newInvestment: Investment = {
+      property_id: selectedProperty.id,
+      user_id: user._id,
+      property_name: selectedProperty.name,
+      shares_owned: shareCount,
+      total_investment: totalCost,
+      date: new Date().toISOString(),
+      current_value: totalCost * (1 + growthRate / 100),
+      growth_percentage: growthRate,
     };
-  } else {
-    updatedInvestments = [...investments, newInvestment];
-  }
 
-  // Save to localStorage immediately for fast UI update
-  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-  setInvestments(updatedInvestments);
+    // Check if the user already invested in this property
+    const existingInvestmentIndex = investments.findIndex(
+      (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
+    );
 
- try {
-    const savedInvestment = await addInvestment(newInvestment);
+    let updatedInvestments: Investment[];
+    if (existingInvestmentIndex >= 0) {
+      updatedInvestments = [...investments];
+      const existing = updatedInvestments[existingInvestmentIndex];
+      updatedInvestments[existingInvestmentIndex] = {
+        ...existing,
+        shares_owned: existing.shares_owned + shareCount,
+        total_investment: existing.total_investment + totalCost,
+        current_value: (existing.total_investment + totalCost) * (1 + growthRate / 100),
+      };
+    } else {
+      updatedInvestments = [...investments, newInvestment];
+    }
 
-    if (savedInvestment) {
+    // Save to localStorage immediately for fast UI update
+    localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+    setInvestments(updatedInvestments);
+
+    try {
+      const savedInvestment = await addInvestment(newInvestment);
+
+      if (savedInvestment) {
         // Only update localStorage if backend returned a valid object
         if (existingInvestmentIndex === -1) {
-            updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
-            localStorage.setItem('investments', JSON.stringify(updatedInvestments));
-            setInvestments(updatedInvestments);
+          updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
+          localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+          setInvestments(updatedInvestments);
         }
         toast({
-            title: 'Payment Successful!',
-            description: 'Investment added to your portfolio',
+          title: 'Payment Successful!',
+          description: 'Investment added to your portfolio',
         });
-    } else {
+      } else {
         throw new Error('Backend did not return saved investment');
-    }
-} catch (error) {
-    console.error('Error saving investment:', error); // log for debugging
-    toast({
+      }
+    } catch (error) {
+      console.error('Error saving investment:', error); // log for debugging
+      toast({
         title: 'Failed to save investment',
         description: 'Something went wrong while saving to backend.',
         variant: 'destructive',
-    });
-}
+      });
+    }
 
-  setSelectedProperty(null);
-  setShareCount(1);
-};
+    setSelectedProperty(null);
+    setShareCount(1);
+  };
 
 
-const handleSellShares = async (investment: Investment) => {
-  const shares = sellCount[investment.property_id] || 0;
-  if (!user || shares < 1 || shares > investment.shares_owned) {
-    toast({
-      title: 'Invalid Share Amount',
-      description: `Enter a valid number of shares to sell (max ${investment.shares_owned})`,
-      variant: 'destructive',
-    });
-    return;
-  }
+  const handleSellShares = async (investment: Investment) => {
+    const shares = sellCount[investment.property_id] || 0;
+    if (!user || shares < 1 || shares > investment.shares_owned) {
+      toast({
+        title: 'Invalid Share Amount',
+        description: `Enter a valid number of shares to sell (max ${investment.shares_owned})`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  const updatedInvestments = investments.map((inv) =>
-    inv.property_id === investment.property_id
-      ? {
+    const updatedInvestments = investments.map((inv) =>
+      inv.property_id === investment.property_id
+        ? {
           ...inv,
           shares_owned: inv.shares_owned - shares,
           total_investment: inv.total_investment * ((inv.shares_owned - shares) / inv.shares_owned),
         }
-      : inv
-  ).filter(inv => inv.shares_owned > 0);
+        : inv
+    ).filter(inv => inv.shares_owned > 0);
 
-  setInvestments(updatedInvestments);
-  localStorage.setItem('investments', JSON.stringify(updatedInvestments));
+    setInvestments(updatedInvestments);
+    localStorage.setItem('investments', JSON.stringify(updatedInvestments));
 
-  try {
-    // Only delete from backend if selling all remaining shares
-    if (shares >= investment.shares_owned && investment._id) {
-      await deleteInvestment(investment._id);
+    try {
+      // Only delete from backend if selling all remaining shares
+      if (shares >= investment.shares_owned && investment._id) {
+        await deleteInvestment(investment._id);
+      }
+      toast({
+        title: 'Shares Sold',
+        description: `Successfully sold ${shares} shares of ${investment.property_name}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to sell shares',
+        description: 'Something went wrong while updating backend.',
+        variant: 'destructive',
+      });
     }
-    toast({
-      title: 'Shares Sold',
-      description: `Successfully sold ${shares} shares of ${investment.property_name}`,
-    });
-  } catch (error) {
-    toast({
-      title: 'Failed to sell shares',
-      description: 'Something went wrong while updating backend.',
-      variant: 'destructive',
-    });
-  }
 
-  setSellCount({ ...sellCount, [investment.property_id]: 0 });
-};
+    setSellCount({ ...sellCount, [investment.property_id]: 0 });
+  };
 
-const handleDeleteInvestment = async (investmentId: string) => {
-  // Update localStorage immediately
-  const updated = investments.filter(inv => inv._id !== investmentId);
-  setInvestments(updated);
-  localStorage.setItem('investments', JSON.stringify(updated));
+  const handleDeleteInvestment = async (investmentId: string) => {
+    // Update localStorage immediately
+    const updated = investments.filter(inv => inv._id !== investmentId);
+    setInvestments(updated);
+    localStorage.setItem('investments', JSON.stringify(updated));
 
-  // Delete from backend
-  try {
-    await deleteInvestment(investmentId); // use context function
-    toast({
-      title: 'Investment Removed',
-      description: 'Investment deleted successfully',
-    });
-  } catch (error) {
-    toast({
-      title: 'Failed to delete investment',
-      description: 'Something went wrong while deleting investment.',
-      variant: 'destructive',
-    });
-  }
-};
+    // Delete from backend
+    try {
+      await deleteInvestment(investmentId); // use context function
+      toast({
+        title: 'Investment Removed',
+        description: 'Investment deleted successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to delete investment',
+        description: 'Something went wrong while deleting investment.',
+        variant: 'destructive',
+      });
+    }
+  };
 
 
   const formatCurrency = (amount: number) => {
@@ -525,14 +525,14 @@ const handleDeleteInvestment = async (investmentId: string) => {
   };
 
   const totalInvested = investments.reduce(
-  (sum, inv) => sum + (inv?.total_investment || 0),
-  0
-);
+    (sum, inv) => sum + (inv?.total_investment || 0),
+    0
+  );
 
-const totalCurrentValue = investments.reduce(
-  (sum, inv) => sum + (inv?.current_value || 0),
-  0
-);
+  const totalCurrentValue = investments.reduce(
+    (sum, inv) => sum + (inv?.current_value || 0),
+    0
+  );
 
   const totalGrowth = totalCurrentValue - totalInvested;
   const totalGrowthPercentage = totalInvested > 0 ? ((totalGrowth / totalInvested) * 100).toFixed(2) : '0';
@@ -541,248 +541,228 @@ const totalCurrentValue = investments.reduce(
     <WalletProvider>
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/50">
         <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Investment Opportunities
-          </h1>
-          <p className="text-muted-foreground">Invest in premium real estate properties and earn passive income</p>
-        </div>
-
-        {/* Portfolio Summary */}
-        {investments.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Invested</p>
-                    <p className="text-2xl font-bold">{formatCurrency(totalInvested)}</p>
-                  </div>
-                  <Wallet className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Current Value</p>
-                    <p className="text-2xl font-bold">{formatCurrency(totalCurrentValue)}</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Growth</p>
-                    <p className="text-2xl font-bold text-green-500">+{totalGrowthPercentage}%</p>
-                  </div>
-                  <Building2 className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
+          {/* Header */}
+          {/* Wallet Balance Display */}
+          {/* Wallet Balance Display */}
+          <div className="mb-8">
+            <WalletCard />
           </div>
-        )}
 
-        {/* Available Properties */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {properties.map((property) => (
-            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <div className="h-56 relative overflow-hidden">
-                <img
-                  src={property.image}
-                  alt={property.name}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge className="bg-primary/90 backdrop-blur-sm">{property.type}</Badge>
-                  <Badge className="bg-green-500/90 backdrop-blur-sm">{property.occupancy}% Occupied</Badge>
-                </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-xl">{property.name}</CardTitle>
-                <CardDescription className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {property.location}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Property Value:</span>
-                    <span className="font-semibold">{formatCurrency(property.totalValue)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Share Price:</span>
-                    <span className="font-semibold">{formatCurrency(property.sharePrice)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Available Shares:</span>
-                    <span className="font-semibold">{property.availableShares}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expected Annual Return:</span>
-                    <span className="font-semibold text-green-500">{property.expectedReturn}%</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Year Built:
-                    </span>
-                    <span className="font-semibold">{property.yearBuilt}</span>
-                  </div>
-                </div>
 
-                {/* Growth Chart */}
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={property.growthData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="month" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:opacity-90"
-                      onClick={() => setSelectedProperty(property)}
-                    >
-                      Buy Shares
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Invest in {property.name}</DialogTitle>
-                      <DialogDescription>
-                        Enter the number of shares you want to purchase
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="shares">Number of Shares</Label>
+
+          {/* Portfolio Summary */}
+          {investments.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Total Invested</p>
+                      <p className="text-2xl font-bold">{formatCurrency(totalInvested)}</p>
+                    </div>
+                    <Wallet className="h-8 w-8 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Current Value</p>
+                      <p className="text-2xl font-bold">{formatCurrency(totalCurrentValue)}</p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Total Growth</p>
+                      <p className="text-2xl font-bold text-green-500">+{totalGrowthPercentage}%</p>
+                    </div>
+                    <Building2 className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Available Properties */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {properties.map((property) => (
+              <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="h-56 relative overflow-hidden">
+                  <img
+                    src={property.image}
+                    alt={property.name}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                  />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge className="bg-primary/90 backdrop-blur-sm">{property.type}</Badge>
+                    <Badge className="bg-green-500/90 backdrop-blur-sm">{property.occupancy}% Occupied</Badge>
+                  </div>
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-xl">{property.name}</CardTitle>
+                  <CardDescription className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {property.location}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Property Value:</span>
+                      <span className="font-semibold">{formatCurrency(property.totalValue)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Share Price:</span>
+                      <span className="font-semibold">{formatCurrency(property.sharePrice)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Available Shares:</span>
+                      <span className="font-semibold">{property.availableShares}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Expected Annual Return:</span>
+                      <span className="font-semibold text-green-500">{property.expectedReturn}%</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Year Built:
+                      </span>
+                      <span className="font-semibold">{property.yearBuilt}</span>
+                    </div>
+                  </div>
+
+                  {/* Growth Chart */}
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={property.growthData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="month" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="w-full bg-gradient-to-r from-primary to-primary/80 hover:opacity-90"
+                        onClick={() => setSelectedProperty(property)}
+                      >
+                        Buy Shares
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Invest in {property.name}</DialogTitle>
+                        <DialogDescription>
+                          Enter the number of shares you want to purchase
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="shares">Number of Shares</Label>
+                          <Input
+                            id="shares"
+                            type="number"
+                            min="1"
+                            max={selectedProperty?.availableShares || 1}
+                            value={shareCount}
+                            onChange={(e) => {
+                              let val = parseInt(e.target.value) || 1;
+                              if (val > selectedProperty?.availableShares!) val = selectedProperty.availableShares;
+                              setShareCount(val);
+                            }}
+                          />
+
+                        </div>
+                        <div className="p-4 bg-muted rounded-lg space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Share Price:</span>
+                            <span className="font-semibold">{formatCurrency(property.sharePrice)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Quantity:</span>
+                            <span className="font-semibold">{shareCount}</span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold border-t pt-2">
+                            <span>Total:</span>
+                            <span>{formatCurrency(property.sharePrice * shareCount)}</span>
+                          </div>
+                        </div>
+                        <Button className="w-full" onClick={handleBuyShares}>
+                          Confirm Purchase
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* My Investments */}
+          {/* My Investments */}
+          {investments.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">My Investments</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {investments.map((investment) => (
+                  <Card key={investment._id || investment.property_id}>
+                    <CardHeader>
+                      <CardTitle>{investment.property_name}</CardTitle>
+                      <CardDescription>
+                        Shares Owned: {investment.shares_owned}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p>Total Invested: {formatCurrency(investment.total_investment)}</p>
+                      <p>Current Value: {formatCurrency(investment.current_value)}</p>
+                      <p>Growth: {investment.growth_percentage}%</p>
+                      <div className="mt-4 flex gap-2">
                         <Input
-                          id="shares"
                           type="number"
                           min="1"
-                          max={selectedProperty?.availableShares || 1}
-                          value={shareCount}
-                          onChange={(e) => {
-                            let val = parseInt(e.target.value) || 1;
-                            if (val > selectedProperty?.availableShares!) val = selectedProperty.availableShares;
-                            setShareCount(val);
-                          }}
+                          max={investment.shares_owned}
+                          placeholder="Shares to sell"
+                          value={sellCount[investment.property_id] || ""}
+                          onChange={(e) =>
+                            setSellCount({
+                              ...sellCount,
+                              [investment.property_id]: parseInt(e.target.value) || 0,
+                            })
+                          }
                         />
-
+                        <Button onClick={() => handleSellShares(investment)}>
+                          Sell
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() =>
+                            investment._id && handleDeleteInvestment(investment._id)
+                          }
+                        >
+                          Delete
+                        </Button>
                       </div>
-                      <div className="p-4 bg-muted rounded-lg space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Share Price:</span>
-                          <span className="font-semibold">{formatCurrency(property.sharePrice)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Quantity:</span>
-                          <span className="font-semibold">{shareCount}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-bold border-t pt-2">
-                          <span>Total:</span>
-                          <span>{formatCurrency(property.sharePrice * shareCount)}</span>
-                        </div>
-                      </div>
-                      <Button className="w-full" onClick={handleBuyShares}>
-                        Confirm Purchase
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* My Investments */}
-       {investments.length > 0 && (
-  <div>
-    <h2 className="text-2xl font-bold mb-4">My Investments</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {investments
-        .filter(Boolean) // Remove any undefined/null investments
-        .map((investment) =>
-          investment ? (
-            <Card
-              key={investment._id || investment.property_id}
-              className="hover:shadow-md transition-shadow p-4"
-            >
-              <CardHeader>
-                <CardTitle className="text-lg">{investment.property_name}</CardTitle>
-                <CardDescription>
-                  Invested on{' '}
-                  {investment.date
-                    ? new Date(investment.date).toLocaleDateString()
-                    : 'N/A'}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shares Owned:</span>
-                  <span className="font-semibold">{investment.shares_owned || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Invested:</span>
-                  <span className="font-semibold">
-                    {formatCurrency(investment.total_investment || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current Value:</span>
-                  <span className="font-semibold text-green-500">
-                    {formatCurrency(investment.current_value || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center border-t pt-2">
-                  <span className="text-muted-foreground">Growth:</span>
-                  <span className="font-semibold text-green-500 flex items-center gap-1">
-                    <TrendingUp className="h-4 w-4" />
-                    +{investment.growth_percentage || 0}%
-                  </span>
-                </div>
-              </CardContent>
-
-              {/* Sell input */}
-              <div className="flex gap-2 mt-2">
-                <Input
-                  type="number"
-                  min={1}
-                  max={investment.shares_owned || 1}
-                  value={sellCount[investment.property_id] || ''}
-                  onChange={(e) =>
-                    setSellCount({
-                      ...sellCount,
-                      [investment.property_id]: Number(e.target.value),
-                    })
-                  }
-                  placeholder={`Shares to sell (max ${investment.shares_owned || 0})`}
-                />
-                <Button onClick={() => handleSellShares(investment)}>Sell</Button>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </Card>
-          ) : null
-        )}
-    </div>
-  </div>
-)}
-
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </WalletProvider>
   );
 }
 

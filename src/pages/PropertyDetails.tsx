@@ -14,11 +14,11 @@ const PropertyDetails = () => {
   const { getProperty } = useProperty();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
-  
+
   if (!id) return <Navigate to="/properties" replace />;
-  
+
   const property = getProperty(id);
-  
+
   if (!property) {
     return (
       <main className="min-h-screen bg-background pt-20">
@@ -34,7 +34,7 @@ const PropertyDetails = () => {
 
   const handleWishlistToggle = () => {
     if (!user) return;
-    
+
     if (isInWishlist(property.id)) {
       removeFromWishlist(property.id);
     } else {
@@ -68,7 +68,7 @@ const PropertyDetails = () => {
               </div>
             )}
           </div>
-          
+
           {/* Property Details */}
           <div className="space-y-6">
             <div className="flex justify-between items-start">
@@ -90,7 +90,7 @@ const PropertyDetails = () => {
                 </Button>
               )}
             </div>
-            
+
             <div className="flex items-center gap-4">
               <Badge variant={property.category === 'sale' ? 'default' : 'secondary'}>
                 {property.category === 'sale' ? 'For Sale' : 'For Rent'}
@@ -98,13 +98,13 @@ const PropertyDetails = () => {
               <Badge variant="outline">{property.type}</Badge>
               {property.available && <Badge className="bg-green-500">Available</Badge>}
             </div>
-            
+
             <div className="text-3xl font-bold text-primary flex items-center gap-1">
               <IndianRupee className="w-8 h-8" />
               {property.price.toLocaleString()}
               {property.category === 'rent' && <span className="text-lg text-muted-foreground">/month</span>}
             </div>
-            
+
             <div className="grid grid-cols-3 gap-4">
               {property.bedrooms && (
                 <div className="flex items-center gap-2">
@@ -123,12 +123,12 @@ const PropertyDetails = () => {
                 <span>{property.area} sq ft</span>
               </div>
             </div>
-            
+
             <div>
               <h2 className="text-xl font-semibold mb-3">Description</h2>
               <p className="text-muted-foreground leading-relaxed">{property.description}</p>
             </div>
-            
+
             {property.amenities.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-3">Amenities</h2>
@@ -139,13 +139,13 @@ const PropertyDetails = () => {
                 </div>
               </div>
             )}
-            
+
             <div className="border-t pt-6">
               <h3 className="font-semibold mb-2">Contact Seller</h3>
               <p className="text-muted-foreground mb-1">{property.sellerName}</p>
               <p className="text-muted-foreground">{property.sellerPhone}</p>
             </div>
-            
+
             {/* Purchase/Rent Actions */}
             {property.available && user ? (
               <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -153,10 +153,10 @@ const PropertyDetails = () => {
                   <h3 className="font-semibold text-lg mb-4">
                     {property.category === 'sale' ? 'Purchase This Property' : 'Rent This Property'}
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="flex items-center gap-2 h-12"
                       onClick={() => navigate(`/contract/${id}/${property.category === 'sale' ? 'buy' : 'rent'}`)}
                     >
@@ -172,18 +172,24 @@ const PropertyDetails = () => {
                         </>
                       )}
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
+
+                    <Button
+                      variant="outline"
+                      size="lg"
                       className="flex items-center gap-2 h-12"
-                      onClick={() => navigate(`/chat?seller_id=${property.sellerId}&buyer_id=${user?._id || 'guest'}`)}
+                      onClick={() => {
+                        const chatUrl = new URL("https://realestate-chat-hub-qag7k28.public.builtwithrocket.new");
+                        chatUrl.searchParams.append("seller_id", property.sellerId);
+                        chatUrl.searchParams.append("buyer_id", user?._id || "guest");
+                        window.open(chatUrl.toString(), "_blank"); // opens in a new tab
+                      }}
                     >
                       <MapPin className="w-5 h-5" />
                       Contact Seller
                     </Button>
+
                   </div>
-                  
+
                   <div className="mt-4 text-center">
                     <p className="text-sm text-muted-foreground">
                       Secure transaction • Digital contract • Instant processing
