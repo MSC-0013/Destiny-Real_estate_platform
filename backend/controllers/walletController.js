@@ -34,7 +34,7 @@ export const addFunds = async (req, res) => {
     const wallet = await Wallet.findOneAndUpdate(
       { userId },
       { $inc: { balance: amount } },
-      { new: true, upsert: true } // creates wallet if not exists
+      { new: true, upsert: true } 
     );
 
     res.json({ balance: wallet.balance, message: `₹${amount} added successfully` });

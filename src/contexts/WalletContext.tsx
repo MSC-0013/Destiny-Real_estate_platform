@@ -19,7 +19,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [balance, setBalance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load wallet balance from backend or fallback to localStorage
+  // Fetch wallet balance from MongoDB when user logs in
   useEffect(() => {
     const fetchBalance = async () => {
       if (!user) {
@@ -29,21 +29,14 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       try {
         const res = await API.get(`/wallet/${user._id}`);
-        let mongoBalance = res.data.balance;
-
-        // Merge with localStorage if exists (to avoid losing offline funds)
-        const stored = localStorage.getItem(`walletBalance_${user._id}`);
-        if (stored) {
-          const localBalance = parseFloat(stored);
-          mongoBalance = Math.max(mongoBalance, localBalance);
-        }
-
-        setBalance(mongoBalance);
-        localStorage.setItem(`walletBalance_${user._id}`, mongoBalance.toString());
-      } catch {
-        console.warn("Backend unavailable, using localStorage");
-        const raw = localStorage.getItem(`walletBalance_${user._id}`);
-        setBalance(raw ? parseFloat(raw) : 0); // start from 0 if nothing
+        setBalance(res.data.balance || 0);
+      } catch (err) {
+        console.error("Error fetching balance:", err);
+        toast({
+          title: "Server Error",
+          description: "Could not fetch wallet balance. Try again later.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -52,57 +45,44 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     fetchBalance();
   }, [user]);
 
-  // Sync localStorage whenever balance changes
-  useEffect(() => {
-    if (user) localStorage.setItem(`walletBalance_${user._id}`, balance.toString());
-  }, [balance, user]);
-
-  // Add funds
+  // Add funds (MongoDB only)
   const addFunds = async (amount: number): Promise<void> => {
     if (!user || amount <= 0 || !isFinite(amount)) {
-      toast({ title: "Invalid amount", description: "Enter a positive amount", variant: "destructive" });
+      toast({ title: "Invalid Amount", description: "Please enter a valid positive number.", variant: "destructive" });
       return;
     }
 
     try {
       const res = await API.post(`/wallet/${user._id}/add`, { amount });
       setBalance(res.data.balance);
-      localStorage.setItem(`walletBalance_${user._id}`, res.data.balance.toString());
-      toast({ title: "Funds added", description: `₹${amount.toLocaleString()} added to wallet` });
-    } catch {
-      // fallback to localStorage
-      const newBalance = balance + amount;
-      setBalance(newBalance);
-      localStorage.setItem(`walletBalance_${user._id}`, newBalance.toString());
-      toast({ title: "Funds added (offline)", description: `₹${amount.toLocaleString()} added to wallet` });
+      toast({ title: "Funds Added", description: res.data.message });
+    } catch (err) {
+      console.error("Error adding funds:", err);
+      toast({ title: "Server Error", description: "Failed to add funds.", variant: "destructive" });
     }
   };
 
-  // Withdraw funds
+  // Withdraw funds (MongoDB only)
   const withdraw = async (amount: number): Promise<boolean> => {
     if (!user || amount <= 0 || !isFinite(amount)) {
-      toast({ title: "Invalid amount", description: "Enter a positive amount", variant: "destructive" });
+      toast({ title: "Invalid Amount", description: "Please enter a valid positive number.", variant: "destructive" });
       return false;
     }
 
     if (amount > balance) {
-      toast({ title: "Insufficient funds", description: "Add money to your wallet to continue", variant: "destructive" });
+      toast({ title: "Insufficient Funds", description: "Add more money to your wallet.", variant: "destructive" });
       return false;
     }
 
     try {
       const res = await API.post(`/wallet/${user._id}/withdraw`, { amount });
       setBalance(res.data.balance);
-      localStorage.setItem(`walletBalance_${user._id}`, res.data.balance.toString());
-      toast({ title: "Payment Successful", description: `₹${amount.toLocaleString()} deducted from wallet` });
+      toast({ title: "Withdrawal Successful", description: res.data.message });
       return true;
-    } catch {
-      // fallback to localStorage
-      const newBalance = balance - amount;
-      setBalance(newBalance);
-      localStorage.setItem(`walletBalance_${user._id}`, newBalance.toString());
-      toast({ title: "Payment Successful (offline)", description: `₹${amount.toLocaleString()} deducted from wallet` });
-      return true;
+    } catch (err) {
+      console.error("Error withdrawing funds:", err);
+      toast({ title: "Server Error", description: "Failed to process withdrawal.", variant: "destructive" });
+      return false;
     }
   };
 

@@ -31,7 +31,7 @@ interface InvestContextType {
   allInvestorDetails: InvestorDetails[];
   loading: boolean;
   fetchInvestments: (userId: string) => Promise<void>;
-  addInvestment: (investment: Omit<Investment, "_id">) => Promise<Investment>; // return saved investment
+  addInvestment: (investment: Omit<Investment, "_id">) => Promise<Investment>;
   deleteInvestment: (investmentId: string) => Promise<void>;
   fetchAllInvestorDetails: () => Promise<void>;
 }
@@ -44,19 +44,13 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
   const [allInvestorDetails, setAllInvestorDetails] = useState<InvestorDetails[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 🟢 Load investments from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("investments");
-    if (saved) setInvestments(JSON.parse(saved));
-  }, []);
-
-  // 🧩 Fetch investments for a single user and sync with backend
+  // 🧩 Fetch investments for a single user (directly from backend)
   const fetchInvestments = async (userId: string) => {
+    if (!userId) return;
     try {
       setLoading(true);
       const res = await API.getInvestments(userId);
       setInvestments(res.data);
-      localStorage.setItem("investments", JSON.stringify(res.data));
     } catch (error) {
       console.error("❌ Failed to fetch investments:", error);
       toast({
@@ -69,38 +63,12 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🧩 Add new investment (Buy shares)
+  // 🧩 Add new investment (buy shares)
   const addInvestment = async (investment: Omit<Investment, "_id">): Promise<Investment> => {
     setLoading(true);
-    const profit = investment.total_investment * (investment.growth_percentage / 100);
-    const admin_commission = profit * 0.01;
-
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: Investment = {
-      ...investment,
-      profit,
-      admin_commission,
-      _id: tempId,
-    };
-
-    // Optimistic update + persist locally
-    setInvestments((prev) => {
-      const updated = [...prev, optimistic];
-      localStorage.setItem("investments", JSON.stringify(updated));
-      return updated;
-    });
-
     try {
-      // Do NOT send _id to backend to avoid MongoDB CastError
-      const { _id: _omit, ...payload } = optimistic;
-      const res = await API.createInvestment(payload);
-
-      // Replace optimistic with saved record
-      setInvestments((prev) => {
-        const replaced = prev.map((inv) => (inv._id === tempId ? res.data : inv));
-        localStorage.setItem("investments", JSON.stringify(replaced));
-        return replaced;
-      });
+      const res = await API.createInvestment(investment);
+      setInvestments((prev) => [...prev, res.data]);
 
       toast({
         title: "Investment Successful!",
@@ -112,30 +80,21 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
       console.error("❌ Error adding investment:", error);
       toast({
         title: "Failed to add investment",
-        description: "Saved locally. Will sync when backend is available.",
+        description: "Something went wrong while adding your investment.",
         variant: "destructive",
       });
-      // Keep optimistic record; let caller handle lack of backend response
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // 🧩 Delete investment
+  // 🧩 Delete investment (sell shares)
   const deleteInvestment = async (investmentId: string) => {
     try {
       setLoading(true);
-
-      // 1️⃣ Remove locally immediately
-      setInvestments((prev) => {
-        const updated = prev.filter((inv) => inv._id !== investmentId);
-        localStorage.setItem("investments", JSON.stringify(updated));
-        return updated;
-      });
-
-      // 2️⃣ Remove from backend
       await API.deleteInvestment(investmentId);
+      setInvestments((prev) => prev.filter((inv) => inv._id !== investmentId));
 
       toast({
         title: "Investment Removed",
@@ -153,16 +112,12 @@ export const InvestProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🧩 Fetch all investor details (Admin View)
+  // 🧩 Fetch all investor details (admin)
   const fetchAllInvestorDetails = async () => {
     try {
       setLoading(true);
       const res = await API.getAllInvestorDetails();
       setAllInvestorDetails(res.data);
-      toast({
-        title: "Investor Data Loaded",
-        description: "All investor details loaded successfully.",
-      });
     } catch (error) {
       console.error("❌ Failed to load all investor details:", error);
       toast({
