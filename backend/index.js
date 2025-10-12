@@ -12,8 +12,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import propertyRoutes from "./routes/propertyRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import investmentRoutes from "./routes/investmentRoutes.js";
-
-
+import walletRoutes from './routes/walletRoutes.js';
 
 
 
@@ -69,6 +68,8 @@ app.use('/api/payments',paymentRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/investments", investmentRoutes);
+app.use('/api/wallet', walletRoutes);
+
 
 
 
