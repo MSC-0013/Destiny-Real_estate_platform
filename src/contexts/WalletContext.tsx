@@ -7,6 +7,7 @@ interface WalletContextType {
   balance: number;
   addFunds: (amount: number) => Promise<void>;
   withdraw: (amount: number) => Promise<boolean>;
+  addFromInvestmentSale: (amount: number) => void;
   canAfford: (amount: number) => boolean;
   isLoading: boolean;
 }
@@ -26,7 +27,6 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsLoading(false);
         return;
       }
-
       try {
         const res = await API.get(`/wallet/${user._id}`);
         setBalance(res.data.balance || 0);
@@ -41,17 +41,15 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsLoading(false);
       }
     };
-
     fetchBalance();
   }, [user]);
 
-  // Add funds (MongoDB only)
+  // Add funds
   const addFunds = async (amount: number): Promise<void> => {
-    if (!user || amount <= 0 || !isFinite(amount)) {
-      toast({ title: "Invalid Amount", description: "Please enter a valid positive number.", variant: "destructive" });
+    if (!user || amount <= 0) {
+      toast({ title: "Invalid Amount", description: "Enter a valid number.", variant: "destructive" });
       return;
     }
-
     try {
       const res = await API.post(`/wallet/${user._id}/add`, { amount });
       setBalance(res.data.balance);
@@ -62,18 +60,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // Withdraw funds (MongoDB only)
+  // Withdraw funds
   const withdraw = async (amount: number): Promise<boolean> => {
-    if (!user || amount <= 0 || !isFinite(amount)) {
-      toast({ title: "Invalid Amount", description: "Please enter a valid positive number.", variant: "destructive" });
-      return false;
-    }
-
+    if (!user || amount <= 0) return false;
     if (amount > balance) {
       toast({ title: "Insufficient Funds", description: "Add more money to your wallet.", variant: "destructive" });
       return false;
     }
-
     try {
       const res = await API.post(`/wallet/${user._id}/withdraw`, { amount });
       setBalance(res.data.balance);
@@ -86,10 +79,16 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
+  // Update wallet instantly after investment sale
+  const addFromInvestmentSale = (amount: number) => {
+    setBalance((prev) => prev + amount);
+    toast({ title: "Wallet Updated", description: `₹${amount} added from investment sale.` });
+  };
+
   const canAfford = (amount: number) => balance >= amount;
 
   return (
-    <WalletContext.Provider value={{ balance, addFunds, withdraw, canAfford, isLoading }}>
+    <WalletContext.Provider value={{ balance, addFunds, withdraw, addFromInvestmentSale, canAfford, isLoading }}>
       {children}
     </WalletContext.Provider>
   );

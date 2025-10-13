@@ -334,9 +334,9 @@ const Invest = () => {
   const { toast } = useToast();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [shareCount, setShareCount] = useState(1);
-  const { addInvestment, fetchInvestments, deleteInvestment } = useInvest();
-  const { user } = useAuth(); // get logged-in user
-  const { canAfford, withdraw, balance } = useWallet();
+  const { investments, addInvestment, fetchInvestments, deleteInvestment } = useInvest();
+  const { user } = useAuth();
+  const { canAfford, withdraw, balance, addFromInvestmentSale } = useWallet();
 
   useEffect(() => {
     if (!user?._id) return;
@@ -344,7 +344,6 @@ const Invest = () => {
     fetchInvestments(user._id); // only fetch from backend
   }, [user]);
 
-  const [investments, setInvestments] = useState<Investment[]>([]);
   const [sellCount, setSellCount] = useState<{ [key: string]: number }>({});
 
 
@@ -353,7 +352,6 @@ const Invest = () => {
 
     const totalCost = selectedProperty.sharePrice * shareCount;
 
-    // Check wallet
     if (!canAfford(totalCost)) {
       toast({
         title: 'Insufficient Wallet Balance',
@@ -363,7 +361,6 @@ const Invest = () => {
       return;
     }
 
-    // Deduct wallet balance (demo)
     withdraw(totalCost);
 
     const growthRate = Math.max(2, Math.min(12, selectedProperty.expectedReturn));
@@ -380,38 +377,8 @@ const Invest = () => {
       growth_percentage: growthRate,
     };
 
-    // Check if user already has investment in this property
-    const existingIndex = investments.findIndex(
-      (inv) => inv.property_id === selectedProperty.id && inv.user_id === user._id
-    );
-
-    let updatedInvestments: Investment[];
-    if (existingIndex >= 0) {
-      const existing = investments[existingIndex];
-      const updatedInvestment = {
-        ...existing,
-        shares_owned: existing.shares_owned + shareCount,
-        total_investment: existing.total_investment + totalCost,
-        current_value: calculateCurrentValue(existing.total_investment + totalCost),
-      };
-      updatedInvestments = [...investments];
-      updatedInvestments[existingIndex] = updatedInvestment;
-    } else {
-      updatedInvestments = [...investments, newInvestment];
-    }
-
-    // Immediate UI update
-    setInvestments([...updatedInvestments]);
-
     try {
-      const savedInvestment = await addInvestment(newInvestment);
-
-      if (savedInvestment && existingIndex === -1) {
-        // Update newly added investment with backend object
-        updatedInvestments[updatedInvestments.length - 1] = savedInvestment;
-        setInvestments([...updatedInvestments]);
-      }
-
+      await addInvestment(newInvestment); // <-- context updates investments internally
       toast({
         title: 'Payment Successful!',
         description: 'Investment added to your portfolio',
@@ -425,14 +392,15 @@ const Invest = () => {
       });
     }
 
-    // Reset selections
     setSelectedProperty(null);
     setShareCount(1);
   };
 
 
+
   const handleSellShares = async (investment: Investment) => {
     const shares = sellCount[investment.property_id] || 0;
+
     if (!user || shares < 1 || shares > investment.shares_owned) {
       toast({
         title: 'Invalid Share Amount',
@@ -449,17 +417,21 @@ const Invest = () => {
             ...inv,
             shares_owned: inv.shares_owned - shares,
             total_investment: inv.total_investment * ((inv.shares_owned - shares) / inv.shares_owned),
+            current_value: inv.current_value * ((inv.shares_owned - shares) / inv.shares_owned),
           }
           : inv
       )
       .filter((inv) => inv.shares_owned > 0);
 
-    setInvestments([...updatedInvestments]);
-
     try {
       if (shares >= investment.shares_owned && investment._id) {
         await deleteInvestment(investment._id);
       }
+
+      // ✅ Credit the wallet correctly after selling shares
+      const saleProceeds = shares * (investment.current_value / investment.shares_owned);
+      addFromInvestmentSale(saleProceeds);
+
       toast({
         title: 'Shares Sold',
         description: `Successfully sold ${shares} shares of ${investment.property_name}`,
@@ -477,7 +449,6 @@ const Invest = () => {
 
   const handleDeleteInvestment = async (investmentId: string) => {
     const updated = investments.filter((inv) => inv._id !== investmentId);
-    setInvestments([...updated]); // <-- Fixed: use 'updated' instead of 'updatedInvestments'
 
     try {
       await deleteInvestment(investmentId);
